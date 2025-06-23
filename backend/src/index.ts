@@ -12,13 +12,19 @@ const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://192.168.1.24:3000',
-    'https://idea-managment.vercel.app',
-    'https://idea-managment-5l0r8sfv5-tongducduy03s-projects.vercel.app'
-  ],
+  origin: (origin, callback) => {
+    // Cho phép các origin hợp lệ hoặc không có origin (như postman)
+    if (
+      !origin ||
+      origin.startsWith('http://localhost') ||
+      origin === 'http://192.168.1.24:3000' ||
+      origin.endsWith('.vercel.app')
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
