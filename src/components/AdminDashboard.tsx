@@ -94,7 +94,7 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchIdeas();
-  }, []);
+  }, [fetchIdeas]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
