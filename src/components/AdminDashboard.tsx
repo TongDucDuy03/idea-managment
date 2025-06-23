@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -9,11 +9,6 @@ import {
   TextField,
   IconButton,
   Switch,
-  FormControlLabel,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Alert,
   Grid,
   Card,
@@ -66,7 +61,7 @@ const AdminDashboard: React.FC = () => {
     return Math.max(baseHeight, baseHeight + (maxLines - 1) * lineHeight);
   };
 
-  const fetchIdeas = async () => {
+  const fetchIdeas = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -90,7 +85,7 @@ const AdminDashboard: React.FC = () => {
       }
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     fetchIdeas();
