@@ -13,16 +13,11 @@ const port = process.env.PORT || 5000;
 // Middleware
 app.use(cors({
   origin: (origin, callback) => {
-    // Cho phép các origin hợp lệ hoặc không có origin (như postman)
-    if (
-      !origin ||
-      origin.startsWith('http://localhost') ||
-      origin === 'http://192.168.1.24:3000' ||
-      origin.endsWith('.vercel.app')
-    ) {
+    // Cho phép tất cả origin .vercel.app và local
+    if (!origin || origin.includes('localhost') || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error('CORS not allowed for this origin'));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
