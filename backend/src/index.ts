@@ -16,7 +16,8 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:3001',
     'http://192.168.1.24:3000',
-    'https://idea-managment.vercel.app'
+    'https://idea-managment.vercel.app',
+    'https://idea-managment-5l0r8sfv5-tongducduy03s-projects.vercel.app'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
