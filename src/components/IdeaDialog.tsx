@@ -57,7 +57,6 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
   const [formData, setFormData] = useState<Partial<Idea>>({
     fullName: '',
     department: '',
-    phone: '',
     solution: '',
     ideaCode: '',
     isPaid: false
@@ -71,7 +70,6 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
       setFormData({
         fullName: '',
         department: '',
-        phone: '',
         solution: '',
         ideaCode: '',
         isPaid: false
@@ -122,14 +120,6 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               name="fullName"
               label="Họ và tên"
               value={formData.fullName}
-              onChange={handleTextChange}
-              required
-              fullWidth
-            />
-            <TextField
-              name="phone"
-              label="Số điện thoại"
-              value={formData.phone}
               onChange={handleTextChange}
               required
               fullWidth

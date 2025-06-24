@@ -45,12 +45,10 @@ const IdeaForm: React.FC = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     department: '',
-    phone: '',
     solution: ''
   });
   const [errors, setErrors] = useState({
     department: '',
-    phone: '',
     solution: ''
   });
   const [error, setError] = useState('');
@@ -60,20 +58,12 @@ const IdeaForm: React.FC = () => {
   const validateForm = () => {
     const newErrors = {
       department: '',
-      phone: '',
       solution: ''
     };
     let isValid = true;
 
     if (!formData.department.trim()) {
       newErrors.department = 'Vui lòng chọn đơn vị làm việc';
-      isValid = false;
-    }
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Vui lòng nhập số điện thoại';
-      isValid = false;
-    } else if (!/^\d{9,11}$/.test(formData.phone.trim())) {
-      newErrors.phone = 'Số điện thoại không hợp lệ';
       isValid = false;
     }
     if (!formData.solution.trim()) {
@@ -126,7 +116,6 @@ const IdeaForm: React.FC = () => {
       setFormData({
         fullName: '',
         department: '',
-        phone: '',
         solution: ''
       });
       setTimeout(() => {
@@ -236,25 +225,6 @@ const IdeaForm: React.FC = () => {
                   </Typography>
                 )}
               </FormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                name="phone"
-                label="Số điện thoại"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                fullWidth
-                error={!!errors.phone}
-                helperText={errors.phone}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#1976d2',
-                    },
-                  },
-                }}
-              />
             </Grid>
             <Grid item xs={12}>
               <TextField

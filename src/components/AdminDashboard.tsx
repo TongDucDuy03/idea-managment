@@ -202,7 +202,6 @@ const AdminDashboard: React.FC = () => {
       'Mã ý tưởng': idea.ideaCode,
       'Họ và tên': idea.fullName,
       'Đơn vị': idea.department,
-      'Số điện thoại': idea.phone,
       'Ý tưởng': idea.solution,
       'Đã thanh toán': idea.isPaid ? 'Có' : 'Không',
       'Ngày gửi': new Date(idea.submissionDate).toLocaleDateString('vi-VN')
@@ -253,9 +252,9 @@ const AdminDashboard: React.FC = () => {
       )
     },
     { 
-      field: 'phone', 
-      headerName: 'Số điện thoại', 
-      width: 160,
+      field: 'idea', 
+      headerName: 'Vấn đề', 
+      width: 300,
       renderCell: (params) => (
         <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
           {params.value}
