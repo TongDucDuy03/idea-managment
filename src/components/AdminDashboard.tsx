@@ -253,9 +253,9 @@ const AdminDashboard: React.FC = () => {
         </div>
       )
     },
-    { 
-      field: 'idea', 
-      headerName: 'Vấn đề', 
+    {
+      field: 'idea',
+      headerName: 'Ý tưởng',
       width: 300,
       renderCell: (params) => (
         <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
@@ -263,16 +263,16 @@ const AdminDashboard: React.FC = () => {
         </div>
       )
     },
-    { 
-      field: 'solution', 
-      headerName: 'Giải pháp', 
-      width: 300,
-      renderCell: (params) => (
-        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
-          {params.value}
-        </div>
-      )
-    },
+    // {
+    //   field: 'solution',
+    //   headerName: 'Giải pháp',
+    //   width: 300,
+    //   renderCell: (params) => (
+    //     <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
+    //       {params.value}
+    //     </div>
+    //   )
+    // },
     {
       field: 'isPaid',
       headerName: 'Đã thanh toán',

@@ -237,7 +237,7 @@ const IdeaForm: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 name="idea"
-                label="Vấn đề"
+                label="Ý tưởng"
                 value={formData.idea}
                 onChange={handleChange}
                 required
@@ -246,7 +246,7 @@ const IdeaForm: React.FC = () => {
                 rows={4}
                 error={!!errors.idea}
                 helperText={errors.idea}
-                sx={{ 
+                sx={{
                   '& .MuiOutlinedInput-root': {
                     '&:hover fieldset': {
                       borderColor: '#1976d2',
@@ -255,19 +255,18 @@ const IdeaForm: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} style={{ display: 'none' }}>
               <TextField
                 name="solution"
                 label="Giải pháp"
                 value={formData.solution}
                 onChange={handleChange}
-                required
                 fullWidth
                 multiline
                 rows={4}
                 error={!!errors.solution}
                 helperText={errors.solution}
-                sx={{ 
+                sx={{
                   '& .MuiOutlinedInput-root': {
                     '&:hover fieldset': {
                       borderColor: '#1976d2',
