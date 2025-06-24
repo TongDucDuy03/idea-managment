@@ -45,13 +45,11 @@ const IdeaForm: React.FC = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     department: '',
-    idea: '',
-    solution: ''
+    idea: ''
   });
   const [errors, setErrors] = useState({
     department: '',
-    idea: '',
-    solution: ''
+    idea: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -60,8 +58,7 @@ const IdeaForm: React.FC = () => {
   const validateForm = () => {
     const newErrors = {
       department: '',
-      idea: '',
-      solution: ''
+      idea: ''
     };
     let isValid = true;
 
@@ -70,13 +67,13 @@ const IdeaForm: React.FC = () => {
       isValid = false;
     }
     if (!formData.idea.trim()) {
-      newErrors.idea = 'Vui lòng nhập vấn đề ';
+      newErrors.idea = 'Vui lòng nhập ý tưởng ';
       isValid = false;
     }
-    if (!formData.solution.trim()) {
-      newErrors.solution = 'Vui lòng nhập giải pháp';
-      isValid = false;
-    }
+    // if (!formData.solution.trim()) {
+    //   newErrors.solution = 'Vui lòng nhập giải pháp';
+    //   isValid = false;
+    // }
 
     setErrors(newErrors);
     return isValid;
@@ -123,8 +120,7 @@ const IdeaForm: React.FC = () => {
       setFormData({
         fullName: '',
         department: '',
-        idea: '',
-        solution: ''
+        idea: ''
       });
       setTimeout(() => {
         setSuccess(false);
@@ -255,7 +251,7 @@ const IdeaForm: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} style={{ display: 'none' }}>
+            {/* <Grid item xs={12} style={{ display: 'none' }}>
               <TextField
                 name="solution"
                 label="Giải pháp"
@@ -274,7 +270,7 @@ const IdeaForm: React.FC = () => {
                   },
                 }}
               />
-            </Grid>
+            </Grid> */}
           </Grid>
           <Button 
             type="submit" 
