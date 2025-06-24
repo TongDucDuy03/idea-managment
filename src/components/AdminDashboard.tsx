@@ -69,7 +69,7 @@ const AdminDashboard: React.FC = () => {
         return;
       }
 
-      const response = await axios.get('https://idea-managment-production-44d8.up.railway.app/api/ideas', {
+      const response = await axios.get('http://localhost:5000/api/ideas', {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -103,7 +103,7 @@ const AdminDashboard: React.FC = () => {
         return;
       }
 
-      await axios.put(`https://idea-managment-production-44d8.up.railway.app/api/ideas/${id}`, {
+      await axios.put(`http://localhost:5000/api/ideas/${id}`, {
         isPaid: isPaid
       }, {
         headers: {
@@ -130,7 +130,7 @@ const AdminDashboard: React.FC = () => {
           return;
         }
 
-        await axios.delete(`https://idea-managment-production-44d8.up.railway.app/api/ideas/${id}`, {
+        await axios.delete(`http://localhost:5000/api/ideas/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -168,13 +168,13 @@ const AdminDashboard: React.FC = () => {
       }
 
       if (isEditMode && selectedIdea) {
-        await axios.put(`https://idea-managment-production-44d8.up.railway.app/api/ideas/${selectedIdea._id}`, ideaData, {
+        await axios.put(`http://localhost:5000/api/ideas/${selectedIdea._id}`, ideaData, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
       } else {
-        await axios.post('https://idea-managment-production-44d8.up.railway.app/api/ideas', ideaData, {
+        await axios.post('http://localhost:5000/api/ideas', ideaData, {
           headers: {
             Authorization: `Bearer ${token}`
           }
