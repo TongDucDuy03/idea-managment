@@ -263,16 +263,6 @@ const AdminDashboard: React.FC = () => {
       )
     },
     { 
-      field: 'idea', 
-      headerName: 'Vấn đề', 
-      width: 300,
-      renderCell: (params) => (
-        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
-          {params.value}
-        </div>
-      )
-    },
-    { 
       field: 'solution', 
       headerName: 'Ý tưởng', 
       width: 300,
