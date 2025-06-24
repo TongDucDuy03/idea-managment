@@ -16,7 +16,7 @@ exports.deleteIdea = exports.updateIdea = exports.updatePaymentStatus = exports.
 const Idea_1 = __importDefault(require("../models/Idea"));
 const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { fullName, department, idea, solution } = req.body;
+        const { fullName, department, idea } = req.body;
         // Generate idea code
         const initials = fullName
             .split(' ')
@@ -30,7 +30,7 @@ const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             fullName,
             department,
             idea,
-            solution,
+            // solution,
             ideaCode,
             submissionDate: new Date()
         });

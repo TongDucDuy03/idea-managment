@@ -37,8 +37,8 @@ const mongoose_1 = __importStar(require("mongoose"));
 const IdeaSchema = new mongoose_1.Schema({
     fullName: { type: String, required: false },
     department: { type: String, required: true },
-    idea: { type: String, required: true },
-    solution: { type: String, required: true },
+    idea: { type: String, required: false },
+    // solution: { type: String, required: false },
     ideaCode: { type: String, required: true, unique: true },
     submissionDate: { type: Date, default: Date.now },
     isPaid: { type: Boolean, default: false }
