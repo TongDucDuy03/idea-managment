@@ -202,7 +202,8 @@ const AdminDashboard: React.FC = () => {
       'Mã ý tưởng': idea.ideaCode,
       'Họ và tên': idea.fullName,
       'Đơn vị': idea.department,
-      'Ý tưởng': idea.solution,
+      'Vấn đề': idea.idea,
+      'Giải pháp': idea.solution,
       'Đã thanh toán': idea.isPaid ? 'Có' : 'Không',
       'Ngày gửi': new Date(idea.submissionDate).toLocaleDateString('vi-VN')
     }));
@@ -216,6 +217,7 @@ const AdminDashboard: React.FC = () => {
   const filteredIdeas = ideas.filter(idea =>
     idea.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     idea.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    idea.idea.toLowerCase().includes(searchTerm.toLowerCase()) ||
     idea.solution.toLowerCase().includes(searchTerm.toLowerCase()) ||
     idea.ideaCode.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -263,7 +265,7 @@ const AdminDashboard: React.FC = () => {
     },
     { 
       field: 'solution', 
-      headerName: 'Ý tưởng', 
+      headerName: 'Giải pháp', 
       width: 300,
       renderCell: (params) => (
         <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>

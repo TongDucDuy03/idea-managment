@@ -45,10 +45,12 @@ const IdeaForm: React.FC = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     department: '',
+    idea: '',
     solution: ''
   });
   const [errors, setErrors] = useState({
     department: '',
+    idea: '',
     solution: ''
   });
   const [error, setError] = useState('');
@@ -58,6 +60,7 @@ const IdeaForm: React.FC = () => {
   const validateForm = () => {
     const newErrors = {
       department: '',
+      idea: '',
       solution: ''
     };
     let isValid = true;
@@ -66,8 +69,12 @@ const IdeaForm: React.FC = () => {
       newErrors.department = 'Vui lòng chọn đơn vị làm việc';
       isValid = false;
     }
+    if (!formData.idea.trim()) {
+      newErrors.idea = 'Vui lòng nhập vấn đề ';
+      isValid = false;
+    }
     if (!formData.solution.trim()) {
-      newErrors.solution = 'Vui lòng nhập ý tưởng';
+      newErrors.solution = 'Vui lòng nhập giải pháp';
       isValid = false;
     }
 
@@ -116,6 +123,7 @@ const IdeaForm: React.FC = () => {
       setFormData({
         fullName: '',
         department: '',
+        idea: '',
         solution: ''
       });
       setTimeout(() => {
@@ -228,8 +236,29 @@ const IdeaForm: React.FC = () => {
             </Grid>
             <Grid item xs={12}>
               <TextField
+                name="idea"
+                label="Vấn đề"
+                value={formData.idea}
+                onChange={handleChange}
+                required
+                fullWidth
+                multiline
+                rows={4}
+                error={!!errors.idea}
+                helperText={errors.idea}
+                sx={{ 
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#1976d2',
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
                 name="solution"
-                label="Ý tưởng"
+                label="Giải pháp"
                 value={formData.solution}
                 onChange={handleChange}
                 required

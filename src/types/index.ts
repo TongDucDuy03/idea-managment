@@ -2,6 +2,7 @@ export interface Idea {
   _id: string;
   fullName: string;
   department: string;
+  idea: string;
   solution: string;
   ideaCode: string;
   submissionDate: Date;
@@ -11,5 +12,6 @@ export interface Idea {
 export interface IdeaFormData {
   fullName: string;
   department: string;
+  idea: string;
   solution: string;
 } 
