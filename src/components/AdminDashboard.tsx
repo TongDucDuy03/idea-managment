@@ -286,6 +286,15 @@ const AdminDashboard: React.FC = () => {
       ),
     },
     {
+      field: 'submissionDate',
+      headerName: 'Thời gian nộp',
+      width: 180,
+      valueGetter: (params) => {
+        if (!params.value) return '';
+        return new Date(params.value).toLocaleString('vi-VN');
+      },
+    },
+    {
       field: 'actions',
       headerName: 'Thao tác',
       width: 120,
