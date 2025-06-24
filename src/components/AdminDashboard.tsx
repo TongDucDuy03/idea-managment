@@ -69,7 +69,7 @@ const AdminDashboard: React.FC = () => {
         return;
       }
 
-      const response = await axios.get('http://localhost:5000/api/ideas', {
+      const response = await axios.get('https://idea-managment.onrender.com/api/ideas', {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -103,7 +103,7 @@ const AdminDashboard: React.FC = () => {
         return;
       }
 
-      await axios.put(`http://localhost:5000/api/ideas/${id}`, {
+      await axios.put(`https://idea-managment.onrender.com/api/ideas/${id}`, {
         isPaid: isPaid
       }, {
         headers: {
@@ -130,7 +130,7 @@ const AdminDashboard: React.FC = () => {
           return;
         }
 
-        await axios.delete(`http://localhost:5000/api/ideas/${id}`, {
+        await axios.delete(`https://idea-managment.onrender.com/api/ideas/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -168,13 +168,13 @@ const AdminDashboard: React.FC = () => {
       }
 
       if (isEditMode && selectedIdea) {
-        await axios.put(`http://localhost:5000/api/ideas/${selectedIdea._id}`, ideaData, {
+        await axios.put(`https://idea-managment.onrender.com/api/ideas/${selectedIdea._id}`, ideaData, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
       } else {
-        await axios.post('http://localhost:5000/api/ideas', ideaData, {
+        await axios.post('https://idea-managment.onrender.com/api/ideas', ideaData, {
           headers: {
             Authorization: `Bearer ${token}`
           }
