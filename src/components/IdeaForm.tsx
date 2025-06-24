@@ -45,12 +45,12 @@ const IdeaForm: React.FC = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     department: '',
-    idea: '',
+    phone: '',
     solution: ''
   });
   const [errors, setErrors] = useState({
     department: '',
-    idea: '',
+    phone: '',
     solution: ''
   });
   const [error, setError] = useState('');
@@ -60,7 +60,7 @@ const IdeaForm: React.FC = () => {
   const validateForm = () => {
     const newErrors = {
       department: '',
-      idea: '',
+      phone: '',
       solution: ''
     };
     let isValid = true;
@@ -69,12 +69,15 @@ const IdeaForm: React.FC = () => {
       newErrors.department = 'Vui lòng chọn đơn vị làm việc';
       isValid = false;
     }
-    if (!formData.idea.trim()) {
-      newErrors.idea = 'Vui lòng nhập vấn đề ';
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Vui lòng nhập số điện thoại';
+      isValid = false;
+    } else if (!/^\d{9,11}$/.test(formData.phone.trim())) {
+      newErrors.phone = 'Số điện thoại không hợp lệ';
       isValid = false;
     }
     if (!formData.solution.trim()) {
-      newErrors.solution = 'Vui lòng nhập giải pháp';
+      newErrors.solution = 'Vui lòng nhập ý tưởng';
       isValid = false;
     }
 
@@ -123,7 +126,7 @@ const IdeaForm: React.FC = () => {
       setFormData({
         fullName: '',
         department: '',
-        idea: '',
+        phone: '',
         solution: ''
       });
       setTimeout(() => {
@@ -234,19 +237,17 @@ const IdeaForm: React.FC = () => {
                 )}
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
-                name="idea"
-                label="Vấn đề"
-                value={formData.idea}
+                name="phone"
+                label="Số điện thoại"
+                value={formData.phone}
                 onChange={handleChange}
                 required
                 fullWidth
-                multiline
-                rows={4}
-                error={!!errors.idea}
-                helperText={errors.idea}
-                sx={{ 
+                error={!!errors.phone}
+                helperText={errors.phone}
+                sx={{
                   '& .MuiOutlinedInput-root': {
                     '&:hover fieldset': {
                       borderColor: '#1976d2',
@@ -258,7 +259,7 @@ const IdeaForm: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 name="solution"
-                label="Giải pháp"
+                label="Ý tưởng"
                 value={formData.solution}
                 onChange={handleChange}
                 required

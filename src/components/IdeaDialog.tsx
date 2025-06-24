@@ -57,7 +57,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
   const [formData, setFormData] = useState<Partial<Idea>>({
     fullName: '',
     department: '',
-    idea: '',
+    phone: '',
     solution: '',
     ideaCode: '',
     isPaid: false
@@ -71,7 +71,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
       setFormData({
         fullName: '',
         department: '',
-        idea: '',
+        phone: '',
         solution: '',
         ideaCode: '',
         isPaid: false
@@ -126,6 +126,14 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               required
               fullWidth
             />
+            <TextField
+              name="phone"
+              label="Số điện thoại"
+              value={formData.phone}
+              onChange={handleTextChange}
+              required
+              fullWidth
+            />
             <FormControl fullWidth required>
               <InputLabel>Phòng ban</InputLabel>
               <Select
@@ -150,18 +158,8 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               fullWidth
             />
             <TextField
-              name="idea"
-              label="Vấn đề"
-              value={formData.idea}
-              onChange={handleTextChange}
-              required
-              fullWidth
-              multiline
-              rows={4}
-            />
-            <TextField
               name="solution"
-              label="Giải pháp"
+              label="Ý tưởng"
               value={formData.solution}
               onChange={handleTextChange}
               required

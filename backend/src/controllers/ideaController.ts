@@ -3,7 +3,7 @@ import Idea, { IIdea } from '../models/Idea';
 
 export const createIdea = async (req: Request, res: Response) => {
   try {
-    const { fullName, department, idea, solution } = req.body;
+    const { fullName, department, phone, idea, solution } = req.body;
     
     // Generate idea code
     const initials = fullName
@@ -18,6 +18,7 @@ export const createIdea = async (req: Request, res: Response) => {
     const newIdea = new Idea({
       fullName,
       department,
+      phone,
       idea,
       solution,
       ideaCode,
