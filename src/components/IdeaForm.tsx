@@ -117,7 +117,7 @@ const IdeaForm: React.FC = () => {
     if (!validateForm()) return;
 
     try {
-      const response = await axios.post('https://idea-managment.up.railway.app/api/ideas', formData);
+      const response = await axios.post('https://idea-managment-production-44d8.up.railway.app/api/ideas', formData);
       setSuccess(true);
       setIdeaCode(response.data.ideaCode);
       setFormData({
