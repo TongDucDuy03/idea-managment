@@ -18,15 +18,10 @@ const emailService_1 = require("../services/emailService");
 const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { fullName, department, idea } = req.body;
-        // Generate idea code
-        const initials = fullName
-            .split(' ')
-            .map((word) => word[0])
-            .join('')
-            .toUpperCase();
+        // Generate idea code (without name prefix)
         const timestamp = new Date().getTime();
         const randomNum = Math.floor(Math.random() * 1000);
-        const ideaCode = `${initials}-${timestamp}-${randomNum}`;
+        const ideaCode = `${timestamp}-${randomNum}`;
         const newIdea = new Idea_1.default({
             fullName,
             department,

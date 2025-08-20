@@ -6,12 +6,7 @@ export const createIdea = async (req: Request, res: Response) => {
   try {
     const { fullName, department, idea } = req.body;
     
-    // Generate idea code
-    const initials = fullName
-      .split(' ')
-      .map((word: string) => word[0])
-      .join('')
-      .toUpperCase();
+    // Generate idea code (without name prefix)
     const timestamp = new Date().getTime();
     const randomNum = Math.floor(Math.random() * 1000);
     const ideaCode = `${timestamp}-${randomNum}`;
