@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteIdea = exports.updateIdea = exports.updatePaymentStatus = exports.getAllIdeas = exports.createIdea = void 0;
 const Idea_1 = __importDefault(require("../models/Idea"));
+const emailService_1 = require("../services/emailService");
 const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { fullName, department, idea } = req.body;
@@ -35,6 +36,10 @@ const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             submissionDate: new Date()
         });
         const savedIdea = yield newIdea.save();
+        // Fire-and-forget email (do not block response)
+        (0, emailService_1.sendIdeaSubmittedEmail)(savedIdea).catch((err) => {
+            console.error('Failed to send idea notification email:', err);
+        });
         res.status(201).json(savedIdea);
     }
     catch (error) {

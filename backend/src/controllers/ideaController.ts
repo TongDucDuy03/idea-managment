@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Idea, { IIdea } from '../models/Idea';
+import { sendIdeaSubmittedEmail } from '../services/emailService';
 
 export const createIdea = async (req: Request, res: Response) => {
   try {
@@ -13,7 +14,7 @@ export const createIdea = async (req: Request, res: Response) => {
       .toUpperCase();
     const timestamp = new Date().getTime();
     const randomNum = Math.floor(Math.random() * 1000);
-    const ideaCode = `${initials}-${timestamp}-${randomNum}`;
+    const ideaCode = `${timestamp}-${randomNum}`;
 
     const newIdea = new Idea({
       fullName,
@@ -25,6 +26,12 @@ export const createIdea = async (req: Request, res: Response) => {
     });
 
     const savedIdea = await newIdea.save();
+
+    // Fire-and-forget email (do not block response)
+    sendIdeaSubmittedEmail(savedIdea as IIdea).catch((err) => {
+      console.error('Failed to send idea notification email:', err);
+    });
+
     res.status(201).json(savedIdea);
   } catch (error) {
     res.status(500).json({ message: 'Error creating idea', error });
