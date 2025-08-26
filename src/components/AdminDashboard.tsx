@@ -8,13 +8,14 @@ import {
   Paper,
   TextField,
   IconButton,
-  Switch,
   Alert,
   Grid,
   Card,
   CardContent,
   Divider,
-  Tooltip
+  Tooltip,
+  Select,
+  MenuItem
 } from '@mui/material';
 import { DataGrid, GridColDef, GridRowHeightParams } from '@mui/x-data-grid';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon } from '@mui/icons-material';
@@ -95,7 +96,7 @@ const AdminDashboard: React.FC = () => {
     setSearchTerm(event.target.value);
   };
 
-  const handlePaymentStatusChange = async (id: string, isPaid: boolean) => {
+  const handleStatusChange = async (id: string, status: 'pending' | 'rejected' | 'rewarded') => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -104,7 +105,7 @@ const AdminDashboard: React.FC = () => {
       }
 
       await axios.put(`https://idea-managment.onrender.com/api/ideas/${id}`, {
-        isPaid: isPaid
+        status
       }, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -116,7 +117,7 @@ const AdminDashboard: React.FC = () => {
         localStorage.removeItem('token');
         navigate('/login');
       } else {
-        setError('Không thể cập nhật trạng thái thanh toán');
+        setError('Không thể cập nhật trạng thái');
       }
     }
   };
@@ -198,13 +199,16 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleExportExcel = () => {
+    const statusLabel = (s: 'pending' | 'rejected' | 'rewarded') => (
+      s === 'pending' ? '⏳ Chưa xem xét' : s === 'rejected' ? '❌ Không khen thưởng' : '🏆 Đã khen thưởng'
+    );
     const exportData = ideas.map(idea => ({
       'Mã ý tưởng': idea.ideaCode,
       'Họ và tên': idea.fullName,
       'Đơn vị': idea.department,
       'Vấn đề': idea.idea,
       'Giải pháp': idea.solution,
-      'Đã thanh toán': idea.isPaid ? 'Có' : 'Không',
+      'Trạng thái': statusLabel(idea.status),
       'Ngày gửi': new Date(idea.submissionDate).toLocaleDateString('vi-VN')
     }));
 
@@ -274,15 +278,20 @@ const AdminDashboard: React.FC = () => {
     //   )
     // },
     {
-      field: 'isPaid',
-      headerName: 'Đã thanh toán',
-      width: 150,
+      field: 'status',
+      headerName: 'Trạng thái',
+      width: 220,
       renderCell: (params) => (
-        <Switch
-          checked={params.value}
-          onChange={() => handlePaymentStatusChange(params.row._id, !params.value)}
-          color="primary"
-        />
+        <Select
+          size="small"
+          value={params.value || 'pending'}
+          onChange={(e) => handleStatusChange(params.row._id, e.target.value as 'pending' | 'rejected' | 'rewarded')}
+          sx={{ minWidth: 200 }}
+        >
+          <MenuItem value="pending">⏳ Chưa xem xét</MenuItem>
+          <MenuItem value="rejected">❌ Không khen thưởng</MenuItem>
+          <MenuItem value="rewarded">🏆 Đã khen thưởng</MenuItem>
+        </Select>
       ),
     },
     {

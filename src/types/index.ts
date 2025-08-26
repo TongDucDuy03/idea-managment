@@ -6,7 +6,7 @@ export interface Idea {
   solution: string;
   ideaCode: string;
   submissionDate: Date;
-  isPaid: boolean;
+  status: 'pending' | 'rejected' | 'rewarded';
 }
 
 export interface IdeaFormData {

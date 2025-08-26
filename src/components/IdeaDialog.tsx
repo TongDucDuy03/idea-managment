@@ -59,8 +59,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
     department: '',
     idea: '',
     solution: '',
-    ideaCode: '',
-    isPaid: false
+    status: 'pending'
   });
   const [error, setError] = useState('');
 
@@ -73,8 +72,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         department: '',
         idea: '',
         solution: '',
-        ideaCode: '',
-        isPaid: false
+        status: 'pending'
       });
     }
   }, [idea]);
@@ -141,14 +139,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
                 ))}
               </Select>
             </FormControl>
-            <TextField
-              name="ideaCode"
-              label="Mã ý tưởng"
-              value={formData.ideaCode}
-              onChange={handleTextChange}
-              required
-              fullWidth
-            />
+            {/* Mã ý tưởng được tạo tự động ở backend; không cần nhập ở đây */}
             <TextField
               name="idea"
               label="Vấn đề"

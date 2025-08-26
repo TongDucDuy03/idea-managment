@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteIdea = exports.updateIdea = exports.updatePaymentStatus = exports.getAllIdeas = exports.createIdea = void 0;
+exports.deleteIdea = exports.updateIdea = exports.updateStatus = exports.getAllIdeas = exports.createIdea = void 0;
 const Idea_1 = __importDefault(require("../models/Idea"));
 const emailService_1 = require("../services/emailService");
 const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -28,6 +28,7 @@ const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             idea,
             // solution,
             ideaCode,
+            status: 'pending',
             submissionDate: new Date()
         });
         const savedIdea = yield newIdea.save();
@@ -44,7 +45,7 @@ const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.createIdea = createIdea;
 const getAllIdeas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { search, isPaid } = req.query;
+        const { search, status } = req.query;
         let query = {};
         if (search) {
             query.$or = [
@@ -52,8 +53,8 @@ const getAllIdeas = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 { ideaCode: { $regex: search, $options: 'i' } }
             ];
         }
-        if (isPaid !== undefined) {
-            query.isPaid = isPaid === 'true';
+        if (status !== undefined) {
+            query.status = status;
         }
         const ideas = yield Idea_1.default.find(query).sort({ submissionDate: -1 });
         res.json(ideas);
@@ -63,21 +64,21 @@ const getAllIdeas = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getAllIdeas = getAllIdeas;
-const updatePaymentStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const { isPaid } = req.body;
-        const updatedIdea = yield Idea_1.default.findByIdAndUpdate(id, { isPaid }, { new: true });
+        const { status } = req.body;
+        const updatedIdea = yield Idea_1.default.findByIdAndUpdate(id, { status }, { new: true });
         if (!updatedIdea) {
             return res.status(404).json({ message: 'Idea not found' });
         }
         res.json(updatedIdea);
     }
     catch (error) {
-        res.status(500).json({ message: 'Error updating payment status', error });
+        res.status(500).json({ message: 'Error updating status', error });
     }
 });
-exports.updatePaymentStatus = updatePaymentStatus;
+exports.updateStatus = updateStatus;
 const updateIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const idea = yield Idea_1.default.findByIdAndUpdate(req.params.id, req.body, { new: true });

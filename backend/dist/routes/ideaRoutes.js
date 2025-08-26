@@ -13,5 +13,5 @@ router.post('/', ideaController_1.createIdea);
 router.get('/', auth_1.auth, ideaController_1.getAllIdeas);
 router.put('/:id', auth_1.auth, ideaController_1.updateIdea);
 router.delete('/:id', auth_1.auth, ideaController_1.deleteIdea);
-router.patch('/:id/payment', auth_1.auth, ideaController_1.updatePaymentStatus);
+router.patch('/:id/status', auth_1.auth, ideaController_1.updateStatus);
 exports.default = router;

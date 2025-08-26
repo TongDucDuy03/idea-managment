@@ -41,6 +41,6 @@ const IdeaSchema = new mongoose_1.Schema({
     // solution: { type: String, required: false },
     ideaCode: { type: String, required: true, unique: true },
     submissionDate: { type: Date, default: Date.now },
-    isPaid: { type: Boolean, default: false }
+    status: { type: String, enum: ['pending', 'rejected', 'rewarded'], default: 'pending' }
 });
 exports.default = mongoose_1.default.model('Idea', IdeaSchema);
