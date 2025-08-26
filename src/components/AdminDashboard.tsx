@@ -14,8 +14,12 @@ import {
   CardContent,
   Divider,
   Tooltip,
+  Chip,
+  Menu,
+  MenuItem,
   Select,
-  MenuItem
+  Checkbox,
+  ListItemText
 } from '@mui/material';
 import { DataGrid, GridColDef, GridRowHeightParams } from '@mui/x-data-grid';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon } from '@mui/icons-material';
@@ -33,6 +37,7 @@ const AdminDashboard: React.FC = () => {
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<Array<'pending' | 'rejected' | 'rewarded'>>([]);
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
@@ -94,6 +99,11 @@ const AdminDashboard: React.FC = () => {
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
+  };
+
+  const handleStatusFilterChange = (event: any) => {
+    const value = event.target.value as Array<'pending' | 'rejected' | 'rewarded'>;
+    setStatusFilter(value);
   };
 
   const handleStatusChange = async (id: string, status: 'pending' | 'rejected' | 'rewarded') => {
@@ -200,7 +210,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleExportExcel = () => {
     const statusLabel = (s: 'pending' | 'rejected' | 'rewarded') => (
-      s === 'pending' ? '⏳ Chưa xem xét' : s === 'rejected' ? '❌ Không khen thưởng' : '🏆 Đã khen thưởng'
+      s === 'pending' ? 'Chưa xem xét' : s === 'rejected' ? 'Không khen thưởng' : 'Đã khen thưởng'
     );
     const exportData = ideas.map(idea => ({
       'Mã ý tưởng': idea.ideaCode,
@@ -219,12 +229,48 @@ const AdminDashboard: React.FC = () => {
   };
 
   const filteredIdeas = ideas.filter(idea =>
-    idea.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    idea.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    idea.idea.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    idea.solution.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    idea.ideaCode.toLowerCase().includes(searchTerm.toLowerCase())
+    (
+      idea.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      idea.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      idea.idea.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      idea.solution.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      idea.ideaCode.toLowerCase().includes(searchTerm.toLowerCase())
+    ) && (
+      statusFilter.length === 0 || statusFilter.includes(idea.status as any)
+    )
   );
+
+  const StatusCell: React.FC<{ row: Idea }> = ({ row }) => {
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+    const label = row.status ? (row.status === 'pending' ? 'Chưa xem xét' : row.status === 'rejected' ? 'Không khen thưởng' : 'Đã khen thưởng') : 'Chưa xem xét';
+    const color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' =
+      row.status === 'rejected' ? 'error' : row.status === 'rewarded' ? 'success' : 'info';
+
+    const handleOpen = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
+    const handleClose = () => setAnchorEl(null);
+    const selectStatus = (s: 'pending' | 'rejected' | 'rewarded') => {
+      handleStatusChange(row._id, s);
+      handleClose();
+    };
+
+    return (
+      <>
+        <Chip
+          label={label}
+          color={color}
+          size="small"
+          onClick={handleOpen}
+          sx={{ fontWeight: 'bold', cursor: 'pointer' }}
+        />
+        <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+          <MenuItem onClick={() => selectStatus('pending')}>Chưa xem xét</MenuItem>
+          <MenuItem onClick={() => selectStatus('rejected')}>Không khen thưởng</MenuItem>
+          <MenuItem onClick={() => selectStatus('rewarded')}>Đã khen thưởng</MenuItem>
+        </Menu>
+      </>
+    );
+  };
 
   const columns: GridColDef[] = [
     { 
@@ -280,19 +326,9 @@ const AdminDashboard: React.FC = () => {
     {
       field: 'status',
       headerName: 'Trạng thái',
-      width: 220,
-      renderCell: (params) => (
-        <Select
-          size="small"
-          value={params.value || 'pending'}
-          onChange={(e) => handleStatusChange(params.row._id, e.target.value as 'pending' | 'rejected' | 'rewarded')}
-          sx={{ minWidth: 200 }}
-        >
-          <MenuItem value="pending">⏳ Chưa xem xét</MenuItem>
-          <MenuItem value="rejected">❌ Không khen thưởng</MenuItem>
-          <MenuItem value="rewarded">🏆 Đã khen thưởng</MenuItem>
-        </Select>
-      ),
+      width: 200,
+      renderCell: (params) => <StatusCell row={params.row} />,
+      sortable: false
     },
     {
       field: 'submissionDate',
@@ -358,6 +394,32 @@ const AdminDashboard: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12} md={6} sx={{ textAlign: 'right' }}>
+              <Select
+                multiple
+                displayEmpty
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+                renderValue={(selected) => {
+                  if ((selected as string[]).length === 0) {
+                    return 'Lọc trạng thái';
+                  }
+                  const map: any = { pending: 'Chưa xem xét', rejected: 'Không khen thưởng', rewarded: 'Đã khen thưởng' };
+                  return (selected as string[]).map(s => map[s]).join(', ');
+                }}
+                size="small"
+                sx={{ mr: 2, minWidth: 220 }}
+              >
+                {[
+                  { value: 'pending', label: 'Chưa xem xét' },
+                  { value: 'rejected', label: 'Không khen thưởng' },
+                  { value: 'rewarded', label: 'Đã khen thưởng' }
+                ].map(opt => (
+                  <MenuItem key={opt.value} value={opt.value}>
+                    <Checkbox checked={statusFilter.indexOf(opt.value as any) > -1} />
+                    <ListItemText primary={opt.label} />
+                  </MenuItem>
+                ))}
+              </Select>
               <Button
                 variant="contained"
                 color="primary"
