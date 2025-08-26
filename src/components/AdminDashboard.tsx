@@ -38,6 +38,7 @@ const AdminDashboard: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [statusFilter, setStatusFilter] = useState<Array<'pending' | 'rejected' | 'rewarded'>>([]);
+  const [departmentFilter, setDepartmentFilter] = useState<string[]>([]);
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
@@ -104,6 +105,11 @@ const AdminDashboard: React.FC = () => {
   const handleStatusFilterChange = (event: any) => {
     const value = event.target.value as Array<'pending' | 'rejected' | 'rewarded'>;
     setStatusFilter(value);
+  };
+
+  const handleDepartmentFilterChange = (event: any) => {
+    const value = event.target.value as string[];
+    setDepartmentFilter(value);
   };
 
   const handleStatusChange = async (id: string, status: 'pending' | 'rejected' | 'rewarded') => {
@@ -228,6 +234,8 @@ const AdminDashboard: React.FC = () => {
     XLSX.writeFile(wb, 'danh_sach_y_tuong.xlsx');
   };
 
+  const uniqueDepartments = Array.from(new Set(ideas.map(i => i.department))).filter(Boolean).sort();
+
   const filteredIdeas = ideas.filter(idea =>
     (
       idea.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -236,7 +244,8 @@ const AdminDashboard: React.FC = () => {
       idea.solution.toLowerCase().includes(searchTerm.toLowerCase()) ||
       idea.ideaCode.toLowerCase().includes(searchTerm.toLowerCase())
     ) && (
-      statusFilter.length === 0 || statusFilter.includes(idea.status as any)
+      (statusFilter.length === 0 || statusFilter.includes(idea.status as any)) &&
+      (departmentFilter.length === 0 || departmentFilter.includes(idea.department))
     )
   );
 
@@ -393,7 +402,7 @@ const AdminDashboard: React.FC = () => {
           </Typography>
           <Divider sx={{ my: 2 }} />
           <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={5}>
+            <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
                 label="Tìm kiếm"
@@ -409,8 +418,29 @@ const AdminDashboard: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={7}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2, flexWrap: 'nowrap' }}>
+            <Grid item xs={12} md={8}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', columnGap: 2, rowGap: 1.5, flexWrap: 'nowrap' }}>
+                <Select
+                  multiple
+                  displayEmpty
+                  value={departmentFilter}
+                  onChange={handleDepartmentFilterChange}
+                  renderValue={(selected) => {
+                    if ((selected as string[]).length === 0) {
+                      return 'Lọc phòng ban';
+                    }
+                    return (selected as string[]).join(', ');
+                  }}
+                  size="small"
+                  sx={{ minWidth: 180, maxWidth: 240, flexShrink: 1 }}
+                >
+                  {uniqueDepartments.map(dep => (
+                    <MenuItem key={dep} value={dep}>
+                      <Checkbox checked={departmentFilter.indexOf(dep) > -1} />
+                      <ListItemText primary={dep} />
+                    </MenuItem>
+                  ))}
+                </Select>
                 <Select
                   multiple
                   displayEmpty
@@ -424,7 +454,7 @@ const AdminDashboard: React.FC = () => {
                     return (selected as string[]).map(s => map[s]).join(', ');
                   }}
                   size="small"
-                  sx={{ minWidth: 220 }}
+                  sx={{ minWidth: 180, maxWidth: 240, flexShrink: 1 }}
                 >
                   {[
                     { value: 'pending', label: 'Chưa xem xét' },
@@ -450,6 +480,7 @@ const AdminDashboard: React.FC = () => {
                     textTransform: 'none',
                     boxShadow: 2,
                     whiteSpace: 'nowrap',
+                    minWidth: 'max-content',
                     '&:hover': {
                       boxShadow: 4,
                       transform: 'translateY(-2px)',
@@ -472,6 +503,7 @@ const AdminDashboard: React.FC = () => {
                     textTransform: 'none',
                     boxShadow: 2,
                     whiteSpace: 'nowrap',
+                    minWidth: 'max-content',
                     '&:hover': {
                       boxShadow: 4,
                       transform: 'translateY(-2px)',
@@ -491,7 +523,8 @@ const AdminDashboard: React.FC = () => {
                     fontSize: '1rem',
                     fontWeight: 'bold',
                     textTransform: 'none',
-                    whiteSpace: 'nowrap'
+                    whiteSpace: 'nowrap',
+                    minWidth: 'max-content'
                   }}
                 >
                   Đăng xuất
