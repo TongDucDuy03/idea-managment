@@ -277,8 +277,10 @@ const AdminDashboard: React.FC = () => {
       field: 'ideaCode', 
       headerName: 'Mã ý tưởng', 
       width: 150,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
-        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
+        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center' }}>
           {params.value}
         </div>
       )
@@ -287,8 +289,10 @@ const AdminDashboard: React.FC = () => {
       field: 'fullName', 
       headerName: 'Họ và tên', 
       width: 200,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
-        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
+        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center' }}>
           {params.value}
         </div>
       )
@@ -297,8 +301,10 @@ const AdminDashboard: React.FC = () => {
       field: 'department', 
       headerName: 'Đơn vị', 
       width: 250,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
-        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
+        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center' }}>
           {params.value}
         </div>
       )
@@ -307,8 +313,10 @@ const AdminDashboard: React.FC = () => {
       field: 'idea',
       headerName: 'Ý tưởng',
       width: 300,
+      align: 'center',
+      headerAlign: 'center',
       renderCell: (params) => (
-        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
+        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center', marginTop: 0 }}>
           {params.value}
         </div>
       )
@@ -327,13 +335,21 @@ const AdminDashboard: React.FC = () => {
       field: 'status',
       headerName: 'Trạng thái',
       width: 200,
-      renderCell: (params) => <StatusCell row={params.row} />,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <StatusCell row={params.row} />
+        </div>
+      ),
       sortable: false
     },
     {
       field: 'submissionDate',
       headerName: 'Thời gian nộp',
       width: 180,
+      align: 'center',
+      headerAlign: 'center',
       valueGetter: (params) => {
         if (!params.value) return '';
         return new Date(params.value).toLocaleString('vi-VN');
@@ -377,7 +393,7 @@ const AdminDashboard: React.FC = () => {
           </Typography>
           <Divider sx={{ my: 2 }} />
           <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={5}>
               <TextField
                 fullWidth
                 label="Tìm kiếm"
@@ -393,91 +409,94 @@ const AdminDashboard: React.FC = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={6} sx={{ textAlign: 'right' }}>
-              <Select
-                multiple
-                displayEmpty
-                value={statusFilter}
-                onChange={handleStatusFilterChange}
-                renderValue={(selected) => {
-                  if ((selected as string[]).length === 0) {
-                    return 'Lọc trạng thái';
-                  }
-                  const map: any = { pending: 'Chưa xem xét', rejected: 'Không khen thưởng', rewarded: 'Đã khen thưởng' };
-                  return (selected as string[]).map(s => map[s]).join(', ');
-                }}
-                size="small"
-                sx={{ mr: 2, minWidth: 220 }}
-              >
-                {[
-                  { value: 'pending', label: 'Chưa xem xét' },
-                  { value: 'rejected', label: 'Không khen thưởng' },
-                  { value: 'rewarded', label: 'Đã khen thưởng' }
-                ].map(opt => (
-                  <MenuItem key={opt.value} value={opt.value}>
-                    <Checkbox checked={statusFilter.indexOf(opt.value as any) > -1} />
-                    <ListItemText primary={opt.label} />
-                  </MenuItem>
-                ))}
-              </Select>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<AddIcon />}
-                onClick={handleAdd}
-                sx={{
-                  py: 1.5,
-                  px: 3,
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  textTransform: 'none',
-                  boxShadow: 2,
-                  '&:hover': {
-                    boxShadow: 4,
-                    transform: 'translateY(-2px)',
-                    transition: 'all 0.2s'
-                  }
-                }}
-              >
-                Thêm Ý tưởng Mới
-              </Button>
-              <Button
-                variant="contained"
-                color="success"
-                startIcon={<FileDownloadIcon />}
-                onClick={handleExportExcel}
-                sx={{
-                  ml: 2,
-                  py: 1.5,
-                  px: 3,
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  textTransform: 'none',
-                  boxShadow: 2,
-                  '&:hover': {
-                    boxShadow: 4,
-                    transform: 'translateY(-2px)',
-                    transition: 'all 0.2s'
-                  }
-                }}
-              >
-                Xuất Excel
-              </Button>
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={handleLogout}
-                sx={{
-                  ml: 2,
-                  py: 1.5,
-                  px: 3,
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  textTransform: 'none',
-                }}
-              >
-                Đăng xuất
-              </Button>
+            <Grid item xs={12} md={7}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 2, flexWrap: 'nowrap' }}>
+                <Select
+                  multiple
+                  displayEmpty
+                  value={statusFilter}
+                  onChange={handleStatusFilterChange}
+                  renderValue={(selected) => {
+                    if ((selected as string[]).length === 0) {
+                      return 'Lọc trạng thái';
+                    }
+                    const map: any = { pending: 'Chưa xem xét', rejected: 'Không khen thưởng', rewarded: 'Đã khen thưởng' };
+                    return (selected as string[]).map(s => map[s]).join(', ');
+                  }}
+                  size="small"
+                  sx={{ minWidth: 220 }}
+                >
+                  {[
+                    { value: 'pending', label: 'Chưa xem xét' },
+                    { value: 'rejected', label: 'Không khen thưởng' },
+                    { value: 'rewarded', label: 'Đã khen thưởng' }
+                  ].map(opt => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      <Checkbox checked={statusFilter.indexOf(opt.value as any) > -1} />
+                      <ListItemText primary={opt.label} />
+                    </MenuItem>
+                  ))}
+                </Select>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<AddIcon />}
+                  onClick={handleAdd}
+                  sx={{
+                    py: 1.25,
+                    px: 2.5,
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    boxShadow: 2,
+                    whiteSpace: 'nowrap',
+                    '&:hover': {
+                      boxShadow: 4,
+                      transform: 'translateY(-2px)',
+                      transition: 'all 0.2s'
+                    }
+                  }}
+                >
+                  Thêm Ý tưởng Mới
+                </Button>
+                <Button
+                  variant="contained"
+                  color="success"
+                  startIcon={<FileDownloadIcon />}
+                  onClick={handleExportExcel}
+                  sx={{
+                    py: 1.25,
+                    px: 2.5,
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    boxShadow: 2,
+                    whiteSpace: 'nowrap',
+                    '&:hover': {
+                      boxShadow: 4,
+                      transform: 'translateY(-2px)',
+                      transition: 'all 0.2s'
+                    }
+                  }}
+                >
+                  Xuất Excel
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={handleLogout}
+                  sx={{
+                    py: 1.25,
+                    px: 2.5,
+                    fontSize: '1rem',
+                    fontWeight: 'bold',
+                    textTransform: 'none',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Đăng xuất
+                </Button>
+              </Box>
             </Grid>
           </Grid>
         </CardContent>
@@ -503,19 +522,18 @@ const AdminDashboard: React.FC = () => {
             whiteSpace: 'normal',
             lineHeight: 'normal',
             padding: '8px',
-            alignItems: 'flex-start',
+            alignItems: 'center',
             overflow: 'visible',
             wordBreak: 'break-word',
             display: 'flex',
-            flexDirection: 'column',
-            alignContent: 'flex-start',
+            alignContent: 'center',
           },
           '& .MuiDataGrid-columnHeaders': {
             backgroundColor: '#f5f5f5',
             borderBottom: '2px solid #e0e0e0',
           },
           '& .MuiDataGrid-row': {
-            alignItems: 'flex-start',
+            alignItems: 'center',
           },
           '& .MuiDataGrid-row:hover': {
             backgroundColor: '#f5f5f5',
