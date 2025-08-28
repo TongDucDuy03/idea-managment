@@ -22,7 +22,7 @@ import {
   ListItemText
 } from '@mui/material';
 import { DataGrid, GridColDef, GridRowHeightParams } from '@mui/x-data-grid';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, FileDownload as FileDownloadIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, FileDownload as FileDownloadIcon } from '@mui/icons-material';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { Idea } from '../types';
@@ -33,12 +33,17 @@ const AdminDashboard: React.FC = () => {
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [statusFilter, setStatusFilter] = useState<Array<'pending' | 'rejected' | 'rewarded'>>([]);
   const [departmentFilter, setDepartmentFilter] = useState<string[]>([]);
+  const [ideaCodeFilter, setIdeaCodeFilter] = useState('');
+  const [fullNameFilter, setFullNameFilter] = useState('');
+  const [ideaTextFilter, setIdeaTextFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
@@ -98,9 +103,7 @@ const AdminDashboard: React.FC = () => {
     fetchIdeas();
   }, [fetchIdeas]);
 
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-  };
+  
 
   const handleStatusFilterChange = (event: any) => {
     const value = event.target.value as Array<'pending' | 'rejected' | 'rewarded'>;
@@ -111,6 +114,33 @@ const AdminDashboard: React.FC = () => {
     const value = event.target.value as string[];
     setDepartmentFilter(value);
   };
+
+  const handleIdeaCodeFilter = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIdeaCodeFilter(event.target.value);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  const handleFullNameFilter = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFullNameFilter(event.target.value);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  const handleIdeaTextFilter = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIdeaTextFilter(event.target.value);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  
+  const handleDateFromChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDateFrom(event.target.value);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  const handleDateToChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDateTo(event.target.value);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
 
   const handleStatusChange = async (id: string, status: 'pending' | 'rejected' | 'rewarded') => {
     try {
@@ -236,18 +266,34 @@ const AdminDashboard: React.FC = () => {
 
   const uniqueDepartments = Array.from(new Set(ideas.map(i => i.department))).filter(Boolean).sort();
 
-  const filteredIdeas = ideas.filter(idea =>
-    (
-      idea.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      idea.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      idea.idea.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      idea.solution.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      idea.ideaCode.toLowerCase().includes(searchTerm.toLowerCase())
-    ) && (
-      (statusFilter.length === 0 || statusFilter.includes(idea.status as any)) &&
-      (departmentFilter.length === 0 || departmentFilter.includes(idea.department))
-    )
-  );
+  const normalizeText = (text: string) =>
+    (text || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+  const filteredIdeas = ideas.filter(idea => {
+    const matchesIdeaCode = normalizeText(ideaCodeFilter) === '' || normalizeText((idea as any).ideaCode || '').includes(normalizeText(ideaCodeFilter));
+    const matchesFullName = normalizeText(fullNameFilter) === '' || normalizeText((idea as any).fullName || '').includes(normalizeText(fullNameFilter));
+    const matchesIdeaText = normalizeText(ideaTextFilter) === '' || normalizeText((idea as any).idea || '').includes(normalizeText(ideaTextFilter));
+    const matchesStatus = statusFilter.length === 0 || statusFilter.includes((idea as any).status);
+    const matchesDepartment = departmentFilter.length === 0 || departmentFilter.includes((idea as any).department);
+    const submissionMs = idea.submissionDate ? new Date(idea.submissionDate).getTime() : NaN;
+    const fromMs = dateFrom ? new Date(dateFrom).setHours(0, 0, 0, 0) : NaN;
+    const toMs = dateTo ? new Date(dateTo).setHours(23, 59, 59, 999) : NaN;
+    const matchesDateFrom = !dateFrom || (!Number.isNaN(submissionMs) && submissionMs >= fromMs);
+    const matchesDateTo = !dateTo || (!Number.isNaN(submissionMs) && submissionMs <= toMs);
+
+    return (
+      matchesIdeaCode &&
+      matchesFullName &&
+      matchesIdeaText &&
+      matchesStatus &&
+      matchesDepartment &&
+      matchesDateFrom &&
+      matchesDateTo
+    );
+  });
 
   const StatusCell: React.FC<{ row: Idea }> = ({ row }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -402,133 +448,140 @@ const AdminDashboard: React.FC = () => {
           </Typography>
           <Divider sx={{ my: 2 }} />
           <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label="Tìm kiếm"
-                variant="outlined"
-                value={searchTerm}
-                onChange={handleSearch}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#1976d2',
-                    },
-                  },
-                }}
-              />
-            </Grid>
             <Grid item xs={12} md={8}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', columnGap: 2, rowGap: 1.5, flexWrap: 'nowrap' }}>
-                <Select
-                  multiple
-                  displayEmpty
-                  value={departmentFilter}
-                  onChange={handleDepartmentFilterChange}
-                  renderValue={(selected) => {
-                    if ((selected as string[]).length === 0) {
-                      return 'Lọc phòng ban';
-                    }
-                    return (selected as string[]).join(', ');
-                  }}
-                  size="small"
-                  sx={{ minWidth: 180, maxWidth: 240, flexShrink: 1 }}
-                >
-                  {uniqueDepartments.map(dep => (
-                    <MenuItem key={dep} value={dep}>
-                      <Checkbox checked={departmentFilter.indexOf(dep) > -1} />
-                      <ListItemText primary={dep} />
-                    </MenuItem>
-                  ))}
-                </Select>
-                <Select
-                  multiple
-                  displayEmpty
-                  value={statusFilter}
-                  onChange={handleStatusFilterChange}
-                  renderValue={(selected) => {
-                    if ((selected as string[]).length === 0) {
-                      return 'Lọc trạng thái';
-                    }
-                    const map: any = { pending: 'Chưa xem xét', rejected: 'Không khen thưởng', rewarded: 'Đã khen thưởng' };
-                    return (selected as string[]).map(s => map[s]).join(', ');
-                  }}
-                  size="small"
-                  sx={{ minWidth: 180, maxWidth: 240, flexShrink: 1 }}
-                >
-                  {[
-                    { value: 'pending', label: 'Chưa xem xét' },
-                    { value: 'rejected', label: 'Không khen thưởng' },
-                    { value: 'rewarded', label: 'Đã khen thưởng' }
-                  ].map(opt => (
-                    <MenuItem key={opt.value} value={opt.value}>
-                      <Checkbox checked={statusFilter.indexOf(opt.value as any) > -1} />
-                      <ListItemText primary={opt.label} />
-                    </MenuItem>
-                  ))}
-                </Select>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddIcon />}
-                  onClick={handleAdd}
-                  sx={{
-                    py: 1.25,
-                    px: 2.5,
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    textTransform: 'none',
-                    boxShadow: 2,
-                    whiteSpace: 'nowrap',
-                    minWidth: 'max-content',
-                    '&:hover': {
-                      boxShadow: 4,
-                      transform: 'translateY(-2px)',
-                      transition: 'all 0.2s'
-                    }
-                  }}
-                >
-                  Thêm Ý tưởng Mới
-                </Button>
-                <Button
-                  variant="contained"
-                  color="success"
-                  startIcon={<FileDownloadIcon />}
-                  onClick={handleExportExcel}
-                  sx={{
-                    py: 1.25,
-                    px: 2.5,
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    textTransform: 'none',
-                    boxShadow: 2,
-                    whiteSpace: 'nowrap',
-                    minWidth: 'max-content',
-                    '&:hover': {
-                      boxShadow: 4,
-                      transform: 'translateY(-2px)',
-                      transition: 'all 0.2s'
-                    }
-                  }}
-                >
-                  Xuất Excel
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={handleLogout}
-                  sx={{
-                    py: 1.25,
-                    px: 2.5,
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    textTransform: 'none',
-                    whiteSpace: 'nowrap',
-                    minWidth: 'max-content'
-                  }}
-                >
-                  Đăng xuất
-                </Button>
+              <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2 }}>
+                <Box sx={{ display: 'flex', columnGap: 2, rowGap: 1.5, flexWrap: 'wrap' }}>
+                  <TextField
+                    label="Mã ý tưởng"
+                    size="small"
+                    value={ideaCodeFilter}
+                    onChange={handleIdeaCodeFilter}
+                    sx={{ minWidth: 200, flex: '1 1 200px' }}
+                  />
+                  <TextField
+                    label="Họ và tên"
+                    size="small"
+                    value={fullNameFilter}
+                    onChange={handleFullNameFilter}
+                    sx={{ minWidth: 200, flex: '1 1 200px' }}
+                  />
+                  <TextField
+                    label="Ý tưởng"
+                    size="small"
+                    value={ideaTextFilter}
+                    onChange={handleIdeaTextFilter}
+                    sx={{ minWidth: 200, flex: '2 1 300px' }}
+                  />
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'center', columnGap: 2, rowGap: 1.5, flexWrap: 'wrap' }}>
+                  <TextField
+                    label="Từ ngày"
+                    type="date"
+                    size="small"
+                    value={dateFrom}
+                    onChange={handleDateFromChange}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ minWidth: 170 }}
+                  />
+                  <TextField
+                    label="Đến ngày"
+                    type="date"
+                    size="small"
+                    value={dateTo}
+                    onChange={handleDateToChange}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ minWidth: 170 }}
+                  />
+                  <Select
+                    multiple
+                    displayEmpty
+                    value={departmentFilter}
+                    onChange={handleDepartmentFilterChange}
+                    renderValue={(selected) => {
+                      if ((selected as string[]).length === 0) {
+                        return 'Lọc phòng ban';
+                      }
+                      return (selected as string[]).join(', ');
+                    }}
+                    size="small"
+                    sx={{ minWidth: 200, maxWidth: 280, flexShrink: 1 }}
+                  >
+                    {uniqueDepartments.map(dep => (
+                      <MenuItem key={dep} value={dep}>
+                        <Checkbox checked={departmentFilter.indexOf(dep) > -1} />
+                        <ListItemText primary={dep} />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <Select
+                    multiple
+                    displayEmpty
+                    value={statusFilter}
+                    onChange={handleStatusFilterChange}
+                    renderValue={(selected) => {
+                      if ((selected as string[]).length === 0) {
+                        return 'Lọc trạng thái';
+                      }
+                      const map: any = { pending: 'Chưa xem xét', rejected: 'Không khen thưởng', rewarded: 'Đã khen thưởng' };
+                      return (selected as string[]).map(s => map[s]).join(', ');
+                    }}
+                    size="small"
+                    sx={{ minWidth: 200, maxWidth: 280, flexShrink: 1 }}
+                  >
+                    {[
+                      { value: 'pending', label: 'Chưa xem xét' },
+                      { value: 'rejected', label: 'Không khen thưởng' },
+                      { value: 'rewarded', label: 'Đã khen thưởng' }
+                    ].map(opt => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        <Checkbox checked={statusFilter.indexOf(opt.value as any) > -1} />
+                        <ListItemText primary={opt.label} />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  <Box sx={{ display: 'flex', gap: 2, marginLeft: 'auto', alignItems: 'center' }}>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      startIcon={<FileDownloadIcon />}
+                      onClick={handleExportExcel}
+                      sx={{
+                        py: 1.0,
+                        px: 2.0,
+                        fontSize: '0.95rem',
+                        fontWeight: 'bold',
+                        textTransform: 'none',
+                        boxShadow: 2,
+                        whiteSpace: 'nowrap',
+                        minWidth: 'max-content',
+                        '&:hover': {
+                          boxShadow: 4,
+                          transform: 'translateY(-2px)',
+                          transition: 'all 0.2s'
+                        }
+                      }}
+                    >
+                      Xuất Excel
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={handleLogout}
+                      sx={{
+                        py: 1.0,
+                        px: 2.0,
+                        fontSize: '0.95rem',
+                        fontWeight: 'bold',
+                        textTransform: 'none',
+                        whiteSpace: 'nowrap',
+                        minWidth: 'max-content'
+                      }}
+                    >
+                      Đăng xuất
+                    </Button>
+                  </Box>
+                </Box>
               </Box>
             </Grid>
           </Grid>
