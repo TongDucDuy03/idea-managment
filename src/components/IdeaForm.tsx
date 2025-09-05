@@ -45,7 +45,9 @@ const IdeaForm: React.FC = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     department: '',
-    idea: ''
+    idea: '',
+    solution: '',
+    benefit: ''
   });
   const [errors, setErrors] = useState({
     department: '',
@@ -59,7 +61,7 @@ const IdeaForm: React.FC = () => {
     const newErrors = {
       department: '',
       idea: ''
-    };
+    } as any;
     let isValid = true;
 
     if (!formData.department.trim()) {
@@ -70,10 +72,7 @@ const IdeaForm: React.FC = () => {
       newErrors.idea = 'Vui lòng nhập ý tưởng ';
       isValid = false;
     }
-    // if (!formData.solution.trim()) {
-    //   newErrors.solution = 'Vui lòng nhập giải pháp';
-    //   isValid = false;
-    // }
+    // Solution and benefit are optional per current backend
 
     setErrors(newErrors);
     return isValid;
@@ -114,13 +113,21 @@ const IdeaForm: React.FC = () => {
     if (!validateForm()) return;
 
     try {
-      const response = await axios.post('https://idea-managment.onrender.com/api/ideas', formData);
+      const response = await axios.post('https://idea-managment.onrender.com/api/ideas', {
+        fullName: formData.fullName,
+        department: formData.department,
+        idea: formData.idea,
+        solution: formData.solution,
+        benefit: formData.benefit
+      });
       setSuccess(true);
       setIdeaCode(response.data.ideaCode);
       setFormData({
         fullName: '',
         department: '',
-        idea: ''
+        idea: '',
+        solution: '',
+        benefit: ''
       });
       setTimeout(() => {
         setSuccess(false);
@@ -251,7 +258,7 @@ const IdeaForm: React.FC = () => {
                 }}
               />
             </Grid>
-            {/* <Grid item xs={12} style={{ display: 'none' }}>
+            <Grid item xs={12}>
               <TextField
                 name="solution"
                 label="Giải pháp"
@@ -259,9 +266,7 @@ const IdeaForm: React.FC = () => {
                 onChange={handleChange}
                 fullWidth
                 multiline
-                rows={4}
-                error={!!errors.solution}
-                helperText={errors.solution}
+                rows={3}
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     '&:hover fieldset': {
@@ -270,7 +275,25 @@ const IdeaForm: React.FC = () => {
                   },
                 }}
               />
-            </Grid> */}
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                name="benefit"
+                label="Lợi ích"
+                value={formData.benefit}
+                onChange={handleChange}
+                fullWidth
+                multiline
+                rows={3}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#1976d2',
+                    },
+                  },
+                }}
+              />
+            </Grid>
           </Grid>
           <Button 
             type="submit" 

@@ -4,7 +4,7 @@ import { sendIdeaSubmittedEmail } from '../services/emailService';
 
 export const createIdea = async (req: Request, res: Response) => {
   try {
-    const { fullName, department, idea } = req.body;
+    const { fullName, department, idea, solution, benefit } = req.body;
     
     // Generate idea code (without name prefix)
     const timestamp = new Date().getTime();
@@ -15,7 +15,8 @@ export const createIdea = async (req: Request, res: Response) => {
       fullName,
       department,
       idea,
-      // solution,
+      solution,
+      benefit,
       ideaCode,
       submissionDate: new Date()
     });

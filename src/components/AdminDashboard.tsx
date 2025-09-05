@@ -22,7 +22,7 @@ import {
   ListItemText
 } from '@mui/material';
 import { DataGrid, GridColDef, GridRowHeightParams } from '@mui/x-data-grid';
-import { Edit as EditIcon, Delete as DeleteIcon, FileDownload as FileDownloadIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, FileDownload as FileDownloadIcon, BarChart as BarChartIcon } from '@mui/icons-material';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { Idea } from '../types';
@@ -53,16 +53,19 @@ const AdminDashboard: React.FC = () => {
   const calculateRowHeight = (params: GridRowHeightParams) => {
     const ideaLength = params.model.idea ? params.model.idea.length : 0;
     const solutionLength = params.model.solution ? params.model.solution.length : 0;
+    const benefitLength = (params as any).model.benefit ? (params as any).model.benefit.length : 0;
     
     // Approximate characters per line for 'idea' and 'solution' columns
     // width: 300px, font-size: default (around 14px), assume ~40 characters per line for 300px width
     const charsPerLineIdea = 40; 
     const charsPerLineSolution = 40;
+    const charsPerLineBenefit = 40;
 
     const linesIdea = Math.ceil(ideaLength / charsPerLineIdea);
     const linesSolution = Math.ceil(solutionLength / charsPerLineSolution);
+    const linesBenefit = Math.ceil(benefitLength / charsPerLineBenefit);
 
-    const maxLines = Math.max(linesIdea, linesSolution);
+    const maxLines = Math.max(linesIdea, linesSolution, linesBenefit);
 
     // Base height for a single line (e.g., 50px as initial min height for rows)
     const baseHeight = 50; 
@@ -244,6 +247,10 @@ const AdminDashboard: React.FC = () => {
     navigate('/login');
   };
 
+  const handleGoToStatistics = () => {
+    navigate('/statistics');
+  };
+
   const handleExportExcel = () => {
     const statusLabel = (s: 'pending' | 'rejected' | 'rewarded') => (
       s === 'pending' ? 'Chưa xem xét' : s === 'rejected' ? 'Không khen thưởng' : 'Đã khen thưởng'
@@ -253,7 +260,8 @@ const AdminDashboard: React.FC = () => {
       'Họ và tên': idea.fullName,
       'Đơn vị': idea.department,
       'Vấn đề': idea.idea,
-      'Giải pháp': idea.solution,
+      'Giải pháp': (idea as any).solution || parseFieldFromIdea((idea as any).idea, 'Giải pháp'),
+      'Lợi ích': (idea as any).benefit || parseFieldFromIdea((idea as any).idea, 'Lợi ích'),
       'Trạng thái': statusLabel(idea.status),
       'Ngày gửi': new Date(idea.submissionDate).toLocaleDateString('vi-VN')
     }));
@@ -327,6 +335,13 @@ const AdminDashboard: React.FC = () => {
     );
   };
 
+  const parseFieldFromIdea = (ideaText: string | undefined, key: 'Giải pháp' | 'Lợi ích') => {
+    if (!ideaText) return '';
+    const lines = ideaText.split(/\n+/);
+    const line = lines.find(l => l.trim().toLowerCase().startsWith(key.toLowerCase())) || '';
+    return line.replace(/^.*?:\s*/, '').trim();
+  };
+
   const columns: GridColDef[] = [
     { 
       field: 'ideaCode', 
@@ -376,16 +391,32 @@ const AdminDashboard: React.FC = () => {
         </div>
       )
     },
-    // {
-    //   field: 'solution',
-    //   headerName: 'Giải pháp',
-    //   width: 300,
-    //   renderCell: (params) => (
-    //     <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>
-    //       {params.value}
-    //     </div>
-    //   )
-    // },
+    {
+      field: 'solution',
+      headerName: 'Giải pháp',
+      width: 300,
+      align: 'center',
+      headerAlign: 'center',
+      valueGetter: (params) => (params.row as any).solution || parseFieldFromIdea((params.row as any).idea, 'Giải pháp'),
+      renderCell: (params) => (
+        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center' }}>
+          {params.value}
+        </div>
+      )
+    },
+    {
+      field: 'benefit',
+      headerName: 'Lợi ích',
+      width: 300,
+      align: 'center',
+      headerAlign: 'center',
+      valueGetter: (params) => (params.row as any).benefit || parseFieldFromIdea((params.row as any).idea, 'Lợi ích'),
+      renderCell: (params) => (
+        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center' }}>
+          {params.value}
+        </div>
+      )
+    },
     {
       field: 'status',
       headerName: 'Trạng thái',
@@ -541,6 +572,29 @@ const AdminDashboard: React.FC = () => {
                     ))}
                   </Select>
                   <Box sx={{ display: 'flex', gap: 2, marginLeft: 'auto', alignItems: 'center' }}>
+                    <Button
+                      variant="contained"
+                      color="info"
+                      startIcon={<BarChartIcon />}
+                      onClick={handleGoToStatistics}
+                      sx={{
+                        py: 1.0,
+                        px: 2.0,
+                        fontSize: '0.95rem',
+                        fontWeight: 'bold',
+                        textTransform: 'none',
+                        boxShadow: 2,
+                        whiteSpace: 'nowrap',
+                        minWidth: 'max-content',
+                        '&:hover': {
+                          boxShadow: 4,
+                          transform: 'translateY(-2px)',
+                          transition: 'all 0.2s'
+                        }
+                      }}
+                    >
+                      Dashboard Thống kê
+                    </Button>
                     <Button
                       variant="contained"
                       color="success"

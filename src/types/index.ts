@@ -4,6 +4,7 @@ export interface Idea {
   department: string;
   idea: string;
   solution: string;
+  benefit?: string;
   ideaCode: string;
   submissionDate: Date;
   status: 'pending' | 'rejected' | 'rewarded';
@@ -14,4 +15,5 @@ export interface IdeaFormData {
   department: string;
   idea: string;
   solution: string;
+  benefit?: string;
 } 

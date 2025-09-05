@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import IdeaForm from './components/IdeaForm';
 import AdminDashboard from './components/AdminDashboard';
+import StatisticsDashboard from './components/StatisticsDashboard';
 import Login from './components/Login';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -32,6 +33,14 @@ function App() {
             element={
               <PrivateRoute>
                 <AdminDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/statistics"
+            element={
+              <PrivateRoute>
+                <StatisticsDashboard />
               </PrivateRoute>
             }
           />
