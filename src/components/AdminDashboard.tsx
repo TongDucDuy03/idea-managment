@@ -391,7 +391,7 @@ const AdminDashboard: React.FC = () => {
     },
     {
       field: 'idea',
-      headerName: 'Ý tưởng',
+      headerName: 'Thực trạng',
       width: 300,
       align: 'center',
       headerAlign: 'center',

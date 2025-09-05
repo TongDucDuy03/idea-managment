@@ -243,7 +243,7 @@ const IdeaForm: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 name="idea"
-                label="Ý tưởng (Thực trạng – Giải pháp – Lợi ích)"
+                label="Thực trạng"
                 value={formData.idea}
                 onChange={handleChange}
                 required
