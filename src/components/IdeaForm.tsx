@@ -113,12 +113,15 @@ const IdeaForm: React.FC = () => {
     if (!validateForm()) return;
 
     try {
+      const combinedIdea = [
+        formData.idea?.trim(),
+        formData.solution?.trim() ? `\nGiải pháp: ${formData.solution.trim()}` : '',
+        formData.benefit?.trim() ? `\nLợi ích: ${formData.benefit.trim()}` : ''
+      ].filter(Boolean).join('');
+
       const response = await axios.post('https://idea-managment.onrender.com/api/ideas', {
-        fullName: formData.fullName,
-        department: formData.department,
-        idea: formData.idea,
-        solution: formData.solution,
-        benefit: formData.benefit
+        ...formData,
+        idea: combinedIdea
       });
       setSuccess(true);
       setIdeaCode(response.data.ideaCode);

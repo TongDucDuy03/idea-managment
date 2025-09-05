@@ -342,6 +342,16 @@ const AdminDashboard: React.FC = () => {
     return line.replace(/^.*?:\s*/, '').trim();
   };
 
+  const getPureIdeaText = (ideaText: string | undefined) => {
+    if (!ideaText) return '';
+    const lines = ideaText.split(/\n+/);
+    const filtered = lines.filter(l => {
+      const t = l.trim().toLowerCase();
+      return !(t.startsWith('giải pháp:') || t.startsWith('lợi ích:'));
+    });
+    return filtered.join('\n').trim();
+  };
+
   const columns: GridColDef[] = [
     { 
       field: 'ideaCode', 
@@ -385,6 +395,7 @@ const AdminDashboard: React.FC = () => {
       width: 300,
       align: 'center',
       headerAlign: 'center',
+      valueGetter: (params) => getPureIdeaText((params.row as any).idea),
       renderCell: (params) => (
         <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center', marginTop: 0 }}>
           {params.value}
@@ -572,7 +583,7 @@ const AdminDashboard: React.FC = () => {
                     ))}
                   </Select>
                   <Box sx={{ display: 'flex', gap: 2, marginLeft: 'auto', alignItems: 'center' }}>
-                    <Button
+                    {/* <Button
                       variant="contained"
                       color="info"
                       startIcon={<BarChartIcon />}
@@ -594,7 +605,7 @@ const AdminDashboard: React.FC = () => {
                       }}
                     >
                       Dashboard Thống kê
-                    </Button>
+                    </Button> */}
                     <Button
                       variant="contained"
                       color="success"
