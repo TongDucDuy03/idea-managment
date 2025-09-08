@@ -50,8 +50,8 @@ const IdeaSchema = new mongoose_1.Schema({
     },
     implementationDirection: {
         type: String,
-        enum: ['Lưu ý tưởng', 'Triển khai', 'Làm báo cáo A3', 'Xem xét'],
-        default: 'Lưu ý tưởng'
+        enum: ['', 'Lưu ý tưởng', 'Triển khai', 'Làm báo cáo A3', 'Xem xét'],
+        default: ''
     },
     implementationDepartment: { type: String, required: false },
     note: { type: String, required: false }

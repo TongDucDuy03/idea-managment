@@ -10,7 +10,7 @@ export interface IIdea extends Document {
   submissionDate: Date;
   isPaid: boolean;
   status: 'pending' | 'rejected' | 'rewarded';
-  implementationDirection?: 'Lưu ý tưởng' | 'Triển khai' | 'Làm báo cáo A3' | 'Xem xét';
+  implementationDirection?: 'Lưu ý tưởng' | 'Triển khai' | 'Làm báo cáo A3' | 'Xem xét' | '';
   implementationDepartment?: string;
   note?: string;
 }
@@ -31,8 +31,8 @@ const IdeaSchema: Schema = new Schema({
   },
   implementationDirection: { 
     type: String, 
-    enum: ['Lưu ý tưởng', 'Triển khai', 'Làm báo cáo A3', 'Xem xét'],
-    default: 'Lưu ý tưởng'
+    enum: ['', 'Lưu ý tưởng', 'Triển khai', 'Làm báo cáo A3', 'Xem xét'],
+    default: ''
   },
   implementationDepartment: { type: String, required: false },
   note: { type: String, required: false }

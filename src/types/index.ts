@@ -8,7 +8,7 @@ export interface Idea {
   ideaCode: string;
   submissionDate: Date;
   status: 'pending' | 'rejected' | 'rewarded';
-  implementationDirection?: 'Lưu ý tưởng' | 'Triển khai' | 'Làm báo cáo A3' | 'Xem xét';
+  implementationDirection?: 'Lưu ý tưởng' | 'Triển khai' | 'Làm báo cáo A3' | 'Xem xét' | '';
   implementationDepartment?: string;
   note?: string;
 }

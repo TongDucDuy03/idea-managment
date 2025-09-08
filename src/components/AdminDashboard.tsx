@@ -644,7 +644,7 @@ const AdminDashboard: React.FC = () => {
             Quản lý Ý tưởng Cải tiến
           </Typography>
           <Divider sx={{ my: 2 }} />
-          <Grid container spacing={3} alignItems="center">
+          <Grid container spacing={3} alignItems="flex-start">
             <Grid item xs={12} md={8}>
               <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2 }}>
                 <Box sx={{ display: 'flex', columnGap: 2, rowGap: 1.5, flexWrap: 'wrap' }}>
@@ -829,9 +829,9 @@ const AdminDashboard: React.FC = () => {
             whiteSpace: 'normal',
             lineHeight: '1.4',
             padding: '8px',
-            display: 'block',
+            display: 'flex',
             justifyContent: 'center',     // căn ngang giữa
-            alignItems: 'center',         // căn dọc giữa
+            alignItems: 'flex-start',         // căn dọc giữa
             textAlign: 'center',
             wordBreak: 'break-word',
           },

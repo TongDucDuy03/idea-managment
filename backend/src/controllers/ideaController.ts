@@ -30,7 +30,7 @@ export const createIdea = async (req: Request, res: Response) => {
       ideaCode,
       submissionDate: new Date(),
       status: status || 'pending',
-      implementationDirection: implementationDirection || 'Lưu ý tưởng',
+      implementationDirection: implementationDirection || '',
       implementationDepartment,
       note
     });

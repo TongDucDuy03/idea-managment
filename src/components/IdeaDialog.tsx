@@ -60,7 +60,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
     idea: '',
     solution: '',
     benefit: '',
-    implementationDirection: 'Lưu ý tưởng',
+    implementationDirection: '',
     implementationDepartment: '',
     note: '',
     status: 'pending'
@@ -71,7 +71,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
     if (idea) {
       setFormData({
         ...idea,
-        implementationDirection: idea.implementationDirection || 'Lưu ý tưởng',
+        implementationDirection: idea.implementationDirection || '',
         implementationDepartment: idea.implementationDepartment || '',
         note: idea.note || '',
         status: idea.status || 'pending'
@@ -83,7 +83,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         idea: '',
         solution: '',
         benefit: '',
-        implementationDirection: 'Lưu ý tưởng',
+        implementationDirection: '',
         implementationDepartment: '',
         note: '',
         status: 'pending'
@@ -188,7 +188,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               <InputLabel>Hướng triển khai</InputLabel>
               <Select
                 name="implementationDirection"
-                value={formData.implementationDirection || 'Lưu ý tưởng'}
+                value={formData.implementationDirection || ''}
                 onChange={handleSelectChange}
                 label="Hướng triển khai"
               >
