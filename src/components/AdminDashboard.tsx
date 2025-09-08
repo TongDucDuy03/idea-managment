@@ -490,6 +490,7 @@ const AdminDashboard: React.FC = () => {
           wordBreak: 'break-word',
           width: '100%',
           textAlign: 'left',
+          display: 'block',
           maxHeight: '180px',      // 👈 chiều cao tối đa cố định
           overflowY: 'auto',       // 👈 text dài thì có scroll
           paddingRight: '8px',
@@ -829,9 +830,9 @@ const AdminDashboard: React.FC = () => {
             whiteSpace: 'normal',
             lineHeight: '1.4',
             padding: '8px',
-            display: 'flex',
-            justifyContent: 'center',     // căn ngang giữa
-            alignItems: 'flex-start',         // căn dọc giữa
+            display: 'block',
+            justifyContent: 'flex-start',     // căn ngang giữa
+            alignItems: 'flex-start !important',        // căn dọc giữa
             textAlign: 'center',
             wordBreak: 'break-word',
           },
