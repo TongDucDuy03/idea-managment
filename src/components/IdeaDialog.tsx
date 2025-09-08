@@ -69,7 +69,13 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
 
   useEffect(() => {
     if (idea) {
-      setFormData(idea);
+      setFormData({
+        ...idea,
+        implementationDirection: idea.implementationDirection || 'Lưu ý tưởng',
+        implementationDepartment: idea.implementationDepartment || '',
+        note: idea.note || '',
+        status: idea.status || 'pending'
+      });
     } else {
       setFormData({
         fullName: '',
@@ -217,6 +223,21 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               multiline
               rows={3}
             />
+            {isEdit && (
+              <FormControl fullWidth>
+                <InputLabel>Trạng thái</InputLabel>
+                <Select
+                  name="status"
+                  value={formData.status || 'pending'}
+                  onChange={handleSelectChange}
+                  label="Trạng thái"
+                >
+                  <MenuItem value="pending">Chưa xem xét</MenuItem>
+                  <MenuItem value="rejected">Không khen thưởng</MenuItem>
+                  <MenuItem value="rewarded">Đã khen thưởng</MenuItem>
+                </Select>
+              </FormControl>
+            )}
           </Box>
         </DialogContent>
         <DialogActions>

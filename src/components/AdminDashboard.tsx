@@ -27,6 +27,7 @@ import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { Idea } from '../types';
 import IdeaDialog from './IdeaDialog';
+import api from '../api/config';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
