@@ -59,6 +59,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
     department: '',
     idea: '',
     solution: '',
+    benefit: '',
     status: 'pending'
   });
   const [error, setError] = useState('');
@@ -72,6 +73,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         department: '',
         idea: '',
         solution: '',
+        benefit: '',
         status: 'pending'
       });
     }
@@ -154,6 +156,16 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               name="solution"
               label="Giải pháp"
               value={formData.solution}
+              onChange={handleTextChange}
+              required
+              fullWidth
+              multiline
+              rows={4}
+            />
+            <TextField
+              name="benefit"
+              label="Lợi ích"
+              value={formData.benefit}
               onChange={handleTextChange}
               required
               fullWidth

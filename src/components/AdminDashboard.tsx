@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -49,32 +49,35 @@ const AdminDashboard: React.FC = () => {
     page: 0,
   });
 
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const dataGridRef = useRef<HTMLDivElement>(null);
+
   // Function to approximate row height based on content length
-  const calculateRowHeight = (params: GridRowHeightParams) => {
-    const ideaLength = params.model.idea ? params.model.idea.length : 0;
-    const solutionLength = params.model.solution ? params.model.solution.length : 0;
-    const benefitLength = (params as any).model.benefit ? (params as any).model.benefit.length : 0;
+  // const calculateRowHeight = (params: GridRowHeightParams) => {
+  //   const ideaLength = params.model.idea ? params.model.idea.length : 0;
+  //   const solutionLength = params.model.solution ? params.model.solution.length : 0;
+  //   const benefitLength = (params as any).model.benefit ? (params as any).model.benefit.length : 0;
     
-    // Approximate characters per line for 'idea' and 'solution' columns
-    // width: 300px, font-size: default (around 14px), assume ~40 characters per line for 300px width
-    const charsPerLineIdea = 40; 
-    const charsPerLineSolution = 40;
-    const charsPerLineBenefit = 40;
+  //   // Approximate characters per line for 'idea' and 'solution' columns
+  //   // width: 300px, font-size: default (around 14px), assume ~40 characters per line for 300px width
+  //   const charsPerLineIdea = 40; 
+  //   const charsPerLineSolution = 40;
+  //   const charsPerLineBenefit = 40;
 
-    const linesIdea = Math.ceil(ideaLength / charsPerLineIdea);
-    const linesSolution = Math.ceil(solutionLength / charsPerLineSolution);
-    const linesBenefit = Math.ceil(benefitLength / charsPerLineBenefit);
+  //   const linesIdea = Math.ceil(ideaLength / charsPerLineIdea);
+  //   const linesSolution = Math.ceil(solutionLength / charsPerLineSolution);
+  //   const linesBenefit = Math.ceil(benefitLength / charsPerLineBenefit);
 
-    const maxLines = Math.max(linesIdea, linesSolution, linesBenefit);
+  //   const maxLines = Math.max(linesIdea, linesSolution, linesBenefit);
 
-    // Base height for a single line (e.g., 50px as initial min height for rows)
-    const baseHeight = 50; 
-    // Height per additional line (e.g., 20px per line)
-    const lineHeight = 20; 
+  //   // Base height for a single line (e.g., 50px as initial min height for rows)
+  //   const baseHeight = 50; 
+  //   // Height per additional line (e.g., 20px per line)
+  //   const lineHeight = 20; 
 
-    // Ensure a minimum height and scale based on content
-    return Math.max(baseHeight, baseHeight + (maxLines - 1) * lineHeight);
-  };
+  //   // Ensure a minimum height and scale based on content
+  //   return Math.max(baseHeight, baseHeight + (maxLines - 1) * lineHeight);
+  // };
 
   const fetchIdeas = useCallback(async () => {
     try {
@@ -105,6 +108,7 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     fetchIdeas();
   }, [fetchIdeas]);
+
 
   
 
@@ -303,6 +307,43 @@ const AdminDashboard: React.FC = () => {
     );
   });
 
+  // Sync horizontal scroll between top scroll bar and DataGrid
+  useEffect(() => {
+    const topScrollElement = topScrollRef.current;
+    const dataGridElement = dataGridRef.current?.querySelector('.MuiDataGrid-virtualScroller');
+
+    if (!topScrollElement || !dataGridElement) return;
+
+    // Tính tổng chiều rộng của các cột (hardcode để tránh lỗi dependency)
+    const totalWidth = 150 + 200 + 250 + 300 + 300 + 300 + 200 + 180 + 120; // Tổng chiều rộng các cột
+    
+    // Cập nhật chiều rộng của thanh cuộn trên
+    const invisibleContent = topScrollElement.querySelector('div');
+    if (invisibleContent) {
+      invisibleContent.style.width = `${totalWidth}px`;
+    }
+
+    const handleTopScroll = () => {
+      if (dataGridElement) {
+        dataGridElement.scrollLeft = topScrollElement.scrollLeft;
+      }
+    };
+
+    const handleDataGridScroll = () => {
+      if (topScrollElement) {
+        topScrollElement.scrollLeft = dataGridElement.scrollLeft;
+      }
+    };
+
+    topScrollElement.addEventListener('scroll', handleTopScroll);
+    dataGridElement.addEventListener('scroll', handleDataGridScroll);
+
+    return () => {
+      topScrollElement.removeEventListener('scroll', handleTopScroll);
+      dataGridElement.removeEventListener('scroll', handleDataGridScroll);
+    };
+  }, [filteredIdeas]);
+
   const StatusCell: React.FC<{ row: Idea }> = ({ row }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
@@ -352,6 +393,7 @@ const AdminDashboard: React.FC = () => {
     return filtered.join('\n').trim();
   };
 
+
   const columns: GridColDef[] = [
     { 
       field: 'ideaCode', 
@@ -360,10 +402,18 @@ const AdminDashboard: React.FC = () => {
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
-        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center' }}>
-          {params.value}
+        <div
+        style={{
+          whiteSpace: 'normal',
+          wordWrap: 'break-word',
+          width: '100%',
+          textAlign: 'center'
+        }}
+      >
+          {params.value || '-'}
         </div>
       )
+
     },
     { 
       field: 'fullName', 
@@ -372,10 +422,17 @@ const AdminDashboard: React.FC = () => {
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
-        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center' }}>
-          {params.value}
+        <div style={{
+          width: '100%',
+          textAlign: 'center',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          {params.value || '-'}
         </div>
       )
+
     },
     { 
       field: 'department', 
@@ -384,10 +441,17 @@ const AdminDashboard: React.FC = () => {
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
-        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center' }}>
-          {params.value}
+        <div style={{
+          width: '100%',
+          textAlign: 'center',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          {params.value || '-'}
         </div>
       )
+
     },
     {
       field: 'idea',
@@ -397,8 +461,18 @@ const AdminDashboard: React.FC = () => {
       headerAlign: 'center',
       valueGetter: (params) => getPureIdeaText((params.row as any).idea),
       renderCell: (params) => (
-        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center', marginTop: 0 }}>
-          {params.value}
+        <div style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          width: '100%',
+          textAlign: 'left',
+          maxHeight: '180px',      // 👈 chiều cao tối đa cố định
+          overflowY: 'auto',       // 👈 text dài thì có scroll
+          paddingRight: '8px',
+          scrollbarWidth: 'thin',  // 👈 scrollbar mỏng hơn
+          scrollbarColor: '#ccc transparent' // 👈 màu scrollbar
+        }}>
+          {params.value || '-'}
         </div>
       )
     },
@@ -410,10 +484,21 @@ const AdminDashboard: React.FC = () => {
       headerAlign: 'center',
       valueGetter: (params) => (params.row as any).solution || parseFieldFromIdea((params.row as any).idea, 'Giải pháp'),
       renderCell: (params) => (
-        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center' }}>
-          {params.value}
+        <div style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          width: '100%',
+          textAlign: 'left',
+          maxHeight: '180px',      // 👈 chiều cao tối đa cố định
+          overflowY: 'auto',       // 👈 text dài thì có scroll
+          paddingRight: '8px',
+          scrollbarWidth: 'thin',  // 👈 scrollbar mỏng hơn
+          scrollbarColor: '#ccc transparent' // 👈 màu scrollbar
+        }}>
+          {params.value || '-'}
         </div>
       )
+
     },
     {
       field: 'benefit',
@@ -423,10 +508,21 @@ const AdminDashboard: React.FC = () => {
       headerAlign: 'center',
       valueGetter: (params) => (params.row as any).benefit || parseFieldFromIdea((params.row as any).idea, 'Lợi ích'),
       renderCell: (params) => (
-        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word', width: '100%', textAlign: 'center' }}>
-          {params.value}
+        <div style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          width: '100%',
+          textAlign: 'left',
+          maxHeight: '180px',      // 👈 chiều cao tối đa cố định
+          overflowY: 'auto',       // 👈 text dài thì có scroll
+          paddingRight: '8px',
+          scrollbarWidth: 'thin',  // 👈 scrollbar mỏng hơn
+          scrollbarColor: '#ccc transparent' // 👈 màu scrollbar
+        }}>
+          {params.value || '-'}
         </div>
       )
+
     },
     {
       field: 'status',
@@ -665,20 +761,22 @@ const AdminDashboard: React.FC = () => {
           width: '100%',
           borderRadius: 2,
           height: 'auto', // Ensure Paper expands
+          position: 'relative',
           '& .MuiDataGrid-root': {
             border: 'none',
           },
           '& .MuiDataGrid-cell': {
             borderColor: 'rgba(224, 224, 224, 1)',
             whiteSpace: 'normal',
-            lineHeight: 'normal',
+            lineHeight: '1.4',
             padding: '8px',
-            alignItems: 'center',
-            overflow: 'visible',
+            display: 'block',
+            justifyContent: 'center',     // căn ngang giữa
+            alignItems: 'center',         // căn dọc giữa
+            textAlign: 'center',
             wordBreak: 'break-word',
-            display: 'flex',
-            alignContent: 'center',
           },
+
           '& .MuiDataGrid-columnHeaders': {
             backgroundColor: '#f5f5f5',
             borderBottom: '2px solid #e0e0e0',
@@ -688,20 +786,76 @@ const AdminDashboard: React.FC = () => {
           },
           '& .MuiDataGrid-row:hover': {
             backgroundColor: '#f5f5f5',
+          },
+          // Custom scrollbar styling
+          '& .MuiDataGrid-cell div::-webkit-scrollbar': {
+            width: '6px',
+          },
+          '& .MuiDataGrid-cell div::-webkit-scrollbar-track': {
+            background: '#f1f1f1',
+            borderRadius: '3px',
+          },
+          '& .MuiDataGrid-cell div::-webkit-scrollbar-thumb': {
+            background: '#ccc',
+            borderRadius: '3px',
+          },
+          '& .MuiDataGrid-cell div::-webkit-scrollbar-thumb:hover': {
+            background: '#999',
           }
         }}
       >
-        <DataGrid
-          rows={filteredIdeas}
-          columns={columns}
-          getRowId={(row) => row._id}
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[10, 25, 50]}
-          disableRowSelectionOnClick
-          loading={loading}
-          getRowHeight={calculateRowHeight}
-        />
+        {/* Top horizontal scroll bar - chỉ là thanh cuộn ngang */}
+        <Box
+          ref={topScrollRef}
+          sx={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+            backgroundColor: 'transparent',
+            borderBottom: '1px solid #e0e0e0',
+            height: '12px',
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            '&::-webkit-scrollbar': {
+              height: '12px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#f1f1f1',
+              borderRadius: '6px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#999999',
+              borderRadius: '6px',
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              background: '#999',
+            }
+          }}
+        >
+          {/* Invisible content để tạo scrollbar với chiều rộng đúng */}
+          <Box
+            sx={{
+              width: '100%',
+              minWidth: 'max-content',
+              height: '1px',
+              visibility: 'hidden'
+            }}
+          />
+        </Box>
+        <Box ref={dataGridRef}>
+          <DataGrid
+            rows={filteredIdeas}
+            columns={columns}
+            getRowId={(row) => row._id}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[10, 25, 50]}
+            disableRowSelectionOnClick
+            loading={loading}
+            getRowHeight={() => 200} 
+          />
+        </Box>
+
       </Paper>
 
       <IdeaDialog

@@ -16,7 +16,9 @@ import {
   Select,
   MenuItem,
   Chip,
-  CircularProgress
+  CircularProgress,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material';
 import {
   Chart as ChartJS,
@@ -32,6 +34,12 @@ import {
   Filler
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import { 
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
+  CompareArrows as CompareArrowsIcon,
+  BarChart as BarChartIcon
+} from '@mui/icons-material';
 import axios from 'axios';
 import { Idea } from '../types';
 import AdvancedStatistics from './AdvancedStatistics';
@@ -59,6 +67,8 @@ const StatisticsDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [comparisonType, setComparisonType] = useState<'month' | 'year' | 'none'>('none');
+  const [showComparison, setShowComparison] = useState(false);
 
   const fetchIdeas = useCallback(async () => {
     try {
@@ -129,6 +139,129 @@ const StatisticsDashboard: React.FC = () => {
 
   const filteredIdeas = getFilteredIdeas();
 
+  // Comparison calculation functions
+  const getCurrentMonthData = () => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    
+    return ideas.filter(idea => {
+      const submissionDate = new Date(idea.submissionDate);
+      return submissionDate >= startOfMonth && submissionDate <= endOfMonth;
+    });
+  };
+
+  const getPreviousMonthData = () => {
+    const now = new Date();
+    const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    
+    return ideas.filter(idea => {
+      const submissionDate = new Date(idea.submissionDate);
+      return submissionDate >= startOfPrevMonth && submissionDate <= endOfPrevMonth;
+    });
+  };
+
+  const getCurrentYearData = () => {
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+    
+    return ideas.filter(idea => {
+      const submissionDate = new Date(idea.submissionDate);
+      return submissionDate >= startOfYear && submissionDate <= endOfYear;
+    });
+  };
+
+  const getPreviousYearData = () => {
+    const now = new Date();
+    const startOfPrevYear = new Date(now.getFullYear() - 1, 0, 1);
+    const endOfPrevYear = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+    
+    return ideas.filter(idea => {
+      const submissionDate = new Date(idea.submissionDate);
+      return submissionDate >= startOfPrevYear && submissionDate <= endOfPrevYear;
+    });
+  };
+
+  const calculateComparisonData = () => {
+    if (comparisonType === 'month') {
+      const currentData = getCurrentMonthData();
+      const previousData = getPreviousMonthData();
+      
+      return {
+        current: currentData,
+        previous: previousData,
+        period: 'tháng',
+        currentLabel: `Tháng ${new Date().getMonth() + 1}/${new Date().getFullYear()}`,
+        previousLabel: `Tháng ${new Date().getMonth() === 0 ? 12 : new Date().getMonth()}/${new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear()}`
+      };
+    } else if (comparisonType === 'year') {
+      const currentData = getCurrentYearData();
+      const previousData = getPreviousYearData();
+      
+      return {
+        current: currentData,
+        previous: previousData,
+        period: 'năm',
+        currentLabel: `Năm ${new Date().getFullYear()}`,
+        previousLabel: `Năm ${new Date().getFullYear() - 1}`
+      };
+    }
+    return null;
+  };
+
+  const getComparisonStats = () => {
+    const comparisonData = calculateComparisonData();
+    if (!comparisonData) return null;
+
+    const { current, previous, period, currentLabel, previousLabel } = comparisonData;
+
+    const currentTotal = current.length;
+    const previousTotal = previous.length;
+    const totalChange = currentTotal - previousTotal;
+    const totalChangePercent = previousTotal > 0 ? ((totalChange / previousTotal) * 100) : 0;
+
+    const currentRewarded = current.filter(idea => idea.status === 'rewarded').length;
+    const previousRewarded = previous.filter(idea => idea.status === 'rewarded').length;
+    const rewardedChange = currentRewarded - previousRewarded;
+    const rewardedChangePercent = previousRewarded > 0 ? ((rewardedChange / previousRewarded) * 100) : 0;
+
+    const currentRewardRate = currentTotal > 0 ? (currentRewarded / currentTotal) * 100 : 0;
+    const previousRewardRate = previousTotal > 0 ? (previousRewarded / previousTotal) * 100 : 0;
+    const rewardRateChange = currentRewardRate - previousRewardRate;
+
+    return {
+      currentLabel,
+      previousLabel,
+      period,
+      total: {
+        current: currentTotal,
+        previous: previousTotal,
+        change: totalChange,
+        changePercent: totalChangePercent
+      },
+      rewarded: {
+        current: currentRewarded,
+        previous: previousRewarded,
+        change: rewardedChange,
+        changePercent: rewardedChangePercent
+      },
+      rewardRate: {
+        current: currentRewardRate,
+        previous: previousRewardRate,
+        change: rewardRateChange
+      }
+    };
+  };
+
+  const handleComparisonTypeChange = (event: React.MouseEvent<HTMLElement>, newType: 'month' | 'year' | 'none') => {
+    if (newType !== null) {
+      setComparisonType(newType);
+      setShowComparison(newType !== 'none');
+    }
+  };
+
   // Calculate statistics
   const totalIdeas = filteredIdeas.length;
   const pendingIdeas = filteredIdeas.filter(idea => idea.status === 'pending').length;
@@ -145,6 +278,28 @@ const StatisticsDashboard: React.FC = () => {
   const topDepartments = Object.entries(departmentStats)
     .sort(([,a], [,b]) => b - a)
     .slice(0, 10);
+
+  // User ranking statistics
+  const userStats = filteredIdeas.reduce((acc, idea) => {
+    const userName = idea.fullName || 'Không xác định';
+    if (!acc[userName]) {
+      acc[userName] = {
+        name: userName,
+        total: 0,
+        rewarded: 0,
+        pending: 0,
+        rejected: 0,
+        department: idea.department
+      };
+    }
+    acc[userName].total++;
+    acc[userName][idea.status]++;
+    return acc;
+  }, {} as Record<string, { name: string; total: number; rewarded: number; pending: number; rejected: number; department: string }>);
+
+  const topUsers = Object.values(userStats)
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 15); // Top 15 users
 
   // Monthly trend data
   const monthlyData = filteredIdeas.reduce((acc, idea) => {
@@ -230,6 +385,20 @@ const StatisticsDashboard: React.FC = () => {
     ]
   };
 
+  // User ranking chart data
+  const userRankingChartData = {
+    labels: topUsers.map(user => user.name.length > 20 ? user.name.substring(0, 20) + '...' : user.name),
+    datasets: [
+      {
+        label: 'Tổng số ý tưởng',
+        data: topUsers.map(user => user.total),
+        backgroundColor: '#1976d2',
+        borderColor: '#1565c0',
+        borderWidth: 1
+      }
+    ]
+  };
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -248,6 +417,115 @@ const StatisticsDashboard: React.FC = () => {
         position: 'bottom' as const,
       },
     },
+  };
+
+  const userRankingOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: 'y' as const, // Horizontal bar chart
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: true,
+        text: 'Top 15 Người có nhiều ý tưởng nhất'
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1
+        },
+        grid: {
+          display: true,
+          color: 'rgba(0,0,0,0.1)'
+        }
+      },
+      y: {
+        ticks: {
+          maxRotation: 0,
+          minRotation: 0,
+          align: 'start' as const,
+          font: {
+            family: 'monospace'
+          }
+        },
+        grid: {
+          display: false
+        }
+      }
+    },
+    layout: {
+      padding: {
+        left: 20,
+        right: 20
+      }
+    },
+    elements: {
+      bar: {
+        borderSkipped: false
+      }
+    }
+  };
+
+  // Comparison Card Component
+  const ComparisonCard: React.FC<{ 
+    title: string; 
+    currentValue: number; 
+    previousValue: number; 
+    change: number; 
+    changePercent: number;
+    icon: React.ReactNode;
+  }> = ({ title, currentValue, previousValue, change, changePercent, icon }) => {
+    const isPositive = change >= 0;
+    const isSignificant = Math.abs(changePercent) >= 5; // 5% threshold for significant change
+    
+    return (
+      <Card sx={{ 
+        p: 2, 
+        height: '100%',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        border: '1px solid #e0e0e0',
+        borderRadius: 2,
+        boxShadow: 2
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          {icon}
+          <Typography variant="h6" sx={{ ml: 1, fontWeight: 'bold', color: '#1976d2' }}>
+            {title}
+          </Typography>
+        </Box>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+            {currentValue}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {isPositive ? (
+              <TrendingUpIcon sx={{ color: '#2e7d32', mr: 0.5 }} />
+            ) : (
+              <TrendingDownIcon sx={{ color: '#d32f2f', mr: 0.5 }} />
+            )}
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: isPositive ? '#2e7d32' : '#d32f2f',
+                fontWeight: 'bold',
+                fontSize: isSignificant ? '1rem' : '0.875rem'
+              }}
+            >
+              {change > 0 ? '+' : ''}{change} ({changePercent > 0 ? '+' : ''}{changePercent.toFixed(1)}%)
+            </Typography>
+          </Box>
+        </Box>
+        
+        <Typography variant="body2" color="text.secondary">
+          So với kỳ trước: {previousValue}
+        </Typography>
+      </Card>
+    );
   };
 
   if (loading) {
@@ -300,7 +578,7 @@ const StatisticsDashboard: React.FC = () => {
           <Divider />
           
           {/* Filters */}
-          <Box sx={{ display: 'flex', gap: 3, mt: 3, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', gap: 3, mt: 3, flexWrap: 'wrap', alignItems: 'center' }}>
             <FormControl sx={{ minWidth: 150 }}>
               <InputLabel>Khoảng thời gian</InputLabel>
               <Select
@@ -329,6 +607,45 @@ const StatisticsDashboard: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
+
+            <ToggleButtonGroup
+              value={comparisonType}
+              exclusive
+              onChange={handleComparisonTypeChange}
+              size="small"
+              sx={{ 
+                border: '1px solid #1976d2',
+                borderRadius: 1,
+                '& .MuiToggleButton-root': {
+                  border: 'none',
+                  px: 2,
+                  py: 0.5,
+                  '&.Mui-selected': {
+                    backgroundColor: '#1976d2',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: '#1565c0',
+                    }
+                  }
+                }
+              }}
+            >
+              <ToggleButton value="none">
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                  Không so sánh
+                </Typography>
+              </ToggleButton>
+              <ToggleButton value="month">
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                  So sánh tháng
+                </Typography>
+              </ToggleButton>
+              <ToggleButton value="year">
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                  So sánh năm
+                </Typography>
+              </ToggleButton>
+            </ToggleButtonGroup>
           </Box>
         </CardContent>
       </Card>
@@ -338,6 +655,91 @@ const StatisticsDashboard: React.FC = () => {
           {error}
         </Alert>
       )}
+
+      {/* Comparison Section */}
+      {showComparison && (() => {
+        const stats = getComparisonStats();
+        if (!stats) return null;
+
+        return (
+          <Card elevation={3} sx={{ mb: 4, borderRadius: 2, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <CompareArrowsIcon sx={{ color: 'white', mr: 1, fontSize: '2rem' }} />
+                <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold' }}>
+                  So sánh {stats.period}: {stats.currentLabel} vs {stats.previousLabel}
+                </Typography>
+              </Box>
+              
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <ComparisonCard
+                    title="Tổng số ý tưởng"
+                    currentValue={stats.total.current}
+                    previousValue={stats.total.previous}
+                    change={stats.total.change}
+                    changePercent={stats.total.changePercent}
+                    icon={<BarChartIcon sx={{ color: '#1976d2', fontSize: '1.5rem' }} />}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <ComparisonCard
+                    title="Ý tưởng được khen thưởng"
+                    currentValue={stats.rewarded.current}
+                    previousValue={stats.rewarded.previous}
+                    change={stats.rewarded.change}
+                    changePercent={stats.rewarded.changePercent}
+                    icon={<TrendingUpIcon sx={{ color: '#2e7d32', fontSize: '1.5rem' }} />}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ 
+                    p: 2, 
+                    height: '100%',
+                    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: 2,
+                    boxShadow: 2
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <TrendingUpIcon sx={{ color: '#1976d2', fontSize: '1.5rem' }} />
+                      <Typography variant="h6" sx={{ ml: 1, fontWeight: 'bold', color: '#1976d2' }}>
+                        Tỷ lệ khen thưởng
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                        {stats.rewardRate.current.toFixed(1)}%
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {stats.rewardRate.change >= 0 ? (
+                          <TrendingUpIcon sx={{ color: '#2e7d32', mr: 0.5 }} />
+                        ) : (
+                          <TrendingDownIcon sx={{ color: '#d32f2f', mr: 0.5 }} />
+                        )}
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: stats.rewardRate.change >= 0 ? '#2e7d32' : '#d32f2f',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {stats.rewardRate.change > 0 ? '+' : ''}{stats.rewardRate.change.toFixed(1)}%
+                        </Typography>
+                      </Box>
+                    </Box>
+                    
+                    <Typography variant="body2" color="text.secondary">
+                      So với kỳ trước: {stats.rewardRate.previous.toFixed(1)}%
+                    </Typography>
+                  </Card>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -431,6 +833,18 @@ const StatisticsDashboard: React.FC = () => {
             </Box>
           </Card>
         </Grid>
+
+        {/* User Ranking Chart */}
+        <Grid item xs={12}>
+          <Card elevation={3} sx={{ p: 3, height: 500 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+              Xếp hạng Người có nhiều ý tưởng nhất
+            </Typography>
+            <Box sx={{ height: 400, mt: 2 }}>
+              <Bar data={userRankingChartData} options={userRankingOptions} />
+            </Box>
+          </Card>
+        </Grid>
       </Grid>
 
       {/* Additional Statistics */}
@@ -477,6 +891,37 @@ const StatisticsDashboard: React.FC = () => {
                     {index + 1}. {dept.length > 30 ? dept.substring(0, 30) + '...' : dept}
                   </Typography>
                   <Chip label={count} size="small" color="primary" />
+                </Box>
+              ))}
+            </Box>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+              Top 10 Người có nhiều ý tưởng nhất
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxHeight: 300, overflowY: 'auto' }}>
+              {topUsers.slice(0, 10).map((user, index) => (
+                <Box key={user.name} sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  p: 1,
+                  borderRadius: 1,
+                  backgroundColor: index < 3 ? '#f5f5f5' : 'transparent',
+                  border: index < 3 ? '1px solid #e0e0e0' : 'none'
+                }}>
+                  <Box sx={{ flex: 1, mr: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: index < 3 ? 'bold' : 'normal' }}>
+                      {index + 1}. {user.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {user.department}
+                    </Typography>
+                  </Box>
+                  <Chip label={user.total} size="small" color="primary" />
                 </Box>
               ))}
             </Box>
