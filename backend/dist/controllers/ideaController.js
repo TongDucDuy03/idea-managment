@@ -17,7 +17,7 @@ const Idea_1 = __importDefault(require("../models/Idea"));
 const emailService_1 = require("../services/emailService");
 const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { fullName, department, idea, solution, benefit } = req.body;
+        const { fullName, department, idea, solution, benefit, status, implementationDirection, implementationDepartment, note } = req.body;
         // Generate idea code (without name prefix)
         const timestamp = new Date().getTime();
         const randomNum = Math.floor(Math.random() * 1000);
@@ -29,7 +29,11 @@ const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             solution,
             benefit,
             ideaCode,
-            submissionDate: new Date()
+            submissionDate: new Date(),
+            status: status || 'pending',
+            implementationDirection: implementationDirection || 'Lưu ý tưởng',
+            implementationDepartment,
+            note
         });
         const savedIdea = yield newIdea.save();
         // Fire-and-forget email (do not block response)

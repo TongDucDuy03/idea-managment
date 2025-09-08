@@ -315,7 +315,7 @@ const AdminDashboard: React.FC = () => {
     if (!topScrollElement || !dataGridElement) return;
 
     // Tính tổng chiều rộng của các cột (hardcode để tránh lỗi dependency)
-    const totalWidth = 150 + 200 + 250 + 300 + 300 + 300 + 200 + 180 + 120; // Tổng chiều rộng các cột
+    const totalWidth = 150 + 200 + 250 + 300 + 300 + 300 + 200 + 180 + 180 + 200 + 250 + 120; // Tổng chiều rộng các cột
     
     // Cập nhật chiều rộng của thanh cuộn trên
     const invisibleContent = topScrollElement.querySelector('div');
@@ -547,6 +547,64 @@ const AdminDashboard: React.FC = () => {
         if (!params.value) return '';
         return new Date(params.value).toLocaleString('vi-VN');
       },
+    },
+    {
+      field: 'implementationDirection',
+      headerName: 'Hướng triển khai',
+      width: 180,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{
+          width: '100%',
+          textAlign: 'center',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          {params.value || '-'}
+        </div>
+      )
+    },
+    {
+      field: 'implementationDepartment',
+      headerName: 'Phòng ban triển khai',
+      width: 200,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{
+          width: '100%',
+          textAlign: 'center',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          {params.value || '-'}
+        </div>
+      )
+    },
+    {
+      field: 'note',
+      headerName: 'Ghi chú',
+      width: 250,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          width: '100%',
+          textAlign: 'left',
+          maxHeight: '180px',
+          overflowY: 'auto',
+          paddingRight: '8px',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#ccc transparent'
+        }}>
+          {params.value || '-'}
+        </div>
+      )
     },
     {
       field: 'actions',

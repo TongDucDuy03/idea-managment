@@ -4,7 +4,17 @@ import { sendIdeaSubmittedEmail } from '../services/emailService';
 
 export const createIdea = async (req: Request, res: Response) => {
   try {
-    const { fullName, department, idea, solution, benefit } = req.body;
+    const { 
+      fullName, 
+      department, 
+      idea, 
+      solution, 
+      benefit, 
+      status, 
+      implementationDirection, 
+      implementationDepartment, 
+      note 
+    } = req.body;
     
     // Generate idea code (without name prefix)
     const timestamp = new Date().getTime();
@@ -18,7 +28,11 @@ export const createIdea = async (req: Request, res: Response) => {
       solution,
       benefit,
       ideaCode,
-      submissionDate: new Date()
+      submissionDate: new Date(),
+      status: status || 'pending',
+      implementationDirection: implementationDirection || 'Lưu ý tưởng',
+      implementationDepartment,
+      note
     });
 
     const savedIdea = await newIdea.save();

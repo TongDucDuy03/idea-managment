@@ -60,6 +60,9 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
     idea: '',
     solution: '',
     benefit: '',
+    implementationDirection: 'Lưu ý tưởng',
+    implementationDepartment: '',
+    note: '',
     status: 'pending'
   });
   const [error, setError] = useState('');
@@ -74,6 +77,9 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         idea: '',
         solution: '',
         benefit: '',
+        implementationDirection: 'Lưu ý tưởng',
+        implementationDepartment: '',
+        note: '',
         status: 'pending'
       });
     }
@@ -171,6 +177,45 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               fullWidth
               multiline
               rows={4}
+            />
+            <FormControl fullWidth>
+              <InputLabel>Hướng triển khai</InputLabel>
+              <Select
+                name="implementationDirection"
+                value={formData.implementationDirection || 'Lưu ý tưởng'}
+                onChange={handleSelectChange}
+                label="Hướng triển khai"
+              >
+                <MenuItem value="Lưu ý tưởng">Lưu ý tưởng</MenuItem>
+                <MenuItem value="Triển khai">Triển khai</MenuItem>
+                <MenuItem value="Làm báo cáo A3">Làm báo cáo A3</MenuItem>
+                <MenuItem value="Xem xét">Xem xét</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Phòng ban triển khai</InputLabel>
+              <Select
+                name="implementationDepartment"
+                value={formData.implementationDepartment || ''}
+                onChange={handleSelectChange}
+                label="Phòng ban triển khai"
+              >
+                <MenuItem value="">Chọn phòng ban</MenuItem>
+                {departments.map((dept) => (
+                  <MenuItem key={dept} value={dept}>
+                    {dept}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              name="note"
+              label="Ghi chú"
+              value={formData.note}
+              onChange={handleTextChange}
+              fullWidth
+              multiline
+              rows={3}
             />
           </Box>
         </DialogContent>

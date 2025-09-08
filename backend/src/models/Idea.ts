@@ -9,6 +9,10 @@ export interface IIdea extends Document {
   ideaCode: string;
   submissionDate: Date;
   isPaid: boolean;
+  status: 'pending' | 'rejected' | 'rewarded';
+  implementationDirection?: 'Lưu ý tưởng' | 'Triển khai' | 'Làm báo cáo A3' | 'Xem xét';
+  implementationDepartment?: string;
+  note?: string;
 }
 
 const IdeaSchema: Schema = new Schema({
@@ -19,7 +23,19 @@ const IdeaSchema: Schema = new Schema({
   benefit: { type: String, required: false },
   ideaCode: { type: String, required: true, unique: true },
   submissionDate: { type: Date, default: Date.now },
-  isPaid: { type: Boolean, default: false }
+  isPaid: { type: Boolean, default: false },
+  status: { 
+    type: String, 
+    enum: ['pending', 'rejected', 'rewarded'], 
+    default: 'pending' 
+  },
+  implementationDirection: { 
+    type: String, 
+    enum: ['Lưu ý tưởng', 'Triển khai', 'Làm báo cáo A3', 'Xem xét'],
+    default: 'Lưu ý tưởng'
+  },
+  implementationDepartment: { type: String, required: false },
+  note: { type: String, required: false }
 });
 
 export default mongoose.model<IIdea>('Idea', IdeaSchema); 
