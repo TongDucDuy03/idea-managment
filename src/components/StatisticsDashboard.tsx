@@ -68,8 +68,19 @@ const StatisticsDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [comparisonType, setComparisonType] = useState<'month' | 'year' | 'none'>('none');
+  const [comparisonType, setComparisonType] = useState<'month' | 'quarter' | 'year' | 'none'>('none');
   const [showComparison, setShowComparison] = useState(false);
+  // Comparison period selections
+  const now = new Date();
+  const currentYearInit = now.getFullYear();
+  const currentMonthInit = now.getMonth() + 1; // 1-12
+  const currentQuarterInit = Math.floor((now.getMonth()) / 3) + 1; // 1-4
+  const [yearA, setYearA] = useState<number>(currentYearInit);
+  const [yearB, setYearB] = useState<number>(currentYearInit - 1);
+  const [quarterA, setQuarterA] = useState<number>(currentQuarterInit);
+  const [quarterB, setQuarterB] = useState<number>(currentQuarterInit === 1 ? 4 : currentQuarterInit - 1);
+  const [monthA, setMonthA] = useState<number>(currentMonthInit);
+  const [monthB, setMonthB] = useState<number>(currentMonthInit === 1 ? 12 : currentMonthInit - 1);
 
   const fetchIdeas = useCallback(async () => {
     try {
@@ -185,28 +196,54 @@ const StatisticsDashboard: React.FC = () => {
     });
   };
 
+  // Helpers for period filtering based on selections
+  const filterByYear = (list: Idea[], y: number) => list.filter(i => {
+    const d = new Date(i.submissionDate);
+    return d.getFullYear() === y;
+  });
+  const filterByQuarter = (list: Idea[], y: number, q: number) => list.filter(i => {
+    const d = new Date(i.submissionDate);
+    const year = d.getFullYear();
+    const quarter = Math.floor(d.getMonth() / 3) + 1;
+    return year === y && quarter === q;
+  });
+  const filterByMonth = (list: Idea[], y: number, m: number) => list.filter(i => {
+    const d = new Date(i.submissionDate);
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    return year === y && month === m;
+  });
+
   const calculateComparisonData = () => {
     if (comparisonType === 'month') {
-      const currentData = getCurrentMonthData();
-      const previousData = getPreviousMonthData();
-      
+      const current = filterByMonth(ideas, yearA, monthA);
+      const previous = filterByMonth(ideas, yearB, monthB);
       return {
-        current: currentData,
-        previous: previousData,
+        current,
+        previous,
         period: 'tháng',
-        currentLabel: `Tháng ${new Date().getMonth() + 1}/${new Date().getFullYear()}`,
-        previousLabel: `Tháng ${new Date().getMonth() === 0 ? 12 : new Date().getMonth()}/${new Date().getMonth() === 0 ? new Date().getFullYear() - 1 : new Date().getFullYear()}`
+        currentLabel: `Tháng ${monthA}/${yearA}`,
+        previousLabel: `Tháng ${monthB}/${yearB}`
+      };
+    } else if (comparisonType === 'quarter') {
+      const current = filterByQuarter(ideas, yearA, quarterA);
+      const previous = filterByQuarter(ideas, yearB, quarterB);
+      return {
+        current,
+        previous,
+        period: 'quý',
+        currentLabel: `Q${quarterA}/${yearA}`,
+        previousLabel: `Q${quarterB}/${yearB}`
       };
     } else if (comparisonType === 'year') {
-      const currentData = getCurrentYearData();
-      const previousData = getPreviousYearData();
-      
+      const current = filterByYear(ideas, yearA);
+      const previous = filterByYear(ideas, yearB);
       return {
-        current: currentData,
-        previous: previousData,
+        current,
+        previous,
         period: 'năm',
-        currentLabel: `Năm ${new Date().getFullYear()}`,
-        previousLabel: `Năm ${new Date().getFullYear() - 1}`
+        currentLabel: `Năm ${yearA}`,
+        previousLabel: `Năm ${yearB}`
       };
     }
     return null;
@@ -223,14 +260,17 @@ const StatisticsDashboard: React.FC = () => {
     const totalChange = currentTotal - previousTotal;
     const totalChangePercent = previousTotal > 0 ? ((totalChange / previousTotal) * 100) : 0;
 
-    const currentRewarded = current.filter(idea => idea.status === 'rewarded').length;
-    const previousRewarded = previous.filter(idea => idea.status === 'rewarded').length;
-    const rewardedChange = currentRewarded - previousRewarded;
-    const rewardedChangePercent = previousRewarded > 0 ? ((rewardedChange / previousRewarded) * 100) : 0;
+    // Implemented and success (A3)
+    const currentImplemented = current.filter(i => isImplemented(i.implementationDirection)).length;
+    const previousImplemented = previous.filter(i => isImplemented(i.implementationDirection)).length;
+    const implementedChange = currentImplemented - previousImplemented;
+    const implementedChangePercent = previousImplemented > 0 ? ((implementedChange / previousImplemented) * 100) : 0;
 
-    const currentRewardRate = currentTotal > 0 ? (currentRewarded / currentTotal) * 100 : 0;
-    const previousRewardRate = previousTotal > 0 ? (previousRewarded / previousTotal) * 100 : 0;
-    const rewardRateChange = currentRewardRate - previousRewardRate;
+    const currentSuccessful = current.filter(i => isSuccessful(i.implementationDirection)).length;
+    const previousSuccessful = previous.filter(i => isSuccessful(i.implementationDirection)).length;
+    const currentImplSuccessRate = currentTotal > 0 ? (currentSuccessful / currentTotal) * 100 : 0;
+    const previousImplSuccessRate = previousTotal > 0 ? (previousSuccessful / previousTotal) * 100 : 0;
+    const implSuccessRateChange = currentImplSuccessRate - previousImplSuccessRate;
 
     // Calculate benefit value and reward amount
     const currentBenefitValue = current.reduce((sum, idea) => sum + ((idea as any).benefitValue || 0), 0);
@@ -253,16 +293,16 @@ const StatisticsDashboard: React.FC = () => {
         change: totalChange,
         changePercent: totalChangePercent
       },
-      rewarded: {
-        current: currentRewarded,
-        previous: previousRewarded,
-        change: rewardedChange,
-        changePercent: rewardedChangePercent
+      implemented: {
+        current: currentImplemented,
+        previous: previousImplemented,
+        change: implementedChange,
+        changePercent: implementedChangePercent
       },
-      rewardRate: {
-        current: currentRewardRate,
-        previous: previousRewardRate,
-        change: rewardRateChange
+      implSuccessRate: {
+        current: currentImplSuccessRate,
+        previous: previousImplSuccessRate,
+        change: implSuccessRateChange
       },
       benefitValue: {
         current: currentBenefitValue,
@@ -279,7 +319,7 @@ const StatisticsDashboard: React.FC = () => {
     };
   };
 
-  const handleComparisonTypeChange = (event: React.MouseEvent<HTMLElement>, newType: 'month' | 'year' | 'none') => {
+  const handleComparisonTypeChange = (event: React.MouseEvent<HTMLElement>, newType: 'month' | 'quarter' | 'year' | 'none') => {
     if (newType !== null) {
       setComparisonType(newType);
       setShowComparison(newType !== 'none');
@@ -396,22 +436,22 @@ const StatisticsDashboard: React.FC = () => {
         fill: true,
         tension: 0.4
       },
-      {
-        label: 'Đã khen thưởng',
-        data: monthlyRewarded,
-        borderColor: '#4CAF50',
-        backgroundColor: 'rgba(76, 175, 80, 0.1)',
-        fill: false,
-        tension: 0.4
-      },
-      {
-        label: 'Không khen thưởng',
-        data: monthlyRejected,
-        borderColor: '#F44336',
-        backgroundColor: 'rgba(244, 67, 54, 0.1)',
-        fill: false,
-        tension: 0.4
-      }
+      // {
+      //   label: 'Đã khen thưởng',
+      //   data: monthlyRewarded,
+      //   borderColor: '#4CAF50',
+      //   backgroundColor: 'rgba(76, 175, 80, 0.1)',
+      //   fill: false,
+      //   tension: 0.4
+      // },
+      // {
+      //   label: 'Không khen thưởng',
+      //   data: monthlyRejected,
+      //   borderColor: '#F44336',
+      //   backgroundColor: 'rgba(244, 67, 54, 0.1)',
+      //   fill: false,
+      //   tension: 0.4
+      // }
     ]
   };
 
@@ -670,12 +710,105 @@ const StatisticsDashboard: React.FC = () => {
                   So sánh tháng
                 </Typography>
               </ToggleButton>
+              <ToggleButton value="quarter">
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                  So sánh quý
+                </Typography>
+              </ToggleButton>
               <ToggleButton value="year">
                 <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                   So sánh năm
                 </Typography>
               </ToggleButton>
             </ToggleButtonGroup>
+            {showComparison && (
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                {comparisonType === 'year' && (
+                  <>
+                    <FormControl size="small" sx={{ minWidth: 140 }}>
+                      <InputLabel>Năm A</InputLabel>
+                      <Select label="Năm A" value={yearA} onChange={(e) => setYearA(Number(e.target.value))}>
+                        {Array.from(new Set(ideas.map(i => new Date(i.submissionDate).getFullYear()))).sort((a,b) => a - b).map(y => (
+                          <MenuItem key={y} value={y}>{y}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl size="small" sx={{ minWidth: 140 }}>
+                      <InputLabel>Năm B</InputLabel>
+                      <Select label="Năm B" value={yearB} onChange={(e) => setYearB(Number(e.target.value))}>
+                        {Array.from(new Set(ideas.map(i => new Date(i.submissionDate).getFullYear()))).sort((a,b) => a - b).map(y => (
+                          <MenuItem key={y} value={y}>{y}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </>
+                )}
+                {comparisonType === 'quarter' && (
+                  <>
+                    <FormControl size="small" sx={{ minWidth: 140 }}>
+                      <InputLabel>Năm A</InputLabel>
+                      <Select label="Năm A" value={yearA} onChange={(e) => setYearA(Number(e.target.value))}>
+                        {Array.from(new Set(ideas.map(i => new Date(i.submissionDate).getFullYear()))).sort((a,b) => a - b).map(y => (
+                          <MenuItem key={y} value={y}>{y}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                      <InputLabel>Quý A</InputLabel>
+                      <Select label="Quý A" value={quarterA} onChange={(e) => setQuarterA(Number(e.target.value))}>
+                        {[1,2,3,4].map(q => (<MenuItem key={q} value={q}>{`Q${q}`}</MenuItem>))}
+                      </Select>
+                    </FormControl>
+                    <FormControl size="small" sx={{ minWidth: 140 }}>
+                      <InputLabel>Năm B</InputLabel>
+                      <Select label="Năm B" value={yearB} onChange={(e) => setYearB(Number(e.target.value))}>
+                        {Array.from(new Set(ideas.map(i => new Date(i.submissionDate).getFullYear()))).sort((a,b) => a - b).map(y => (
+                          <MenuItem key={y} value={y}>{y}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                      <InputLabel>Quý B</InputLabel>
+                      <Select label="Quý B" value={quarterB} onChange={(e) => setQuarterB(Number(e.target.value))}>
+                        {[1,2,3,4].map(q => (<MenuItem key={q} value={q}>{`Q${q}`}</MenuItem>))}
+                      </Select>
+                    </FormControl>
+                  </>
+                )}
+                {comparisonType === 'month' && (
+                  <>
+                    <FormControl size="small" sx={{ minWidth: 140 }}>
+                      <InputLabel>Năm A</InputLabel>
+                      <Select label="Năm A" value={yearA} onChange={(e) => setYearA(Number(e.target.value))}>
+                        {Array.from(new Set(ideas.map(i => new Date(i.submissionDate).getFullYear()))).sort((a,b) => a - b).map(y => (
+                          <MenuItem key={y} value={y}>{y}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                      <InputLabel>Tháng A</InputLabel>
+                      <Select label="Tháng A" value={monthA} onChange={(e) => setMonthA(Number(e.target.value))}>
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (<MenuItem key={m} value={m}>{m}</MenuItem>))}
+                      </Select>
+                    </FormControl>
+                    <FormControl size="small" sx={{ minWidth: 140 }}>
+                      <InputLabel>Năm B</InputLabel>
+                      <Select label="Năm B" value={yearB} onChange={(e) => setYearB(Number(e.target.value))}>
+                        {Array.from(new Set(ideas.map(i => new Date(i.submissionDate).getFullYear()))).sort((a,b) => a - b).map(y => (
+                          <MenuItem key={y} value={y}>{y}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                      <InputLabel>Tháng B</InputLabel>
+                      <Select label="Tháng B" value={monthB} onChange={(e) => setMonthB(Number(e.target.value))}>
+                        {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (<MenuItem key={m} value={m}>{m}</MenuItem>))}
+                      </Select>
+                    </FormControl>
+                  </>
+                )}
+              </Box>
+            )}
           </Box>
         </CardContent>
       </Card>
@@ -714,11 +847,11 @@ const StatisticsDashboard: React.FC = () => {
                 </Grid>
                 <Grid item xs={12} md={3}>
                   <ComparisonCard
-                    title="Ý tưởng được khen thưởng"
-                    currentValue={stats.rewarded.current}
-                    previousValue={stats.rewarded.previous}
-                    change={stats.rewarded.change}
-                    changePercent={stats.rewarded.changePercent}
+                    title="Ý tưởng đã triển khai"
+                    currentValue={stats.implemented.current}
+                    previousValue={stats.implemented.previous}
+                    change={stats.implemented.change}
+                    changePercent={stats.implemented.changePercent}
                     icon={<TrendingUpIcon sx={{ color: '#2e7d32', fontSize: '1.5rem' }} />}
                   />
                 </Grid>
@@ -734,16 +867,16 @@ const StatisticsDashboard: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <TrendingUpIcon sx={{ color: '#1976d2', fontSize: '1.5rem' }} />
                       <Typography variant="h6" sx={{ ml: 1, fontWeight: 'bold', color: '#1976d2' }}>
-                        Tỷ lệ khen thưởng
+                        Tỷ lệ triển khai thành công
                       </Typography>
                     </Box>
                     
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                       <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
-                        {stats.rewardRate.current.toFixed(1)}%
+                        {stats.implSuccessRate.current.toFixed(1)}%
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        {stats.rewardRate.change >= 0 ? (
+                        {stats.implSuccessRate.change >= 0 ? (
                           <TrendingUpIcon sx={{ color: '#2e7d32', mr: 0.5 }} />
                         ) : (
                           <TrendingDownIcon sx={{ color: '#d32f2f', mr: 0.5 }} />
@@ -751,17 +884,17 @@ const StatisticsDashboard: React.FC = () => {
                         <Typography 
                           variant="body2" 
                           sx={{ 
-                            color: stats.rewardRate.change >= 0 ? '#2e7d32' : '#d32f2f',
+                            color: stats.implSuccessRate.change >= 0 ? '#2e7d32' : '#d32f2f',
                             fontWeight: 'bold'
                           }}
                         >
-                          {stats.rewardRate.change > 0 ? '+' : ''}{stats.rewardRate.change.toFixed(1)}%
+                          {stats.implSuccessRate.change > 0 ? '+' : ''}{stats.implSuccessRate.change.toFixed(1)}%
                         </Typography>
                       </Box>
                     </Box>
                     
                     <Typography variant="body2" color="text.secondary">
-                      So với kỳ trước: {stats.rewardRate.previous.toFixed(1)}%
+                      So với kỳ trước: {stats.implSuccessRate.previous.toFixed(1)}%
                     </Typography>
                   </Card>
                 </Grid>

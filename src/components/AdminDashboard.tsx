@@ -849,7 +849,7 @@ const AdminDashboard: React.FC = () => {
 
                 {/* Hàng 3 */}
                 <Box sx={{ display: 'flex', gap: 2, marginLeft: 'auto', alignItems: 'center' }}>
-                  {/* <Button
+                  <Button
                       variant="contained"
                       color="info"
                       startIcon={<BarChartIcon />}
@@ -871,7 +871,7 @@ const AdminDashboard: React.FC = () => {
                       }}
                     >
                       Dashboard Thống kê
-                  </Button> */}
+                  </Button>
                   <Button
                     variant="contained"
                     color="success"
