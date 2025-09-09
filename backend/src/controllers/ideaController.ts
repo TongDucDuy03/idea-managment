@@ -13,7 +13,9 @@ export const createIdea = async (req: Request, res: Response) => {
       status, 
       implementationDirection, 
       implementationDepartment, 
-      note 
+      note,
+      benefitValue,
+      rewardAmount
     } = req.body;
     
     // Generate idea code (without name prefix)
@@ -32,7 +34,9 @@ export const createIdea = async (req: Request, res: Response) => {
       status: status || 'pending',
       implementationDirection: implementationDirection || '',
       implementationDepartment,
-      note
+      note,
+      benefitValue: benefitValue || 0,
+      rewardAmount: rewardAmount || 0
     });
 
     const savedIdea = await newIdea.save();

@@ -13,6 +13,8 @@ export interface IIdea extends Document {
   implementationDirection?: 'Lưu ý tưởng' | 'Triển khai' | 'Làm báo cáo A3' | 'Xem xét' | '';
   implementationDepartment?: string;
   note?: string;
+  benefitValue?: number; // Giá trị làm lợi (VND)
+  rewardAmount?: number; // Tiền thưởng (VND)
 }
 
 const IdeaSchema: Schema = new Schema({
@@ -35,7 +37,9 @@ const IdeaSchema: Schema = new Schema({
     default: ''
   },
   implementationDepartment: { type: String, required: false },
-  note: { type: String, required: false }
+  note: { type: String, required: false },
+  benefitValue: { type: Number, required: false, default: 0 },
+  rewardAmount: { type: Number, required: false, default: 0 }
 });
 
 export default mongoose.model<IIdea>('Idea', IdeaSchema); 

@@ -63,7 +63,9 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
     implementationDirection: '',
     implementationDepartment: '',
     note: '',
-    status: 'pending'
+    status: 'pending',
+    benefitValue: 0,
+    rewardAmount: 0
   });
   const [error, setError] = useState('');
 
@@ -74,7 +76,9 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         implementationDirection: idea.implementationDirection || '',
         implementationDepartment: idea.implementationDepartment || '',
         note: idea.note || '',
-        status: idea.status || 'pending'
+        status: idea.status || 'pending',
+        benefitValue: idea.benefitValue || 0,
+        rewardAmount: idea.rewardAmount || 0
       });
     } else {
       setFormData({
@@ -86,7 +90,9 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         implementationDirection: '',
         implementationDepartment: '',
         note: '',
-        status: 'pending'
+        status: 'pending',
+        benefitValue: 0,
+        rewardAmount: 0
       });
     }
   }, [idea]);
@@ -192,6 +198,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
                 onChange={handleSelectChange}
                 label="Hướng triển khai"
               >
+                <MenuItem value="">Chọn Hướng triển khai</MenuItem>
                 <MenuItem value="Lưu ý tưởng">Lưu ý tưởng</MenuItem>
                 <MenuItem value="Triển khai">Triển khai</MenuItem>
                 <MenuItem value="Làm báo cáo A3">Làm báo cáo A3</MenuItem>
@@ -222,6 +229,24 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               fullWidth
               multiline
               rows={3}
+            />
+            <TextField
+              name="benefitValue"
+              label="Giá trị làm lợi (VND)"
+              type="number"
+              value={formData.benefitValue || 0}
+              onChange={handleTextChange}
+              fullWidth
+              inputProps={{ min: 0 }}
+            />
+            <TextField
+              name="rewardAmount"
+              label="Tiền thưởng (VND)"
+              type="number"
+              value={formData.rewardAmount || 0}
+              onChange={handleTextChange}
+              fullWidth
+              inputProps={{ min: 0 }}
             />
             {isEdit && (
               <FormControl fullWidth>

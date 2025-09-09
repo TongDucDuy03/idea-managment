@@ -54,6 +54,8 @@ const IdeaSchema = new mongoose_1.Schema({
         default: ''
     },
     implementationDepartment: { type: String, required: false },
-    note: { type: String, required: false }
+    note: { type: String, required: false },
+    benefitValue: { type: Number, required: false, default: 0 },
+    rewardAmount: { type: Number, required: false, default: 0 }
 });
 exports.default = mongoose_1.default.model('Idea', IdeaSchema);

@@ -316,7 +316,7 @@ const AdminDashboard: React.FC = () => {
     if (!topScrollElement || !dataGridElement) return;
 
     // Tính tổng chiều rộng của các cột (hardcode để tránh lỗi dependency)
-    const totalWidth = 150 + 200 + 250 + 300 + 300 + 300 + 200 + 180 + 180 + 200 + 250 + 120; // Tổng chiều rộng các cột
+    const totalWidth = 150 + 200 + 250 + 300 + 300 + 300 + 200 + 180 + 180 + 200 + 180 + 180 + 120; // Tổng chiều rộng các cột
     
     // Cập nhật chiều rộng của thanh cuộn trên
     const invisibleContent = topScrollElement.querySelector('div');
@@ -589,7 +589,7 @@ const AdminDashboard: React.FC = () => {
     {
       field: 'note',
       headerName: 'Ghi chú',
-      width: 250,
+      width: 200,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
@@ -604,7 +604,41 @@ const AdminDashboard: React.FC = () => {
           scrollbarWidth: 'thin',
           scrollbarColor: '#ccc transparent'
         }}>
-          {params.value || '-'}
+          {params.value || ''}
+        </div>
+      )
+    },
+    {
+      field: 'benefitValue',
+      headerName: 'Giá trị làm lợi (VND)',
+      width: 180,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{
+          width: '100%',
+          textAlign: 'right',
+          fontWeight: 'bold',
+          color: '#2E7D32'
+        }}>
+          {params.value ? new Intl.NumberFormat('vi-VN').format(params.value) : '0'}
+        </div>
+      )
+    },
+    {
+      field: 'rewardAmount',
+      headerName: 'Tiền thưởng (VND)',
+      width: 180,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{
+          width: '100%',
+          textAlign: 'right',
+          fontWeight: 'bold',
+          color: '#1976D2'
+        }}>
+          {params.value ? new Intl.NumberFormat('vi-VN').format(params.value) : '0'}
         </div>
       )
     },
@@ -739,7 +773,7 @@ const AdminDashboard: React.FC = () => {
                     ))}
                   </Select>
                   <Box sx={{ display: 'flex', gap: 2, marginLeft: 'auto', alignItems: 'center' }}>
-                    {/* <Button
+                    <Button
                       variant="contained"
                       color="info"
                       startIcon={<BarChartIcon />}
@@ -761,7 +795,7 @@ const AdminDashboard: React.FC = () => {
                       }}
                     >
                       Dashboard Thống kê
-                    </Button> */}
+                    </Button>
                     <Button
                       variant="contained"
                       color="success"

@@ -836,7 +836,7 @@ const StatisticsDashboard: React.FC = () => {
         </Grid>
 
         {/* User Ranking Chart */}
-        <Grid item xs={12}>
+        {/* <Grid item xs={12}>
           <Card elevation={3} sx={{ p: 3, height: 500 }}>
             <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
               Xếp hạng Người có nhiều ý tưởng nhất
@@ -845,12 +845,12 @@ const StatisticsDashboard: React.FC = () => {
               <Bar data={userRankingChartData} options={userRankingOptions} />
             </Box>
           </Card>
-        </Grid>
+        </Grid> */}
       </Grid>
 
       {/* Additional Statistics */}
       <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid item xs={12} md={6}>
+        {/* <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
               Thống kê Chi tiết
@@ -878,7 +878,7 @@ const StatisticsDashboard: React.FC = () => {
               </Box>
             </Box>
           </Card>
-        </Grid>
+        </Grid> */}
 
         <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ p: 3 }}>
@@ -886,7 +886,7 @@ const StatisticsDashboard: React.FC = () => {
               Top Phòng ban
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {topDepartments.slice(0, 5).map(([dept, count], index) => (
+              {topDepartments.slice(0, 10).map(([dept, count], index) => (
                 <Box key={dept} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="body2" sx={{ flex: 1, mr: 1 }}>
                     {index + 1}. {dept.length > 30 ? dept.substring(0, 30) + '...' : dept}

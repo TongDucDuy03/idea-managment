@@ -99,7 +99,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   const rewardedIdeas = filteredIdeas.filter(idea => idea.status === 'rewarded').length;
   const rejectedIdeas = filteredIdeas.filter(idea => idea.status === 'rejected').length;
 
-  // Department performance analysis
+  // Department performance analysis (quality-focused)
   const departmentPerformance = filteredIdeas.reduce((acc, idea) => {
     if (!acc[idea.department]) {
       acc[idea.department] = {
@@ -174,6 +174,25 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
     ]
   };
 
+  // Department total counts (quantity-focused)
+  const sortedDepartmentsByTotal = Object.entries(departmentPerformance)
+    .sort(([,a], [,b]) => b.total - a.total);
+
+  const departmentTotalCountData = {
+    labels: sortedDepartmentsByTotal.slice(0, 8).map(([dept]) =>
+      dept.length > 15 ? dept.substring(0, 15) + '...' : dept
+    ),
+    datasets: [
+      {
+        label: 'Tổng số ý tưởng',
+        data: sortedDepartmentsByTotal.slice(0, 8).map(([, data]) => data.total),
+        backgroundColor: '#42A5F5',
+        borderColor: '#1E88E5',
+        borderWidth: 1
+      }
+    ]
+  };
+
   const weeklyTrendData = {
     labels: weeklyLabels.map(label => `Tuần ${label.split('-W')[1]}`),
     datasets: [
@@ -225,6 +244,79 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
     ]
   };
 
+  // Yearly distribution and monthly counts (current year)
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const ideasThisYear = filteredIdeas.filter(i => {
+    const d = new Date(i.submissionDate);
+    return d.getFullYear() === currentYear;
+  });
+
+  const monthlyCounts = Array.from({ length: 12 }, () => 0);
+  ideasThisYear.forEach(i => {
+    const d = new Date(i.submissionDate);
+    const m = d.getMonth();
+    monthlyCounts[m] += 1;
+  });
+
+  const monthLabels = ['01','02','03','04','05','06','07','08','09','10','11','12'].map(m => `${m}/${currentYear}`);
+
+  const monthlyCountBarData = {
+    labels: monthLabels,
+    datasets: [
+      {
+        label: 'Số ý tưởng theo tháng',
+        data: monthlyCounts,
+        backgroundColor: '#42A5F5',
+        borderColor: '#1E88E5',
+        borderWidth: 1
+      }
+    ]
+  };
+
+  const yearlyDistributionPie = {
+    labels: monthLabels,
+    datasets: [
+      {
+        data: monthlyCounts,
+        backgroundColor: [
+          '#1E88E5','#43A047','#FB8C00','#8E24AA','#F4511E','#3949AB',
+          '#00ACC1','#7CB342','#FDD835','#5E35B1','#039BE5','#8D6E63'
+        ],
+        borderWidth: 1
+      }
+    ]
+  };
+
+  // Rankings by department and individual based on implementationDirection
+  const isImplemented = (dir?: string) => dir === 'Triển khai' || dir === 'Làm báo cáo A3';
+  const isSuccessful = (dir?: string) => dir === 'Làm báo cáo A3';
+
+  type ImplStats = { implemented: number; successful: number };
+
+  const deptImplStats = filteredIdeas.reduce((acc, idea) => {
+    const key = idea.department || 'Khác';
+    if (!acc[key]) acc[key] = { implemented: 0, successful: 0 } as ImplStats;
+    if (isImplemented(idea.implementationDirection)) acc[key].implemented += 1;
+    if (isSuccessful(idea.implementationDirection)) acc[key].successful += 1;
+    return acc;
+  }, {} as Record<string, ImplStats>);
+
+  const userImplStats = filteredIdeas.reduce((acc, idea) => {
+    const key = idea.fullName || 'Không rõ';
+    if (!acc[key]) acc[key] = { implemented: 0, successful: 0 } as ImplStats;
+    if (isImplemented(idea.implementationDirection)) acc[key].implemented += 1;
+    if (isSuccessful(idea.implementationDirection)) acc[key].successful += 1;
+    return acc;
+  }, {} as Record<string, ImplStats>);
+
+  const topDeptImpl = Object.entries(deptImplStats)
+    .sort(([,a],[,b]) => b.implemented - a.implemented)
+    .slice(0, 10);
+  const topUserImpl = Object.entries(userImplStats)
+    .sort(([,a],[,b]) => b.implemented - a.implemented)
+    .slice(0, 10);
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -248,7 +340,147 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   return (
     <Container maxWidth="xl" sx={{ py: 2 }}>
       <Grid container spacing={3}>
-        {/* Department Performance Chart */}
+        {/* SECTION: Số lượng */}
+        <Grid item xs={12}>
+          <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 1 }}>Số lượng</Typography>
+        </Grid>
+
+        {/* Monthly Counts (Bar) */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3, height: 400 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+              Số ý tưởng theo từng tháng (năm {currentYear})
+            </Typography>
+            <Box sx={{ height: 300, mt: 2 }}>
+              <Bar data={monthlyCountBarData} options={chartOptions} />
+            </Box>
+          </Card>
+        </Grid>
+
+        {/* Yearly Distribution (Pie) */}
+        {/* <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3, height: 400 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+              Phân bố ý tưởng trong năm (Theo tháng)
+            </Typography>
+            <Box sx={{ height: 300, mt: 2 }}>
+              <Doughnut data={yearlyDistributionPie} options={pieOptions} />
+            </Box>
+          </Card>
+        </Grid> */}
+
+        {/* Weekly Trend Chart */}
+        {/* <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3, height: 400 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+              Xu hướng Theo Tuần
+            </Typography>
+            <Box sx={{ height: 300, mt: 2 }}>
+              <Line data={weeklyTrendData} options={chartOptions} />
+            </Box>
+          </Card>
+        </Grid> */}
+
+        {/* Department Total Counts */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3, height: 400 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+              Số lượng theo Phòng ban 
+            </Typography>
+            <Box sx={{ height: 300, mt: 2 }}>
+              <Bar data={departmentTotalCountData} options={chartOptions} />
+            </Box>
+          </Card>
+        </Grid>
+
+        {/* Rankings by Department (Implementation) */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+              Xếp hạng Phòng ban theo triển khai
+            </Typography>
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Xếp hạng</strong></TableCell>
+                    <TableCell><strong>Phòng ban</strong></TableCell>
+                    <TableCell align="center"><strong>Đã triển khai</strong></TableCell>
+                    <TableCell align="center"><strong>Thành công (A3)</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {topDeptImpl.map(([dept, data], index) => (
+                    <TableRow key={dept}>
+                      <TableCell>
+                        <Chip label={index + 1} color={index < 3 ? 'primary' : 'default'} size="small" />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {dept.length > 40 ? dept.substring(0, 40) + '...' : dept}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={(data as any).implemented} color="info" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={(data as any).successful} color="success" size="small" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Card>
+        </Grid>
+
+        {/* Rankings by Individual (Implementation) */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+              Xếp hạng Cá nhân theo triển khai
+            </Typography>
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Xếp hạng</strong></TableCell>
+                    <TableCell><strong>Họ và tên</strong></TableCell>
+                    <TableCell align="center"><strong>Đã triển khai</strong></TableCell>
+                    <TableCell align="center"><strong>Thành công (A3)</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {topUserImpl.map(([name, data], index) => (
+                    <TableRow key={name}>
+                      <TableCell>
+                        <Chip label={index + 1} color={index < 3 ? 'primary' : 'default'} size="small" />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {name.length > 40 ? name.substring(0, 40) + '...' : name}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={(data as any).implemented} color="info" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={(data as any).successful} color="success" size="small" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Card>
+        </Grid>
+
+        {/* SECTION: Chất lượng */}
+        <Grid item xs={12}>
+          <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 3 }}>Chất lượng</Typography>
+        </Grid>
+
+        {/* Department Performance Chart (Reward Rate) */}
         <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ p: 3, height: 400 }}>
             <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
@@ -256,30 +488,6 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
               <Bar data={departmentPerformanceData} options={chartOptions} />
-            </Box>
-          </Card>
-        </Grid>
-
-        {/* Status Distribution Pie Chart */}
-        <Grid item xs={12} md={6}>
-          <Card elevation={3} sx={{ p: 3, height: 400 }}>
-            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
-              Phân bố Trạng thái
-            </Typography>
-            <Box sx={{ height: 300, mt: 2 }}>
-              <Pie data={statusDistributionData} options={pieOptions} />
-            </Box>
-          </Card>
-        </Grid>
-
-        {/* Weekly Trend Chart */}
-        <Grid item xs={12} md={6}>
-          <Card elevation={3} sx={{ p: 3, height: 400 }}>
-            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
-              Xu hướng Theo Tuần
-            </Typography>
-            <Box sx={{ height: 300, mt: 2 }}>
-              <Line data={weeklyTrendData} options={chartOptions} />
             </Box>
           </Card>
         </Grid>
@@ -295,6 +503,18 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
             </Box>
           </Card>
         </Grid>
+
+        {/* Status Distribution Pie Chart */}
+        {/* <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3, height: 400 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+              Phân bố Trạng thái
+            </Typography>
+            <Box sx={{ height: 300, mt: 2 }}>
+              <Pie data={statusDistributionData} options={pieOptions} />
+            </Box>
+          </Card>
+        </Grid> */}
 
         {/* Department Performance Table */}
         <Grid item xs={12}>
