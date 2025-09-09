@@ -232,6 +232,17 @@ const StatisticsDashboard: React.FC = () => {
     const previousRewardRate = previousTotal > 0 ? (previousRewarded / previousTotal) * 100 : 0;
     const rewardRateChange = currentRewardRate - previousRewardRate;
 
+    // Calculate benefit value and reward amount
+    const currentBenefitValue = current.reduce((sum, idea) => sum + ((idea as any).benefitValue || 0), 0);
+    const previousBenefitValue = previous.reduce((sum, idea) => sum + ((idea as any).benefitValue || 0), 0);
+    const benefitValueChange = currentBenefitValue - previousBenefitValue;
+    const benefitValueChangePercent = previousBenefitValue > 0 ? ((benefitValueChange / previousBenefitValue) * 100) : 0;
+
+    const currentRewardAmount = current.reduce((sum, idea) => sum + ((idea as any).rewardAmount || 0), 0);
+    const previousRewardAmount = previous.reduce((sum, idea) => sum + ((idea as any).rewardAmount || 0), 0);
+    const rewardAmountChange = currentRewardAmount - previousRewardAmount;
+    const rewardAmountChangePercent = previousRewardAmount > 0 ? ((rewardAmountChange / previousRewardAmount) * 100) : 0;
+
     return {
       currentLabel,
       previousLabel,
@@ -252,6 +263,18 @@ const StatisticsDashboard: React.FC = () => {
         current: currentRewardRate,
         previous: previousRewardRate,
         change: rewardRateChange
+      },
+      benefitValue: {
+        current: currentBenefitValue,
+        previous: previousBenefitValue,
+        change: benefitValueChange,
+        changePercent: benefitValueChangePercent
+      },
+      rewardAmount: {
+        current: currentRewardAmount,
+        previous: previousRewardAmount,
+        change: rewardAmountChange,
+        changePercent: rewardAmountChangePercent
       }
     };
   };
@@ -673,7 +696,7 @@ const StatisticsDashboard: React.FC = () => {
               </Box>
               
               <Grid container spacing={3}>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={3}>
                   <ComparisonCard
                     title="Tổng số ý tưởng"
                     currentValue={stats.total.current}
@@ -683,7 +706,7 @@ const StatisticsDashboard: React.FC = () => {
                     icon={<BarChartIcon sx={{ color: '#1976d2', fontSize: '1.5rem' }} />}
                   />
                 </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={3}>
                   <ComparisonCard
                     title="Ý tưởng được khen thưởng"
                     currentValue={stats.rewarded.current}
@@ -693,7 +716,7 @@ const StatisticsDashboard: React.FC = () => {
                     icon={<TrendingUpIcon sx={{ color: '#2e7d32', fontSize: '1.5rem' }} />}
                   />
                 </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={3}>
                   <Card sx={{ 
                     p: 2, 
                     height: '100%',
@@ -733,6 +756,139 @@ const StatisticsDashboard: React.FC = () => {
                     
                     <Typography variant="body2" color="text.secondary">
                       So với kỳ trước: {stats.rewardRate.previous.toFixed(1)}%
+                    </Typography>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <Card sx={{ 
+                    p: 2, 
+                    height: '100%',
+                    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: 2,
+                    boxShadow: 2
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <TrendingUpIcon sx={{ color: '#FF9800', fontSize: '1.5rem' }} />
+                      <Typography variant="h6" sx={{ ml: 1, fontWeight: 'bold', color: '#1976d2' }}>
+                        Giá trị làm lợi
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                        {(stats.benefitValue.current / 1000000).toFixed(1)}M
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {stats.benefitValue.change >= 0 ? (
+                          <TrendingUpIcon sx={{ color: '#2e7d32', mr: 0.5 }} />
+                        ) : (
+                          <TrendingDownIcon sx={{ color: '#d32f2f', mr: 0.5 }} />
+                        )}
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: stats.benefitValue.change >= 0 ? '#2e7d32' : '#d32f2f',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {stats.benefitValue.change > 0 ? '+' : ''}{(stats.benefitValue.change / 1000000).toFixed(1)}M
+                        </Typography>
+                      </Box>
+                    </Box>
+                    
+                    <Typography variant="body2" color="text.secondary">
+                      So với kỳ trước: {(stats.benefitValue.previous / 1000000).toFixed(1)}M VND
+                    </Typography>
+                  </Card>
+                </Grid>
+              </Grid>
+              
+              {/* Second row for reward amount */}
+              <Grid container spacing={3} sx={{ mt: 1 }}>
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ 
+                    p: 2, 
+                    height: '100%',
+                    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: 2,
+                    boxShadow: 2
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <TrendingUpIcon sx={{ color: '#9C27B0', fontSize: '1.5rem' }} />
+                      <Typography variant="h6" sx={{ ml: 1, fontWeight: 'bold', color: '#1976d2' }}>
+                        Tổng tiền thưởng
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                        {(stats.rewardAmount.current / 1000000).toFixed(1)}M
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {stats.rewardAmount.change >= 0 ? (
+                          <TrendingUpIcon sx={{ color: '#2e7d32', mr: 0.5 }} />
+                        ) : (
+                          <TrendingDownIcon sx={{ color: '#d32f2f', mr: 0.5 }} />
+                        )}
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: stats.rewardAmount.change >= 0 ? '#2e7d32' : '#d32f2f',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {stats.rewardAmount.change > 0 ? '+' : ''}{(stats.rewardAmount.change / 1000000).toFixed(1)}M
+                        </Typography>
+                      </Box>
+                    </Box>
+                    
+                    <Typography variant="body2" color="text.secondary">
+                      So với kỳ trước: {(stats.rewardAmount.previous / 1000000).toFixed(1)}M VND
+                    </Typography>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ 
+                    p: 2, 
+                    height: '100%',
+                    background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: 2,
+                    boxShadow: 2
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <TrendingUpIcon sx={{ color: '#607D8B', fontSize: '1.5rem' }} />
+                      <Typography variant="h6" sx={{ ml: 1, fontWeight: 'bold', color: '#1976d2' }}>
+                        Tỷ lệ thay đổi tiền thưởng
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+                        {stats.rewardAmount.changePercent.toFixed(1)}%
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {stats.rewardAmount.changePercent >= 0 ? (
+                          <TrendingUpIcon sx={{ color: '#2e7d32', mr: 0.5 }} />
+                        ) : (
+                          <TrendingDownIcon sx={{ color: '#d32f2f', mr: 0.5 }} />
+                        )}
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: stats.rewardAmount.changePercent >= 0 ? '#2e7d32' : '#d32f2f',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {stats.rewardAmount.changePercent > 0 ? '+' : ''}{stats.rewardAmount.changePercent.toFixed(1)}%
+                        </Typography>
+                      </Box>
+                    </Box>
+                    
+                    <Typography variant="body2" color="text.secondary">
+                      Thay đổi so với kỳ trước
                     </Typography>
                   </Card>
                 </Grid>

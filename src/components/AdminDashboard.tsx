@@ -268,6 +268,11 @@ const AdminDashboard: React.FC = () => {
       'Giải pháp': (idea as any).solution || parseFieldFromIdea((idea as any).idea, 'Giải pháp'),
       'Lợi ích': (idea as any).benefit || parseFieldFromIdea((idea as any).idea, 'Lợi ích'),
       'Trạng thái': statusLabel(idea.status),
+      'Hướng triển khai': (idea as any).implementationDirection || '',
+      'Phòng ban triển khai': (idea as any).implementationDepartment || '',
+      'Ghi chú': (idea as any).note || '',
+      'Giá trị làm lợi (VND)': (idea as any).benefitValue ? (idea as any).benefitValue.toLocaleString('vi-VN') : '0',
+      'Tiền thưởng (VND)': (idea as any).rewardAmount ? (idea as any).rewardAmount.toLocaleString('vi-VN') : '0',
       'Ngày gửi': new Date(idea.submissionDate).toLocaleDateString('vi-VN')
     }));
 
@@ -316,7 +321,7 @@ const AdminDashboard: React.FC = () => {
     if (!topScrollElement || !dataGridElement) return;
 
     // Tính tổng chiều rộng của các cột (hardcode để tránh lỗi dependency)
-    const totalWidth = 150 + 200 + 250 + 300 + 300 + 300 + 200 + 180 + 180 + 200 + 180 + 180 + 120; // Tổng chiều rộng các cột
+    const totalWidth = 150+ 200 + 200 + 300 + 300 +300 + 200 + 180 + 180 + 200 + 200 + 180 + 180 + 120 ; // Tổng chiều rộng các cột
     
     // Cập nhật chiều rộng của thanh cuộn trên
     const invisibleContent = topScrollElement.querySelector('div');
@@ -438,7 +443,7 @@ const AdminDashboard: React.FC = () => {
     { 
       field: 'department', 
       headerName: 'Đơn vị', 
-      width: 250,
+      width: 200,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
@@ -529,7 +534,7 @@ const AdminDashboard: React.FC = () => {
     {
       field: 'status',
       headerName: 'Trạng thái',
-      width: 200,
+      width: 150,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
@@ -621,7 +626,7 @@ const AdminDashboard: React.FC = () => {
           fontWeight: 'bold',
           color: '#2E7D32'
         }}>
-          {params.value ? new Intl.NumberFormat('vi-VN').format(params.value) : '0'}
+          {params.value ? params.value.toLocaleString('vi-VN') : '0'}
         </div>
       )
     },
@@ -638,7 +643,7 @@ const AdminDashboard: React.FC = () => {
           fontWeight: 'bold',
           color: '#1976D2'
         }}>
-          {params.value ? new Intl.NumberFormat('vi-VN').format(params.value) : '0'}
+          {params.value ? params.value.toLocaleString('vi-VN') : '0'}
         </div>
       )
     },
@@ -773,7 +778,7 @@ const AdminDashboard: React.FC = () => {
                     ))}
                   </Select>
                   <Box sx={{ display: 'flex', gap: 2, marginLeft: 'auto', alignItems: 'center' }}>
-                    <Button
+                    {/* <Button
                       variant="contained"
                       color="info"
                       startIcon={<BarChartIcon />}
@@ -795,7 +800,7 @@ const AdminDashboard: React.FC = () => {
                       }}
                     >
                       Dashboard Thống kê
-                    </Button>
+                    </Button> */}
                     <Button
                       variant="contained"
                       color="success"

@@ -168,7 +168,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               required
               fullWidth
               multiline
-              rows={4}
+              rows={6}
             />
             <TextField
               name="solution"
@@ -178,7 +178,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               required
               fullWidth
               multiline
-              rows={4}
+              rows={6}
             />
             <TextField
               name="benefit"
@@ -188,7 +188,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               required
               fullWidth
               multiline
-              rows={4}
+              rows={6}
             />
             <FormControl fullWidth>
               <InputLabel>Hướng triển khai</InputLabel>
@@ -237,7 +237,8 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               value={formData.benefitValue || 0}
               onChange={handleTextChange}
               fullWidth
-              inputProps={{ min: 0 }}
+              inputProps={{ min: 0, step: 1 }}
+              helperText="Ví dụ: 5.000.000"
             />
             <TextField
               name="rewardAmount"
@@ -246,7 +247,8 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               value={formData.rewardAmount || 0}
               onChange={handleTextChange}
               fullWidth
-              inputProps={{ min: 0 }}
+              inputProps={{ min: 0, step: 1 }}
+              helperText="Ví dụ: 1.000.000"
             />
             {isEdit && (
               <FormControl fullWidth>

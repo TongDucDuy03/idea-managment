@@ -288,6 +288,129 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
     ]
   };
 
+  // Value-based statistics
+  const departmentBenefitValue = filteredIdeas.reduce((acc, idea) => {
+    const dept = idea.department || 'Khác';
+    if (!acc[dept]) {
+      acc[dept] = 0;
+    }
+    acc[dept] += (idea as any).benefitValue || 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const departmentRewardAmount = filteredIdeas.reduce((acc, idea) => {
+    const dept = idea.department || 'Khác';
+    if (!acc[dept]) {
+      acc[dept] = 0;
+    }
+    acc[dept] += (idea as any).rewardAmount || 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const userRewardAmount = filteredIdeas.reduce((acc, idea) => {
+    const user = idea.fullName || 'Không rõ';
+    if (!acc[user]) {
+      acc[user] = {
+        name: user,
+        department: idea.department || 'Khác',
+        totalReward: 0,
+        totalBenefit: 0
+      };
+    }
+    acc[user].totalReward += (idea as any).rewardAmount || 0;
+    acc[user].totalBenefit += (idea as any).benefitValue || 0;
+    return acc;
+  }, {} as Record<string, { name: string; department: string; totalReward: number; totalBenefit: number }>);
+
+  // Top departments by benefit value
+  const topDeptByBenefit = Object.entries(departmentBenefitValue)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 8);
+
+  const topDeptByReward = Object.entries(departmentRewardAmount)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 8);
+
+  const topUsersByReward = Object.values(userRewardAmount)
+    .sort((a, b) => b.totalReward - a.totalReward)
+    .slice(0, 10);
+
+  // Monthly reward amount data
+  const monthlyRewardData = filteredIdeas.reduce((acc, idea) => {
+    const date = new Date(idea.submissionDate);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    if (!acc[monthKey]) {
+      acc[monthKey] = 0;
+    }
+    acc[monthKey] += (idea as any).rewardAmount || 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const monthlyRewardLabels = Object.keys(monthlyRewardData).sort();
+  const monthlyRewardAmounts = monthlyRewardLabels.map(label => monthlyRewardData[label]);
+
+  // Chart data for value-based charts
+  const departmentBenefitChartData = {
+    labels: topDeptByBenefit.map(([dept]) => 
+      dept.length > 15 ? dept.substring(0, 15) + '...' : dept
+    ),
+    datasets: [
+      {
+        label: 'Giá trị làm lợi (VND)',
+        data: topDeptByBenefit.map(([, value]) => value / 1000000), // Convert to millions
+        backgroundColor: '#4CAF50',
+        borderColor: '#2E7D32',
+        borderWidth: 1
+      }
+    ]
+  };
+
+  const departmentRewardChartData = {
+    labels: topDeptByReward.map(([dept]) => 
+      dept.length > 15 ? dept.substring(0, 15) + '...' : dept
+    ),
+    datasets: [
+      {
+        label: 'Tiền thưởng (VND)',
+        data: topDeptByReward.map(([, value]) => value / 1000000), // Convert to millions
+        backgroundColor: '#FF9800',
+        borderColor: '#F57C00',
+        borderWidth: 1
+      }
+    ]
+  };
+
+  const userRewardChartData = {
+    labels: topUsersByReward.map(user => 
+      user.name.length > 20 ? user.name.substring(0, 20) + '...' : user.name
+    ),
+    datasets: [
+      {
+        label: 'Tiền thưởng (VND)',
+        data: topUsersByReward.map(user => user.totalReward / 1000000), // Convert to millions
+        backgroundColor: '#9C27B0',
+        borderColor: '#7B1FA2',
+        borderWidth: 1
+      }
+    ]
+  };
+
+  const monthlyRewardChartData = {
+    labels: monthlyRewardLabels.map(label => {
+      const [year, month] = label.split('-');
+      return `${month}/${year}`;
+    }),
+    datasets: [
+      {
+        label: 'Tổng tiền thưởng (VND)',
+        data: monthlyRewardAmounts.map(amount => amount / 1000000), // Convert to millions
+        backgroundColor: '#2196F3',
+        borderColor: '#1976D2',
+        borderWidth: 1
+      }
+    ]
+  };
+
   // Rankings by department and individual based on implementationDirection
   const isImplemented = (dir?: string) => dir === 'Triển khai' || dir === 'Làm báo cáo A3';
   const isSuccessful = (dir?: string) => dir === 'Làm báo cáo A3';
@@ -472,6 +595,147 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                 </TableBody>
               </Table>
             </TableContainer>
+          </Card>
+        </Grid>
+
+        {/* SECTION: Giá trị */}
+        <Grid item xs={12}>
+          <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 3 }}>Giá trị</Typography>
+        </Grid>
+
+        {/* Top Departments by Benefit Value */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3, height: 400 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+              Top Phòng ban có Giá trị Làm lợi Cao nhất
+            </Typography>
+            <Box sx={{ height: 300, mt: 2 }}>
+              <Bar data={departmentBenefitChartData} options={{
+                ...chartOptions,
+                plugins: {
+                  ...chartOptions.plugins,
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        return `${context.dataset.label}: ${(context.parsed.y * 1000000).toLocaleString('vi-VN')} VND`;
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: function(value) {
+                        return value + 'M VND';
+                      }
+                    }
+                  }
+                }
+              }} />
+            </Box>
+          </Card>
+        </Grid>
+
+        {/* Top Departments by Reward Amount */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3, height: 400 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+              Top Phòng ban có Tiền thưởng Cao nhất
+            </Typography>
+            <Box sx={{ height: 300, mt: 2 }}>
+              <Bar data={departmentRewardChartData} options={{
+                ...chartOptions,
+                plugins: {
+                  ...chartOptions.plugins,
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        return `${context.dataset.label}: ${(context.parsed.y * 1000000).toLocaleString('vi-VN')} VND`;
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: function(value) {
+                        return value + 'M VND';
+                      }
+                    }
+                  }
+                }
+              }} />
+            </Box>
+          </Card>
+        </Grid>
+
+        {/* Top Individuals by Reward Amount */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3, height: 400 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+              Top Cá nhân có Tiền thưởng Cao nhất
+            </Typography>
+            <Box sx={{ height: 300, mt: 2 }}>
+              <Bar data={userRewardChartData} options={{
+                ...chartOptions,
+                plugins: {
+                  ...chartOptions.plugins,
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        return `${context.dataset.label}: ${(context.parsed.y * 1000000).toLocaleString('vi-VN')} VND`;
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: function(value) {
+                        return value + 'M VND';
+                      }
+                    }
+                  }
+                }
+              }} />
+            </Box>
+          </Card>
+        </Grid>
+
+        {/* Monthly Reward Amount Chart */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3, height: 400 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+              Số tiền thưởng theo từng tháng
+            </Typography>
+            <Box sx={{ height: 300, mt: 2 }}>
+              <Bar data={monthlyRewardChartData} options={{
+                ...chartOptions,
+                plugins: {
+                  ...chartOptions.plugins,
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        return `${context.dataset.label}: ${(context.parsed.y * 1000000).toLocaleString('vi-VN')} VND`;
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: function(value) {
+                        return value + 'M VND';
+                      }
+                    }
+                  }
+                }
+              }} />
+            </Box>
           </Card>
         </Grid>
 
