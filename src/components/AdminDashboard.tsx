@@ -39,6 +39,8 @@ const AdminDashboard: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [statusFilter, setStatusFilter] = useState<Array<'pending' | 'rejected' | 'rewarded'>>([]);
   const [departmentFilter, setDepartmentFilter] = useState<string[]>([]);
+  const [implementationDirectionFilter, setImplementationDirectionFilter] = useState<Array<'Lưu ý tưởng' | 'Triển khai' | 'Làm báo cáo A3' | 'Xem xét' | ''>>([]);
+  const [implementationDepartmentFilter, setImplementationDepartmentFilter] = useState<string[]>([]);
   const [ideaCodeFilter, setIdeaCodeFilter] = useState('');
   const [fullNameFilter, setFullNameFilter] = useState('');
   const [ideaTextFilter, setIdeaTextFilter] = useState('');
@@ -121,6 +123,16 @@ const AdminDashboard: React.FC = () => {
   const handleDepartmentFilterChange = (event: any) => {
     const value = event.target.value as string[];
     setDepartmentFilter(value);
+  };
+
+  const handleImplementationDirectionFilterChange = (event: any) => {
+    const value = event.target.value as Array<'Lưu ý tưởng' | 'Triển khai' | 'Làm báo cáo A3' | 'Xem xét' | ''>;
+    setImplementationDirectionFilter(value);
+  };
+
+  const handleImplementationDepartmentFilterChange = (event: any) => {
+    const value = event.target.value as string[];
+    setImplementationDepartmentFilter(value);
   };
 
   const handleIdeaCodeFilter = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -283,6 +295,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   const uniqueDepartments = Array.from(new Set(ideas.map(i => i.department))).filter(Boolean).sort();
+  const uniqueImplementationDepartments = Array.from(new Set(ideas.map(i => (i as any).implementationDepartment))).filter(Boolean).sort();
 
   const normalizeText = (text: string) =>
     (text || '')
@@ -296,6 +309,8 @@ const AdminDashboard: React.FC = () => {
     const matchesIdeaText = normalizeText(ideaTextFilter) === '' || normalizeText((idea as any).idea || '').includes(normalizeText(ideaTextFilter));
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes((idea as any).status);
     const matchesDepartment = departmentFilter.length === 0 || departmentFilter.includes((idea as any).department);
+    const matchesImplementationDirection = implementationDirectionFilter.length === 0 || implementationDirectionFilter.includes((((idea as any).implementationDirection || '') as any));
+    const matchesImplementationDepartment = implementationDepartmentFilter.length === 0 || implementationDepartmentFilter.includes(((idea as any).implementationDepartment || ''));
     const submissionMs = idea.submissionDate ? new Date(idea.submissionDate).getTime() : NaN;
     const fromMs = dateFrom ? new Date(dateFrom).setHours(0, 0, 0, 0) : NaN;
     const toMs = dateTo ? new Date(dateTo).setHours(23, 59, 59, 999) : NaN;
@@ -308,6 +323,8 @@ const AdminDashboard: React.FC = () => {
       matchesIdeaText &&
       matchesStatus &&
       matchesDepartment &&
+      matchesImplementationDirection &&
+      matchesImplementationDepartment &&
       matchesDateFrom &&
       matchesDateTo
     );
@@ -685,8 +702,9 @@ const AdminDashboard: React.FC = () => {
           </Typography>
           <Divider sx={{ my: 2 }} />
           <Grid container spacing={3} alignItems="flex-start">
-            <Grid item xs={12} md={8}>
+            <Grid item xs={12} md={12}>
               <Box sx={{ display: 'flex', flexDirection: 'column', rowGap: 2 }}>
+                {/* Hàng 1 */}
                 <Box sx={{ display: 'flex', columnGap: 2, rowGap: 1.5, flexWrap: 'wrap' }}>
                   <TextField
                     label="Mã ý tưởng"
@@ -707,11 +725,34 @@ const AdminDashboard: React.FC = () => {
                     size="small"
                     value={ideaTextFilter}
                     onChange={handleIdeaTextFilter}
-                    sx={{ minWidth: 200, flex: '2 1 300px' }}
+                    sx={{ minWidth: 200, flex: '1 1 200px' }}
                   />
+                  
                 </Box>
 
-                <Box sx={{ display: 'flex', alignItems: 'center', columnGap: 2, rowGap: 1.5, flexWrap: 'wrap' }}>
+                {/* Hàng 2 */}
+                <Box sx={{ display: 'flex', columnGap: 2, rowGap: 1.5, flexWrap: 'wrap' }}>
+                  <Select
+                    multiple
+                    displayEmpty
+                    value={departmentFilter}
+                    onChange={handleDepartmentFilterChange}
+                    renderValue={(selected) => {
+                      if ((selected as string[]).length === 0) {
+                        return 'Lọc đơn vị';
+                      }
+                      return (selected as string[]).join(', ');
+                    }}
+                    size="small"
+                    sx={{ minWidth: 200, maxWidth: 280, flexShrink: 1 }}
+                  >
+                    {uniqueDepartments.map(dep => (
+                      <MenuItem key={dep} value={dep}>
+                        <Checkbox checked={departmentFilter.indexOf(dep) > -1} />
+                        <ListItemText primary={dep} />
+                      </MenuItem>
+                    ))}
+                  </Select>
                   <TextField
                     label="Từ ngày"
                     type="date"
@@ -733,34 +774,17 @@ const AdminDashboard: React.FC = () => {
                   <Select
                     multiple
                     displayEmpty
-                    value={departmentFilter}
-                    onChange={handleDepartmentFilterChange}
-                    renderValue={(selected) => {
-                      if ((selected as string[]).length === 0) {
-                        return 'Lọc phòng ban';
-                      }
-                      return (selected as string[]).join(', ');
-                    }}
-                    size="small"
-                    sx={{ minWidth: 200, maxWidth: 280, flexShrink: 1 }}
-                  >
-                    {uniqueDepartments.map(dep => (
-                      <MenuItem key={dep} value={dep}>
-                        <Checkbox checked={departmentFilter.indexOf(dep) > -1} />
-                        <ListItemText primary={dep} />
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  <Select
-                    multiple
-                    displayEmpty
                     value={statusFilter}
                     onChange={handleStatusFilterChange}
                     renderValue={(selected) => {
                       if ((selected as string[]).length === 0) {
                         return 'Lọc trạng thái';
                       }
-                      const map: any = { pending: 'Chưa xem xét', rejected: 'Không khen thưởng', rewarded: 'Đã khen thưởng' };
+                      const map: any = {
+                        pending: 'Chưa xem xét',
+                        rejected: 'Không khen thưởng',
+                        rewarded: 'Đã khen thưởng'
+                      };
                       return (selected as string[]).map(s => map[s]).join(', ');
                     }}
                     size="small"
@@ -777,8 +801,55 @@ const AdminDashboard: React.FC = () => {
                       </MenuItem>
                     ))}
                   </Select>
-                  <Box sx={{ display: 'flex', gap: 2, marginLeft: 'auto', alignItems: 'center' }}>
-                    {/* <Button
+
+                  <Select
+                    multiple
+                    displayEmpty
+                    value={implementationDirectionFilter}
+                    onChange={handleImplementationDirectionFilterChange}
+                    renderValue={(selected) => {
+                      if ((selected as string[]).length === 0) {
+                        return 'Lọc hướng triển khai';
+                      }
+                      return (selected as string[]).join(', ');
+                    }}
+                    size="small"
+                    sx={{ minWidth: 220, maxWidth: 320, flexShrink: 1 }}
+                  >
+                    {['Lưu ý tưởng', 'Triển khai', 'Làm báo cáo A3', 'Xem xét'].map(val => (
+                      <MenuItem key={val} value={val as any}>
+                        <Checkbox checked={implementationDirectionFilter.indexOf(val as any) > -1} />
+                        <ListItemText primary={val} />
+                      </MenuItem>
+                    ))}
+                  </Select>
+
+                  <Select
+                    multiple
+                    displayEmpty
+                    value={implementationDepartmentFilter}
+                    onChange={handleImplementationDepartmentFilterChange}
+                    renderValue={(selected) => {
+                      if ((selected as string[]).length === 0) {
+                        return 'Lọc phòng ban triển khai';
+                      }
+                      return (selected as string[]).join(', ');
+                    }}
+                    size="small"
+                    sx={{ minWidth: 240, maxWidth: 340, flexShrink: 1 }}
+                  >
+                    {uniqueImplementationDepartments.map(dep => (
+                      <MenuItem key={dep} value={dep}>
+                        <Checkbox checked={implementationDepartmentFilter.indexOf(dep) > -1} />
+                        <ListItemText primary={dep} />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </Box>
+
+                {/* Hàng 3 */}
+                <Box sx={{ display: 'flex', gap: 2, marginLeft: 'auto', alignItems: 'center' }}>
+                  {/* <Button
                       variant="contained"
                       color="info"
                       startIcon={<BarChartIcon />}
@@ -800,51 +871,51 @@ const AdminDashboard: React.FC = () => {
                       }}
                     >
                       Dashboard Thống kê
-                    </Button> */}
-                    <Button
-                      variant="contained"
-                      color="success"
-                      startIcon={<FileDownloadIcon />}
-                      onClick={handleExportExcel}
-                      sx={{
-                        py: 1.0,
-                        px: 2.0,
-                        fontSize: '0.95rem',
-                        fontWeight: 'bold',
-                        textTransform: 'none',
-                        boxShadow: 2,
-                        whiteSpace: 'nowrap',
-                        minWidth: 'max-content',
-                        '&:hover': {
-                          boxShadow: 4,
-                          transform: 'translateY(-2px)',
-                          transition: 'all 0.2s'
-                        }
-                      }}
-                    >
-                      Xuất Excel
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={handleLogout}
-                      sx={{
-                        py: 1.0,
-                        px: 2.0,
-                        fontSize: '0.95rem',
-                        fontWeight: 'bold',
-                        textTransform: 'none',
-                        whiteSpace: 'nowrap',
-                        minWidth: 'max-content'
-                      }}
-                    >
-                      Đăng xuất
-                    </Button>
-                  </Box>
+                  </Button> */}
+                  <Button
+                    variant="contained"
+                    color="success"
+                    startIcon={<FileDownloadIcon />}
+                    onClick={handleExportExcel}
+                    sx={{
+                      py: 1.0,
+                      px: 2.0,
+                      fontSize: '0.95rem',
+                      fontWeight: 'bold',
+                      textTransform: 'none',
+                      boxShadow: 2,
+                      whiteSpace: 'nowrap',
+                      minWidth: 'max-content',
+                      '&:hover': {
+                        boxShadow: 4,
+                        transform: 'translateY(-2px)',
+                        transition: 'all 0.2s'
+                      }
+                    }}
+                  >
+                    Xuất Excel
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={handleLogout}
+                    sx={{
+                      py: 1.0,
+                      px: 2.0,
+                      fontSize: '0.95rem',
+                      fontWeight: 'bold',
+                      textTransform: 'none',
+                      whiteSpace: 'nowrap',
+                      minWidth: 'max-content'
+                    }}
+                  >
+                    Đăng xuất
+                  </Button>
                 </Box>
               </Box>
             </Grid>
           </Grid>
+
         </CardContent>
       </Card>
 

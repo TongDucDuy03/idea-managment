@@ -99,31 +99,36 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   const rewardedIdeas = filteredIdeas.filter(idea => idea.status === 'rewarded').length;
   const rejectedIdeas = filteredIdeas.filter(idea => idea.status === 'rejected').length;
 
-  // Department performance analysis (quality-focused)
-  const departmentPerformance = filteredIdeas.reduce((acc, idea) => {
-    if (!acc[idea.department]) {
-      acc[idea.department] = {
-        total: 0,
-        rewarded: 0,
-        pending: 0,
-        rejected: 0,
-        rewardRate: 0
-      };
-    }
-    acc[idea.department].total++;
-    acc[idea.department][idea.status]++;
-    return acc;
-  }, {} as Record<string, { total: number; rewarded: number; pending: number; rejected: number; rewardRate: number }>);
+  // Helpers for implementation status (defined early for reuse)
+  const isImplemented = (dir?: string) => dir === 'Triển khai' || dir === 'Làm báo cáo A3';
+  const isSuccessful = (dir?: string) => dir === 'Làm báo cáo A3';
 
-  // Calculate reward rates
+  // Department performance analysis (quality-focused) - based on implementation success
+  const departmentPerformance = filteredIdeas.reduce((acc, idea) => {
+    const dept = idea.department || 'Khác';
+    if (!acc[dept]) {
+      acc[dept] = {
+        total: 0,
+        implemented: 0,
+        successful: 0,
+        successRate: 0
+      } as any;
+    }
+    acc[dept].total++;
+    if (isImplemented(idea.implementationDirection)) acc[dept].implemented++;
+    if (isSuccessful(idea.implementationDirection)) acc[dept].successful++;
+    return acc;
+  }, {} as Record<string, { total: number; implemented: number; successful: number; successRate: number }>);
+
+  // Calculate implementation success rates
   Object.keys(departmentPerformance).forEach(dept => {
     const deptData = departmentPerformance[dept];
-    deptData.rewardRate = deptData.total > 0 ? (deptData.rewarded / deptData.total) * 100 : 0;
+    deptData.successRate = deptData.total > 0 ? (deptData.successful / deptData.total) * 100 : 0;
   });
 
   // Sort departments by performance
   const sortedDepartments = Object.entries(departmentPerformance)
-    .sort(([,a], [,b]) => b.rewardRate - a.rewardRate);
+    .sort(([,a], [,b]) => b.successRate - a.successRate);
 
   // Weekly trend data
   const weeklyData = filteredIdeas.reduce((acc, idea) => {
@@ -140,22 +145,22 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   const weeklyLabels = Object.keys(weeklyData).sort();
   const weeklyTotals = weeklyLabels.map(label => weeklyData[label].total);
 
-  // Monthly performance comparison
+  // Monthly implementation success comparison
   const monthlyPerformance = filteredIdeas.reduce((acc, idea) => {
     const date = new Date(idea.submissionDate);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     if (!acc[monthKey]) {
-      acc[monthKey] = { total: 0, rewarded: 0, pending: 0, rejected: 0 };
+      acc[monthKey] = { total: 0, successful: 0 } as any;
     }
     acc[monthKey].total++;
-    acc[monthKey][idea.status]++;
+    if (isSuccessful(idea.implementationDirection)) acc[monthKey].successful++;
     return acc;
-  }, {} as Record<string, { total: number; rewarded: number; pending: number; rejected: number }>);
+  }, {} as Record<string, { total: number; successful: number }>);
 
   const monthlyLabels = Object.keys(monthlyPerformance).sort();
-  const monthlyRewardRates = monthlyLabels.map(label => {
+  const monthlySuccessRates = monthlyLabels.map(label => {
     const data = monthlyPerformance[label];
-    return data.total > 0 ? (data.rewarded / data.total) * 100 : 0;
+    return data.total > 0 ? (data.successful / data.total) * 100 : 0;
   });
 
   // Chart configurations
@@ -165,8 +170,8 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
     ),
     datasets: [
       {
-        label: 'Tỷ lệ khen thưởng (%)',
-        data: sortedDepartments.slice(0, 8).map(([, data]) => data.rewardRate.toFixed(1)),
+        label: 'Tỷ lệ triển khai thành công (%)',
+        data: sortedDepartments.slice(0, 8).map(([, data]) => (data as any).successRate.toFixed(1)),
         backgroundColor: '#1976d2',
         borderColor: '#1565c0',
         borderWidth: 1
@@ -207,17 +212,17 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
     ]
   };
 
-  const monthlyRewardRateData = {
+  const monthlySuccessRateData = {
     labels: monthlyLabels.map(label => {
       const [year, month] = label.split('-');
       return `${month}/${year}`;
     }),
     datasets: [
       {
-        label: 'Tỷ lệ khen thưởng (%)',
-        data: monthlyRewardRates,
-        borderColor: '#FF9800',
-        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+        label: 'Tỷ lệ triển khai thành công (%)',
+        data: monthlySuccessRates,
+        borderColor: '#4CAF50',
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
         fill: true,
         tension: 0.4
       }
@@ -410,10 +415,6 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
       }
     ]
   };
-
-  // Rankings by department and individual based on implementationDirection
-  const isImplemented = (dir?: string) => dir === 'Triển khai' || dir === 'Làm báo cáo A3';
-  const isSuccessful = (dir?: string) => dir === 'Làm báo cáo A3';
 
   type ImplStats = { implemented: number; successful: number };
 
@@ -744,11 +745,11 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
           <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 3 }}>Chất lượng</Typography>
         </Grid>
 
-        {/* Department Performance Chart (Reward Rate) */}
+        {/* Department Performance Chart (Implementation Success Rate) */}
         <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ p: 3, height: 400 }}>
             <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
-              Hiệu suất Phòng ban (Top 8)
+              Tỷ lệ Triển khai Thành công theo Phòng ban (Top 8)
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
               <Bar data={departmentPerformanceData} options={chartOptions} />
@@ -756,14 +757,14 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
           </Card>
         </Grid>
 
-        {/* Monthly Reward Rate Chart */}
+        {/* Monthly Implementation Success Rate Chart */}
         <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ p: 3, height: 400 }}>
             <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
-              Tỷ lệ Khen thưởng Theo Tháng
+              Tỷ lệ Triển khai Thành công Theo Tháng
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
-              <Line data={monthlyRewardRateData} options={chartOptions} />
+              <Line data={monthlySuccessRateData} options={chartOptions} />
             </Box>
           </Card>
         </Grid>
@@ -784,7 +785,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
         <Grid item xs={12}>
           <Card elevation={3} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-              Bảng Xếp hạng Phòng ban
+              Bảng Xếp hạng Phòng ban (theo tỷ lệ triển khai thành công)
             </Typography>
             <TableContainer component={Paper} sx={{ mt: 2 }}>
               <Table>
@@ -793,10 +794,9 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                     <TableCell><strong>Xếp hạng</strong></TableCell>
                     <TableCell><strong>Phòng ban</strong></TableCell>
                     <TableCell align="center"><strong>Tổng ý tưởng</strong></TableCell>
-                    <TableCell align="center"><strong>Đã khen thưởng</strong></TableCell>
-                    <TableCell align="center"><strong>Chưa xem xét</strong></TableCell>
-                    <TableCell align="center"><strong>Không khen thưởng</strong></TableCell>
-                    <TableCell align="center"><strong>Tỷ lệ khen thưởng</strong></TableCell>
+                    <TableCell align="center"><strong>Đã triển khai</strong></TableCell>
+                    <TableCell align="center"><strong>Thành công (A3)</strong></TableCell>
+                    <TableCell align="center"><strong>Tỷ lệ thành công</strong></TableCell>
                     <TableCell align="center"><strong>Thanh tiến độ</strong></TableCell>
                   </TableRow>
                 </TableHead>
@@ -819,29 +819,28 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                         <Chip label={data.total} color="primary" size="small" />
                       </TableCell>
                       <TableCell align="center">
-                        <Chip label={data.rewarded} color="success" size="small" />
+                        <Chip label={(data as any).implemented} color="info" size="small" />
                       </TableCell>
                       <TableCell align="center">
-                        <Chip label={data.pending} color="warning" size="small" />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip label={data.rejected} color="error" size="small" />
+                        <Chip label={(data as any).successful} color="success" size="small" />
                       </TableCell>
                       <TableCell align="center">
                         <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                          {data.rewardRate.toFixed(1)}%
+                          {(data as any).successRate.toFixed(1)}%
                         </Typography>
+                      </TableCell>
+                      <TableCell align="center">
                       </TableCell>
                       <TableCell align="center" sx={{ minWidth: 150 }}>
                         <LinearProgress 
                           variant="determinate" 
-                          value={data.rewardRate} 
+                          value={(data as any).successRate} 
                           sx={{ 
                             height: 8, 
                             borderRadius: 4,
                             backgroundColor: '#e0e0e0',
                             '& .MuiLinearProgress-bar': {
-                              backgroundColor: data.rewardRate > 50 ? '#4CAF50' : data.rewardRate > 25 ? '#FF9800' : '#F44336'
+                              backgroundColor: (data as any).successRate > 50 ? '#4CAF50' : (data as any).successRate > 25 ? '#FF9800' : '#F44336'
                             }
                           }} 
                         />

@@ -293,6 +293,12 @@ const StatisticsDashboard: React.FC = () => {
   const rejectedIdeas = filteredIdeas.filter(idea => idea.status === 'rejected').length;
   const rewardRate = totalIdeas > 0 ? ((rewardedIdeas / totalIdeas) * 100).toFixed(1) : '0';
 
+  // Implementation-based statistics
+  const isImplemented = (dir?: string) => dir === 'Triển khai' || dir === 'Làm báo cáo A3';
+  const isSuccessful = (dir?: string) => dir === 'Làm báo cáo A3';
+  const implementedCount = filteredIdeas.filter(idea => isImplemented(idea.implementationDirection)).length;
+  const implementationSuccessRate = totalIdeas > 0 ? ((filteredIdeas.filter(i => isSuccessful(i.implementationDirection)).length / totalIdeas) * 100).toFixed(1) : '0';
+
   // Department statistics
   const departmentStats = filteredIdeas.reduce((acc, idea) => {
     acc[idea.department] = (acc[idea.department] || 0) + 1;
@@ -917,10 +923,10 @@ const StatisticsDashboard: React.FC = () => {
           <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
             <CardContent>
               <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
-                {rewardedIdeas}
+                {implementedCount}
               </Typography>
               <Typography variant="h6" color="text.secondary">
-                Đã khen thưởng
+                Ý tưởng đã triển khai
               </Typography>
             </CardContent>
           </Card>
@@ -943,10 +949,10 @@ const StatisticsDashboard: React.FC = () => {
           <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
             <CardContent>
               <Typography variant="h3" color="error.main" sx={{ fontWeight: 'bold' }}>
-                {rewardRate}%
+                {implementationSuccessRate}%
               </Typography>
               <Typography variant="h6" color="text.secondary">
-                Tỷ lệ khen thưởng
+                Tỷ lệ triển khai thành công
               </Typography>
             </CardContent>
           </Card>
