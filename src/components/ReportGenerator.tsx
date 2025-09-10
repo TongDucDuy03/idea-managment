@@ -76,6 +76,16 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
   const rejectedIdeas = filteredIdeas.filter(idea => idea.status === 'rejected').length;
   const rewardRate = totalIdeas > 0 ? ((rewardedIdeas / totalIdeas) * 100).toFixed(1) : '0';
 
+  // Implementation-based statistics
+  const isImplemented = (dir?: string) => dir === 'Triển khai' || dir === 'Làm báo cáo A3';
+  const isSuccessful = (dir?: string) => dir === 'Làm báo cáo A3';
+  const implementedCount = filteredIdeas.filter(idea => isImplemented(idea.implementationDirection)).length;
+  const implementationSuccessRate = totalIdeas > 0 ? ((filteredIdeas.filter(i => isSuccessful(i.implementationDirection)).length / totalIdeas) * 100).toFixed(1) : '0';
+
+  // Value-based statistics
+  const totalBenefitValue = filteredIdeas.reduce((sum, idea) => sum + ((idea as any).benefitValue || 0), 0);
+  const totalRewardAmount = filteredIdeas.reduce((sum, idea) => sum + ((idea as any).rewardAmount || 0), 0);
+
   // Department statistics
   const departmentStats = filteredIdeas.reduce((acc, idea) => {
     acc[idea.department] = (acc[idea.department] || 0) + 1;
@@ -85,6 +95,64 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
   const topDepartments = Object.entries(departmentStats)
     .sort(([,a], [,b]) => b - a)
     .slice(0, 10);
+
+  // Department implementation statistics
+  const departmentImplementationStats = filteredIdeas.reduce((acc, idea) => {
+    const dept = idea.department || 'Khác';
+    if (!acc[dept]) {
+      acc[dept] = {
+        total: 0,
+        implemented: 0,
+        successful: 0,
+        successRate: 0,
+        benefitValue: 0,
+        rewardAmount: 0
+      };
+    }
+    acc[dept].total++;
+    if (isImplemented(idea.implementationDirection)) acc[dept].implemented++;
+    if (isSuccessful(idea.implementationDirection)) acc[dept].successful++;
+    acc[dept].benefitValue += (idea as any).benefitValue || 0;
+    acc[dept].rewardAmount += (idea as any).rewardAmount || 0;
+    return acc;
+  }, {} as Record<string, { total: number; implemented: number; successful: number; successRate: number; benefitValue: number; rewardAmount: number }>);
+
+  // Calculate success rates
+  Object.keys(departmentImplementationStats).forEach(dept => {
+    const deptData = departmentImplementationStats[dept];
+    deptData.successRate = deptData.total > 0 ? (deptData.successful / deptData.total) * 100 : 0;
+  });
+
+  // Top departments by benefit value and reward amount
+  const topDeptByBenefit = Object.entries(departmentImplementationStats)
+    .sort(([,a], [,b]) => b.benefitValue - a.benefitValue)
+    .slice(0, 5);
+  
+  const topDeptByReward = Object.entries(departmentImplementationStats)
+    .sort(([,a], [,b]) => b.rewardAmount - a.rewardAmount)
+    .slice(0, 5);
+
+  // Top users by reward amount
+  const userRewardStats = filteredIdeas.reduce((acc, idea) => {
+    const user = idea.fullName || 'Không rõ';
+    if (!acc[user]) {
+      acc[user] = {
+        name: user,
+        department: idea.department || 'Khác',
+        totalReward: 0,
+        totalBenefit: 0,
+        ideaCount: 0
+      };
+    }
+    acc[user].totalReward += (idea as any).rewardAmount || 0;
+    acc[user].totalBenefit += (idea as any).benefitValue || 0;
+    acc[user].ideaCount++;
+    return acc;
+  }, {} as Record<string, { name: string; department: string; totalReward: number; totalBenefit: number; ideaCount: number }>);
+
+  const topUsersByReward = Object.values(userRewardStats)
+    .sort((a, b) => b.totalReward - a.totalReward)
+    .slice(0, 5);
 
   const generatePDF = async () => {
     setGenerating(true);
@@ -120,13 +188,28 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
       pdf.setFont('helvetica', 'normal');
       pdf.text(`• Tổng số ý tưởng: ${totalIdeas}`, 20, yPosition);
       yPosition += 8;
-      pdf.text(`• Đã khen thưởng: ${rewardedIdeas}`, 20, yPosition);
+      pdf.text(`• Ý tưởng đã triển khai: ${implementedCount}`, 20, yPosition);
+      yPosition += 8;
+      pdf.text(`• Tỷ lệ triển khai thành công: ${implementationSuccessRate}%`, 20, yPosition);
       yPosition += 8;
       pdf.text(`• Chưa xem xét: ${pendingIdeas}`, 20, yPosition);
       yPosition += 8;
       pdf.text(`• Không khen thưởng: ${rejectedIdeas}`, 20, yPosition);
       yPosition += 8;
       pdf.text(`• Tỷ lệ khen thưởng: ${rewardRate}%`, 20, yPosition);
+      yPosition += 15;
+
+      // Add value-based statistics
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('THỐNG KÊ GIÁ TRỊ', 20, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`• Tổng giá trị làm lợi: ${(totalBenefitValue / 1000000).toFixed(1)}M VND`, 20, yPosition);
+      yPosition += 8;
+      pdf.text(`• Tổng tiền thưởng: ${(totalRewardAmount / 1000000).toFixed(1)}M VND`, 20, yPosition);
       yPosition += 15;
 
       // Add department statistics
@@ -145,6 +228,120 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
             yPosition = 20;
           }
           pdf.text(`${index + 1}. ${dept}: ${count} ý tưởng`, 20, yPosition);
+          yPosition += 8;
+        });
+        yPosition += 10;
+      }
+
+      // Add implementation statistics by department
+      if (Object.keys(departmentImplementationStats).length > 0) {
+        if (yPosition > pageHeight - 50) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('THỐNG KÊ TRIỂN KHAI THEO PHÒNG BAN', 20, yPosition);
+        yPosition += 10;
+
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        
+        Object.entries(departmentImplementationStats).forEach(([dept, stats]) => {
+          if (yPosition > pageHeight - 20) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.text(`${dept}:`, 20, yPosition);
+          yPosition += 6;
+          pdf.text(`  - Tổng: ${stats.total} | Triển khai: ${stats.implemented} | Thành công: ${stats.successful}`, 25, yPosition);
+          yPosition += 6;
+          pdf.text(`  - Tỷ lệ thành công: ${stats.successRate.toFixed(1)}%`, 25, yPosition);
+          yPosition += 6;
+          pdf.text(`  - Giá trị làm lợi: ${(stats.benefitValue / 1000000).toFixed(1)}M VND`, 25, yPosition);
+          yPosition += 6;
+          pdf.text(`  - Tiền thưởng: ${(stats.rewardAmount / 1000000).toFixed(1)}M VND`, 25, yPosition);
+          yPosition += 8;
+        });
+        yPosition += 10;
+      }
+
+      // Add top departments by benefit value
+      if (topDeptByBenefit.length > 0) {
+        if (yPosition > pageHeight - 50) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('TOP PHÒNG BAN CÓ GIÁ TRỊ LÀM LỢI CAO NHẤT', 20, yPosition);
+        yPosition += 10;
+
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'normal');
+        
+        topDeptByBenefit.forEach(([dept, stats], index) => {
+          if (yPosition > pageHeight - 20) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.text(`${index + 1}. ${dept}: ${(stats.benefitValue / 1000000).toFixed(1)}M VND`, 20, yPosition);
+          yPosition += 8;
+        });
+        yPosition += 10;
+      }
+
+      // Add top departments by reward amount
+      if (topDeptByReward.length > 0) {
+        if (yPosition > pageHeight - 50) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('TOP PHÒNG BAN CÓ TIỀN THƯỞNG CAO NHẤT', 20, yPosition);
+        yPosition += 10;
+
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'normal');
+        
+        topDeptByReward.forEach(([dept, stats], index) => {
+          if (yPosition > pageHeight - 20) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.text(`${index + 1}. ${dept}: ${(stats.rewardAmount / 1000000).toFixed(1)}M VND`, 20, yPosition);
+          yPosition += 8;
+        });
+        yPosition += 10;
+      }
+
+      // Add top users by reward amount
+      if (topUsersByReward.length > 0) {
+        if (yPosition > pageHeight - 50) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('TOP CÁ NHÂN CÓ TIỀN THƯỞNG CAO NHẤT', 20, yPosition);
+        yPosition += 10;
+
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'normal');
+        
+        topUsersByReward.forEach((user, index) => {
+          if (yPosition > pageHeight - 20) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.text(`${index + 1}. ${user.name} (${user.department}): ${(user.totalReward / 1000000).toFixed(1)}M VND`, 20, yPosition);
+          yPosition += 6;
+          pdf.text(`   Số ý tưởng: ${user.ideaCount} | Giá trị làm lợi: ${(user.totalBenefit / 1000000).toFixed(1)}M VND`, 20, yPosition);
           yPosition += 8;
         });
         yPosition += 10;
@@ -173,6 +370,14 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
           pdf.text(`   Phòng ban: ${idea.department}`, 20, yPosition);
           yPosition += 6;
           pdf.text(`   Trạng thái: ${getStatusLabel(idea.status)}`, 20, yPosition);
+          yPosition += 6;
+          pdf.text(`   Hướng triển khai: ${idea.implementationDirection || 'Chưa xác định'}`, 20, yPosition);
+          yPosition += 6;
+          pdf.text(`   Phòng ban triển khai: ${(idea as any).implementationDepartment || 'Chưa xác định'}`, 20, yPosition);
+          yPosition += 6;
+          pdf.text(`   Giá trị làm lợi: ${((idea as any).benefitValue || 0).toLocaleString('vi-VN')} VND`, 20, yPosition);
+          yPosition += 6;
+          pdf.text(`   Tiền thưởng: ${((idea as any).rewardAmount || 0).toLocaleString('vi-VN')} VND`, 20, yPosition);
           yPosition += 6;
           pdf.text(`   Ngày gửi: ${new Date(idea.submissionDate).toLocaleDateString('vi-VN')}`, 20, yPosition);
           yPosition += 6;
@@ -273,8 +478,24 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
                   <Chip label={totalIdeas} color="primary" size="small" />
                 </Grid>
                 <Grid item xs={6}>
+                  <Typography variant="body2">Đã triển khai:</Typography>
+                  <Chip label={implementedCount} color="info" size="small" />
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2">Tỷ lệ thành công:</Typography>
+                  <Chip label={`${implementationSuccessRate}%`} color="success" size="small" />
+                </Grid>
+                <Grid item xs={6}>
                   <Typography variant="body2">Tỷ lệ khen thưởng:</Typography>
-                  <Chip label={`${rewardRate}%`} color="success" size="small" />
+                  <Chip label={`${rewardRate}%`} color="warning" size="small" />
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2">Giá trị làm lợi:</Typography>
+                  <Chip label={`${(totalBenefitValue / 1000000).toFixed(1)}M VND`} color="secondary" size="small" />
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2">Tổng tiền thưởng:</Typography>
+                  <Chip label={`${(totalRewardAmount / 1000000).toFixed(1)}M VND`} color="error" size="small" />
                 </Grid>
               </Grid>
             </Card>
