@@ -16,6 +16,29 @@ import {
 } from '@mui/material';
 import { Idea } from '../types';
 
+// Helpers to parse legacy records where "idea" may include lines like
+// "Giải pháp: ..." and "Lợi ích: ..."
+const parseFieldFromIdea = (
+  ideaText: string | undefined,
+  key: 'Giải pháp' | 'Lợi ích'
+) => {
+  if (!ideaText) return '';
+  const lines = ideaText.split(/\n+/);
+  const line =
+    lines.find(l => l.trim().toLowerCase().startsWith(key.toLowerCase())) || '';
+  return line.replace(/^.*?:\s*/, '').trim();
+};
+
+const getPureIdeaText = (ideaText: string | undefined) => {
+  if (!ideaText) return '';
+  const lines = ideaText.split(/\n+/);
+  const filtered = lines.filter(l => {
+    const t = l.trim().toLowerCase();
+    return !(t.startsWith('giải pháp:') || t.startsWith('lợi ích:'));
+  });
+  return filtered.join('\n').trim();
+};
+
 const departments = [
   'Phòng Hành chính nhân sự',
   'Phòng Nghiên cứu thí nghiệm',
@@ -73,6 +96,11 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
     if (idea) {
       setFormData({
         ...idea,
+        // Ensure problem text is pure, without solution/benefit lines
+        idea: getPureIdeaText(idea.idea),
+        // Prefer explicit fields; fall back to parsing from legacy combined text
+        solution: idea.solution || parseFieldFromIdea(idea.idea, 'Giải pháp'),
+        benefit: idea.benefit || parseFieldFromIdea(idea.idea, 'Lợi ích'),
         implementationDirection: idea.implementationDirection || '',
         implementationDepartment: idea.implementationDepartment || '',
         note: idea.note || '',
