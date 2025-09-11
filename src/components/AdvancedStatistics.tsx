@@ -794,8 +794,8 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                     <TableCell><strong>Xếp hạng</strong></TableCell>
                     <TableCell><strong>Phòng ban</strong></TableCell>
                     <TableCell align="center"><strong>Tổng ý tưởng</strong></TableCell>
-                    <TableCell align="center"><strong>Đã triển khai</strong></TableCell>
-                    <TableCell align="center"><strong>Thành công (A3)</strong></TableCell>
+                    <TableCell align="center"><strong>Được triển khai</strong></TableCell>
+                    <TableCell align="center"><strong>Triển khai thành công (A3)</strong></TableCell>
                     <TableCell align="center"><strong>Tỷ lệ thành công</strong></TableCell>
                     <TableCell align="center"><strong>Thanh tiến độ</strong></TableCell>
                   </TableRow>
