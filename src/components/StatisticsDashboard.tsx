@@ -334,9 +334,12 @@ const StatisticsDashboard: React.FC = () => {
   const rewardRate = totalIdeas > 0 ? ((rewardedIdeas / totalIdeas) * 100).toFixed(1) : '0';
 
   // Implementation-based statistics
-  const isImplemented = (dir?: string) => dir === 'Triển khai' || dir === 'Làm báo cáo A3';
+  const isImplemented = (dir?: string) => dir === 'Lưu ý tưởng' || dir === 'Triển khai' || dir === 'Xem xét' || dir === 'Làm báo cáo A3';
+  const implementedDeployed = (dir?: string) => dir === 'Triển khai' || dir === 'Làm báo cáo A3';
   const isSuccessful = (dir?: string) => dir === 'Làm báo cáo A3';
   const implementedCount = filteredIdeas.filter(idea => isImplemented(idea.implementationDirection)).length;
+  const implementedCountDeployed = filteredIdeas.filter(idea => implementedDeployed(idea.implementationDirection)).length;
+  const implementationSuccess = filteredIdeas.filter(idea => isSuccessful(idea.implementationDirection)).length;
   const implementationSuccessRate = totalIdeas > 0 ? ((filteredIdeas.filter(i => isSuccessful(i.implementationDirection)).length / totalIdeas) * 100).toFixed(1) : '0';
 
   // Department statistics
@@ -1039,7 +1042,7 @@ const StatisticsDashboard: React.FC = () => {
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      <Grid item xs={12} sm={6} md={6}>
           <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
             <CardContent>
               <Typography variant="h3" color="primary" sx={{ fontWeight: 'bold' }}>
@@ -1052,33 +1055,7 @@ const StatisticsDashboard: React.FC = () => {
           </Card>
         </Grid>
         
-        <Grid item xs={12} sm={6} md={3}>
-          <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
-            <CardContent>
-              <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
-                {implementedCount}
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                Ý tưởng đã triển khai
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
-            <CardContent>
-              <Typography variant="h3" color="warning.main" sx={{ fontWeight: 'bold' }}>
-                {pendingIdeas}
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                Chưa xem xét
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={6}>
           <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
             <CardContent>
               <Typography variant="h3" color="error.main" sx={{ fontWeight: 'bold' }}>
@@ -1090,6 +1067,61 @@ const StatisticsDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
+            <CardContent>
+              <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
+                {implementedCount}
+              </Typography>
+              <Typography variant="h6" color="text.secondary">
+                Ý tưởng được thưởng 50k
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
+            <CardContent>
+              <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
+                {implementedCountDeployed}
+              </Typography>
+              <Typography variant="h6" color="text.secondary">
+                Ý tưởng được duyệt triển khai
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
+            <CardContent>
+              <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
+                {implementationSuccess}
+              </Typography>
+              <Typography variant="h6" color="text.secondary">
+                Ý tưởng triển khai thành công
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
+            <CardContent>
+              <Typography variant="h3" color="warning.main" sx={{ fontWeight: 'bold' }}>
+                {pendingIdeas}
+              </Typography>
+              <Typography variant="h6" color="text.secondary">
+                Chờ xem xét
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        
       </Grid>
 
       {/* Charts */}
