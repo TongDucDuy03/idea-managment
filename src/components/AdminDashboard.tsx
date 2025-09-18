@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -31,6 +31,7 @@ import api from '../api/config';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -112,7 +113,41 @@ const AdminDashboard: React.FC = () => {
     fetchIdeas();
   }, [fetchIdeas]);
 
-
+  // Apply filters from query params if present
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    
+    // Department filter
+    const dept = params.get('department');
+    if (dept) {
+      setDepartmentFilter([dept]);
+    }
+    
+    // Status filter
+    const status = params.get('status');
+    if (status && ['pending', 'rejected', 'rewarded'].includes(status)) {
+      setStatusFilter([status as 'pending' | 'rejected' | 'rewarded']);
+    }
+    
+    // Date range filter
+    const dateFrom = params.get('dateFrom');
+    const dateTo = params.get('dateTo');
+    if (dateFrom) setDateFrom(dateFrom);
+    if (dateTo) setDateTo(dateTo);
+    
+    // Full name filter
+    const fullName = params.get('fullName');
+    if (fullName) setFullNameFilter(fullName);
+    
+    // Implementation direction filter
+    const implDirection = params.get('implementationDirection');
+    if (implDirection) {
+      const directions = implDirection.split(',').map(d => d.trim());
+      setImplementationDirectionFilter(directions as any);
+    }
+    
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  }, [location.search]);
   
 
   const handleStatusFilterChange = (event: any) => {

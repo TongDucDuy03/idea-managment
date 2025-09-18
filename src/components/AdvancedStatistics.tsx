@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Container,
@@ -33,7 +33,8 @@ import {
   LineElement,
   Filler
 } from 'chart.js';
-import { Bar, Doughnut, Line, Pie } from 'react-chartjs-2';
+import { Bar, Doughnut, Line, Pie, getElementAtEvent } from 'react-chartjs-2';
+import { useNavigate } from 'react-router-dom';
 import { Idea } from '../types';
 
 // Register Chart.js components
@@ -61,7 +62,18 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   timeRange, 
   departmentFilter 
 }) => {
+  const navigate = useNavigate();
   const [selectedMetric, setSelectedMetric] = useState('ideas');
+  
+  // Refs for charts to detect clicked elements
+  const monthlyCountBarRef = useRef<any>(null);
+  const departmentTotalCountRef = useRef<any>(null);
+  const departmentBenefitRef = useRef<any>(null);
+  const departmentRewardRef = useRef<any>(null);
+  const userRewardRef = useRef<any>(null);
+  const monthlyRewardRef = useRef<any>(null);
+  const departmentPerformanceRef = useRef<any>(null);
+  const monthlySuccessRateRef = useRef<any>(null);
 
   // Filter data based on time range and department
   const getFilteredIdeas = () => {
@@ -476,7 +488,25 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
               Số ý tưởng theo từng tháng (năm {currentYear})
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
-              <Bar data={monthlyCountBarData} options={chartOptions} />
+              <Bar 
+                ref={monthlyCountBarRef}
+                data={monthlyCountBarData} 
+                options={chartOptions}
+                onClick={(event) => {
+                  const chart = monthlyCountBarRef.current;
+                  if (!chart) return;
+                  const elements = getElementAtEvent(chart, event);
+                  if (!elements || elements.length === 0) return;
+                  const index = (elements[0] as any).index as number;
+                  const monthLabel = monthLabels[index];
+                  if (monthLabel) {
+                    const [month, year] = monthLabel.split('/');
+                    const startDate = `${year}-${month}-01`;
+                    const endDate = new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0];
+                    navigate(`/admin?dateFrom=${startDate}&dateTo=${endDate}`);
+                  }
+                }}
+              />
             </Box>
           </Card>
         </Grid>
@@ -512,7 +542,22 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
               Số lượng theo Phòng ban 
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
-              <Bar data={departmentTotalCountData} options={chartOptions} />
+              <Bar 
+                ref={departmentTotalCountRef}
+                data={departmentTotalCountData} 
+                options={chartOptions}
+                onClick={(event) => {
+                  const chart = departmentTotalCountRef.current;
+                  if (!chart) return;
+                  const elements = getElementAtEvent(chart, event);
+                  if (!elements || elements.length === 0) return;
+                  const index = (elements[0] as any).index as number;
+                  const dept = sortedDepartmentsByTotal[index]?.[0];
+                  if (dept) {
+                    navigate(`/admin?department=${encodeURIComponent(dept)}`);
+                  }
+                }}
+              />
             </Box>
           </Card>
         </Grid>
@@ -535,7 +580,14 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                 </TableHead>
                 <TableBody>
                   {topDeptImpl.map(([dept, data], index) => (
-                    <TableRow key={dept}>
+                    <TableRow 
+                      key={dept}
+                      sx={{ 
+                        cursor: 'pointer',
+                        '&:hover': { backgroundColor: '#f5f5f5' }
+                      }}
+                      onClick={() => navigate(`/admin?department=${encodeURIComponent(dept)}`)}
+                    >
                       <TableCell>
                         <Chip label={index + 1} color={index < 3 ? 'primary' : 'default'} size="small" />
                       </TableCell>
@@ -576,7 +628,14 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                 </TableHead>
                 <TableBody>
                   {topUserImpl.map(([name, data], index) => (
-                    <TableRow key={name}>
+                    <TableRow 
+                      key={name}
+                      sx={{ 
+                        cursor: 'pointer',
+                        '&:hover': { backgroundColor: '#f5f5f5' }
+                      }}
+                      onClick={() => navigate(`/admin?fullName=${encodeURIComponent(name)}`)}
+                    >
                       <TableCell>
                         <Chip label={index + 1} color={index < 3 ? 'primary' : 'default'} size="small" />
                       </TableCell>
@@ -611,29 +670,44 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
               Top Phòng ban có Giá trị Làm lợi Cao nhất
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
-              <Bar data={departmentBenefitChartData} options={{
-                ...chartOptions,
-                plugins: {
-                  ...chartOptions.plugins,
-                  tooltip: {
-                    callbacks: {
-                      label: function(context) {
-                        return `${context.dataset.label}: ${(context.parsed.y * 1000000).toLocaleString('vi-VN')} VND`;
+              <Bar 
+                ref={departmentBenefitRef}
+                data={departmentBenefitChartData} 
+                options={{
+                  ...chartOptions,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    tooltip: {
+                      callbacks: {
+                        label: function(context) {
+                          return `${context.dataset.label}: ${(context.parsed.y * 1000000).toLocaleString('vi-VN')} VND`;
+                        }
+                      }
+                    }
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        callback: function(value) {
+                          return value + 'M VND';
+                        }
                       }
                     }
                   }
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    ticks: {
-                      callback: function(value) {
-                        return value + 'M VND';
-                      }
-                    }
+                }}
+                onClick={(event) => {
+                  const chart = departmentBenefitRef.current;
+                  if (!chart) return;
+                  const elements = getElementAtEvent(chart, event);
+                  if (!elements || elements.length === 0) return;
+                  const index = (elements[0] as any).index as number;
+                  const dept = topDeptByBenefit[index]?.[0];
+                  if (dept) {
+                    navigate(`/admin?department=${encodeURIComponent(dept)}`);
                   }
-                }
-              }} />
+                }}
+              />
             </Box>
           </Card>
         </Grid>
@@ -645,29 +719,44 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
               Top Phòng ban có Tiền thưởng Cao nhất
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
-              <Bar data={departmentRewardChartData} options={{
-                ...chartOptions,
-                plugins: {
-                  ...chartOptions.plugins,
-                  tooltip: {
-                    callbacks: {
-                      label: function(context) {
-                        return `${context.dataset.label}: ${(context.parsed.y * 1000000).toLocaleString('vi-VN')} VND`;
+              <Bar 
+                ref={departmentRewardRef}
+                data={departmentRewardChartData} 
+                options={{
+                  ...chartOptions,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    tooltip: {
+                      callbacks: {
+                        label: function(context) {
+                          return `${context.dataset.label}: ${(context.parsed.y * 1000000).toLocaleString('vi-VN')} VND`;
+                        }
+                      }
+                    }
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        callback: function(value) {
+                          return value + 'M VND';
+                        }
                       }
                     }
                   }
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    ticks: {
-                      callback: function(value) {
-                        return value + 'M VND';
-                      }
-                    }
+                }}
+                onClick={(event) => {
+                  const chart = departmentRewardRef.current;
+                  if (!chart) return;
+                  const elements = getElementAtEvent(chart, event);
+                  if (!elements || elements.length === 0) return;
+                  const index = (elements[0] as any).index as number;
+                  const dept = topDeptByReward[index]?.[0];
+                  if (dept) {
+                    navigate(`/admin?department=${encodeURIComponent(dept)}`);
                   }
-                }
-              }} />
+                }}
+              />
             </Box>
           </Card>
         </Grid>
@@ -679,29 +768,44 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
               Top Cá nhân có Tiền thưởng Cao nhất
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
-              <Bar data={userRewardChartData} options={{
-                ...chartOptions,
-                plugins: {
-                  ...chartOptions.plugins,
-                  tooltip: {
-                    callbacks: {
-                      label: function(context) {
-                        return `${context.dataset.label}: ${(context.parsed.y * 1000000).toLocaleString('vi-VN')} VND`;
+              <Bar 
+                ref={userRewardRef}
+                data={userRewardChartData} 
+                options={{
+                  ...chartOptions,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    tooltip: {
+                      callbacks: {
+                        label: function(context) {
+                          return `${context.dataset.label}: ${(context.parsed.y * 1000000).toLocaleString('vi-VN')} VND`;
+                        }
+                      }
+                    }
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        callback: function(value) {
+                          return value + 'M VND';
+                        }
                       }
                     }
                   }
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    ticks: {
-                      callback: function(value) {
-                        return value + 'M VND';
-                      }
-                    }
+                }}
+                onClick={(event) => {
+                  const chart = userRewardRef.current;
+                  if (!chart) return;
+                  const elements = getElementAtEvent(chart, event);
+                  if (!elements || elements.length === 0) return;
+                  const index = (elements[0] as any).index as number;
+                  const user = topUsersByReward[index];
+                  if (user) {
+                    navigate(`/admin?fullName=${encodeURIComponent(user.name)}`);
                   }
-                }
-              }} />
+                }}
+              />
             </Box>
           </Card>
         </Grid>
@@ -713,29 +817,47 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
               Số tiền thưởng theo từng tháng
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
-              <Bar data={monthlyRewardChartData} options={{
-                ...chartOptions,
-                plugins: {
-                  ...chartOptions.plugins,
-                  tooltip: {
-                    callbacks: {
-                      label: function(context) {
-                        return `${context.dataset.label}: ${(context.parsed.y * 1000000).toLocaleString('vi-VN')} VND`;
+              <Bar 
+                ref={monthlyRewardRef}
+                data={monthlyRewardChartData} 
+                options={{
+                  ...chartOptions,
+                  plugins: {
+                    ...chartOptions.plugins,
+                    tooltip: {
+                      callbacks: {
+                        label: function(context) {
+                          return `${context.dataset.label}: ${(context.parsed.y * 1000000).toLocaleString('vi-VN')} VND`;
+                        }
+                      }
+                    }
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        callback: function(value) {
+                          return value + 'M VND';
+                        }
                       }
                     }
                   }
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    ticks: {
-                      callback: function(value) {
-                        return value + 'M VND';
-                      }
-                    }
+                }}
+                onClick={(event) => {
+                  const chart = monthlyRewardRef.current;
+                  if (!chart) return;
+                  const elements = getElementAtEvent(chart, event);
+                  if (!elements || elements.length === 0) return;
+                  const index = (elements[0] as any).index as number;
+                  const monthLabel = monthlyRewardLabels[index];
+                  if (monthLabel) {
+                    const [year, month] = monthLabel.split('-');
+                    const startDate = `${year}-${month}-01`;
+                    const endDate = new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0];
+                    navigate(`/admin?dateFrom=${startDate}&dateTo=${endDate}`);
                   }
-                }
-              }} />
+                }}
+              />
             </Box>
           </Card>
         </Grid>
@@ -802,7 +924,14 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                 </TableHead>
                 <TableBody>
                   {sortedDepartments.map(([dept, data], index) => (
-                    <TableRow key={dept}>
+                    <TableRow 
+                      key={dept}
+                      sx={{ 
+                        cursor: 'pointer',
+                        '&:hover': { backgroundColor: '#f5f5f5' }
+                      }}
+                      onClick={() => navigate(`/admin?department=${encodeURIComponent(dept)}`)}
+                    >
                       <TableCell>
                         <Chip 
                           label={index + 1} 

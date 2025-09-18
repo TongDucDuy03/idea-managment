@@ -14,7 +14,6 @@ import {
   Alert,
   CircularProgress,
   Card,
-  CardContent,
   Grid,
   Chip
 } from '@mui/material';
@@ -36,8 +35,26 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [reportType, setReportType] = useState('summary');
-  const [includeCharts, setIncludeCharts] = useState(true);
   const [generating, setGenerating] = useState(false);
+
+  const getTimeRangeLabel = (range: string) => {
+    switch (range) {
+      case 'week': return '7 ngày qua';
+      case 'month': return '30 ngày qua';
+      case 'quarter': return '3 tháng qua';
+      case 'year': return '1 năm qua';
+      default: return 'Tất cả';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Chưa xem xét';
+      case 'rewarded': return 'Đã khen thưởng';
+      case 'rejected': return 'Không khen thưởng';
+      default: return 'Chưa xem xét';
+    }
+  };
 
   // Filter data based on time range and department
   const getFilteredIdeas = () => {
@@ -154,23 +171,273 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
     .sort((a, b) => b.totalReward - a.totalReward)
     .slice(0, 5);
 
+  // Generate HTML content for PDF
+  const generateHTMLContent = () => {
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; line-height: 1.5; color: #333;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="font-size: 20px; font-weight: bold; margin: 0; color: #2c5aa0;">BÁO CÁO THỐNG KÊ Ý TƯỞNG CẢI TIẾN</h1>
+        </div>
+        
+        <div style="margin-bottom: 20px; font-size: 12px;">
+          <p><strong>Ngày tạo báo cáo:</strong> ${new Date().toLocaleDateString('vi-VN')}</p>
+          <p><strong>Khoảng thời gian:</strong> ${getTimeRangeLabel(timeRange)}</p>
+          <p><strong>Phòng ban:</strong> ${departmentFilter === 'all' ? 'Tất cả' : departmentFilter}</p>
+        </div>
+
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 16px; font-weight: bold; color: #2c5aa0; margin-bottom: 10px;">TỔNG QUAN THỐNG KÊ</h2>
+          <div style="font-size: 12px;">
+            <p>• Tổng số ý tưởng: <strong>${totalIdeas}</strong></p>
+            <p>• Ý tưởng đã triển khai: <strong>${implementedCount}</strong></p>
+            <p>• Tỷ lệ triển khai thành công: <strong>${implementationSuccessRate}%</strong></p>
+            <p>• Chưa xem xét: <strong>${pendingIdeas}</strong></p>
+            <p>• Không khen thưởng: <strong>${rejectedIdeas}</strong></p>
+            <p>• Tỷ lệ khen thưởng: <strong>${rewardRate}%</strong></p>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 16px; font-weight: bold; color: #2c5aa0; margin-bottom: 10px;">THỐNG KÊ GIÁ TRỊ</h2>
+          <div style="font-size: 12px;">
+            <p>• Tổng giá trị làm lợi: <strong>${(totalBenefitValue / 1000000).toFixed(1)}M VNĐ</strong></p>
+            <p>• Tổng tiền thưởng: <strong>${(totalRewardAmount / 1000000).toFixed(1)}M VNĐ</strong></p>
+          </div>
+        </div>
+
+        ${topDepartments.length > 0 ? `
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 16px; font-weight: bold; color: #2c5aa0; margin-bottom: 10px;">THỐNG KÊ THEO PHÒNG BAN</h2>
+          <div style="font-size: 12px;">
+            ${topDepartments.map(([dept, count], index) => 
+              `<p>${index + 1}. ${dept}: <strong>${count} ý tưởng</strong></p>`
+            ).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+        ${Object.keys(departmentImplementationStats).length > 0 ? `
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 16px; font-weight: bold; color: #2c5aa0; margin-bottom: 10px;">THỐNG KÊ TRIỂN KHAI THEO PHÒNG BAN</h2>
+          <div style="font-size: 11px;">
+            ${Object.entries(departmentImplementationStats).map(([dept, stats]) => `
+              <div style="margin-bottom: 12px; padding: 8px; background-color: #f8f9fa; border-left: 3px solid #2c5aa0;">
+                <p style="font-weight: bold; margin: 0;">${dept}:</p>
+                <p style="margin: 2px 0;">• Tổng: ${stats.total} | Triển khai: ${stats.implemented} | Thành công: ${stats.successful}</p>
+                <p style="margin: 2px 0;">• Tỷ lệ thành công: ${stats.successRate.toFixed(1)}%</p>
+                <p style="margin: 2px 0;">• Giá trị làm lợi: ${(stats.benefitValue / 1000000).toFixed(1)}M VNĐ</p>
+                <p style="margin: 2px 0;">• Tiền thưởng: ${(stats.rewardAmount / 1000000).toFixed(1)}M VNĐ</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+        ${topDeptByBenefit.length > 0 ? `
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 16px; font-weight: bold; color: #2c5aa0; margin-bottom: 10px;">TOP PHÒNG BAN CÓ GIÁ TRỊ LÀM LỢI CAO NHẤT</h2>
+          <div style="font-size: 12px;">
+            ${topDeptByBenefit.map(([dept, stats], index) => 
+              `<p>${index + 1}. ${dept}: <strong>${(stats.benefitValue / 1000000).toFixed(1)}M VNĐ</strong></p>`
+            ).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+        ${topDeptByReward.length > 0 ? `
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 16px; font-weight: bold; color: #2c5aa0; margin-bottom: 10px;">TOP PHÒNG BAN CÓ TIỀN THƯỞNG CAO NHẤT</h2>
+          <div style="font-size: 12px;">
+            ${topDeptByReward.map(([dept, stats], index) => 
+              `<p>${index + 1}. ${dept}: <strong>${(stats.rewardAmount / 1000000).toFixed(1)}M VNĐ</strong></p>`
+            ).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+        ${topUsersByReward.length > 0 ? `
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 16px; font-weight: bold; color: #2c5aa0; margin-bottom: 10px;">TOP CÁ NHÂN CÓ TIỀN THƯỞNG CAO NHẤT</h2>
+          <div style="font-size: 12px;">
+            ${topUsersByReward.map((user, index) => `
+              <div style="margin-bottom: 10px; padding: 8px; background-color: #f0f7ff; border-radius: 4px;">
+                <p style="margin: 0; font-weight: bold;">${index + 1}. ${user.name} (${user.department}): ${(user.totalReward / 1000000).toFixed(1)}M VNĐ</p>
+                <p style="margin: 2px 0; font-size: 10px;">Số ý tưởng: ${user.ideaCount} | Giá trị làm lợi: ${(user.totalBenefit / 1000000).toFixed(1)}M VNĐ</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+        ${reportType === 'detailed' ? `
+        <div style="margin-bottom: 25px; page-break-before: always;">
+          <h2 style="font-size: 16px; font-weight: bold; color: #2c5aa0; margin-bottom: 10px;">DANH SÁCH CHI TIẾT Ý TƯỞNG</h2>
+          <div style="font-size: 10px;">
+            ${filteredIdeas.map((idea, index) => `
+              <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background-color: #fafafa;">
+                <p style="margin: 0; font-weight: bold;">${index + 1}. Mã: ${idea.ideaCode}</p>
+                <p style="margin: 2px 0;"><strong>Tên:</strong> ${idea.fullName}</p>
+                <p style="margin: 2px 0;"><strong>Phòng ban:</strong> ${idea.department}</p>
+                <p style="margin: 2px 0;"><strong>Trạng thái:</strong> ${getStatusLabel(idea.status)}</p>
+                <p style="margin: 2px 0;"><strong>Hướng triển khai:</strong> ${idea.implementationDirection || 'Chưa xác định'}</p>
+                <p style="margin: 2px 0;"><strong>Phòng ban triển khai:</strong> ${(idea as any).implementationDepartment || 'Chưa xác định'}</p>
+                <p style="margin: 2px 0;"><strong>Giá trị làm lợi:</strong> ${((idea as any).benefitValue || 0).toLocaleString('vi-VN')} VNĐ</p>
+                <p style="margin: 2px 0;"><strong>Tiền thưởng:</strong> ${((idea as any).rewardAmount || 0).toLocaleString('vi-VN')} VNĐ</p>
+                <p style="margin: 2px 0;"><strong>Ngày gửi:</strong> ${new Date(idea.submissionDate).toLocaleDateString('vi-VN')}</p>
+                <p style="margin: 2px 0;"><strong>Ý tưởng:</strong> ${idea.idea.substring(0, 150)}${idea.idea.length > 150 ? '...' : ''}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+      </div>
+    `;
+    return htmlContent;
+  };
+
   const generatePDF = async () => {
     setGenerating(true);
+    try {
+      console.log('Bắt đầu tạo PDF...', { totalIdeas, reportType });
+      
+      // Create temporary div with isolated styling
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = generateHTMLContent();
+      tempDiv.style.cssText = `
+        width: 794px;
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        background-color: white;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        color: #333;
+        border: none;
+        box-shadow: none;
+        transform: none;
+        opacity: 1;
+      `;
+      
+      // Remove any Material-UI classes that might cause OKLCH issues
+      tempDiv.className = '';
+      tempDiv.removeAttribute('class');
+      
+      document.body.appendChild(tempDiv);
+      
+      // Wait for DOM to settle
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('Content height:', tempDiv.scrollHeight);
+      console.log('Content width:', tempDiv.scrollWidth);
+      
+      // Convert to canvas with simple settings
+      const canvas = await html2canvas(tempDiv, {
+        scale: 1.5,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        width: 794,
+        height: tempDiv.scrollHeight,
+        logging: false,
+        ignoreElements: (element) => {
+          // Skip elements that might cause OKLCH color issues
+          const htmlElement = element as HTMLElement;
+          return htmlElement.style?.color?.includes('oklch') || 
+                 htmlElement.style?.backgroundColor?.includes('oklch') ||
+                 htmlElement.style?.borderColor?.includes('oklch');
+        },
+        onclone: (clonedDoc) => {
+          // Remove any OKLCH colors from cloned document
+          const style = clonedDoc.createElement('style');
+          style.textContent = `
+            * {
+              color: #333 !important;
+              background-color: white !important;
+              border-color: #ddd !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
+        }
+      });
+      
+      console.log('Canvas created:', canvas.width, 'x', canvas.height);
+      
+      document.body.removeChild(tempDiv);
+      
+      // Create PDF
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * pageWidth) / canvas.width;
+      
+      if (imgHeight <= pageHeight) {
+        // Single page
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
+      } else {
+        // Multiple pages
+        let heightLeft = imgHeight;
+        let position = 0;
+        
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+      }
+      
+      const fileName = `bao_cao_thong_ke_${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(fileName);
+      
+      console.log('PDF saved:', fileName);
+      setOpen(false);
+      
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      
+      // If OKLCH error occurs, try fallback method
+      if ((error as Error).message.includes('oklch') || (error as Error).message.includes('color function')) {
+        console.log('OKLCH error detected, trying fallback method...');
+        try {
+          await generatePDFFallback();
+          return;
+        } catch (fallbackError) {
+          console.error('Fallback method also failed:', fallbackError);
+        }
+      }
+      
+      alert('Có lỗi xảy ra khi tạo PDF: ' + (error as Error).message);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // Fallback method using direct jsPDF without html2canvas
+  const generatePDFFallback = async () => {
     try {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       let yPosition = 20;
 
-      // Add title
+      // Set font and colors
+      pdf.setFont('times', 'bold');
+      pdf.setTextColor(0, 0, 0);
+      pdf.setDrawColor(0, 0, 0);
+
+      // Title
       pdf.setFontSize(20);
-      pdf.setFont('helvetica', 'bold');
       pdf.text('BÁO CÁO THỐNG KÊ Ý TƯỞNG CẢI TIẾN', pageWidth / 2, yPosition, { align: 'center' });
       yPosition += 15;
 
-      // Add date and filters
+      // Date and filters
       pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'normal');
+      pdf.setFont('times', 'normal');
       pdf.text(`Ngày tạo báo cáo: ${new Date().toLocaleDateString('vi-VN')}`, 20, yPosition);
       yPosition += 8;
       pdf.text(`Khoảng thời gian: ${getTimeRangeLabel(timeRange)}`, 20, yPosition);
@@ -178,14 +445,14 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
       pdf.text(`Phòng ban: ${departmentFilter === 'all' ? 'Tất cả' : departmentFilter}`, 20, yPosition);
       yPosition += 15;
 
-      // Add summary statistics
+      // Summary statistics
       pdf.setFontSize(16);
-      pdf.setFont('helvetica', 'bold');
+      pdf.setFont('times', 'bold');
       pdf.text('TỔNG QUAN THỐNG KÊ', 20, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'normal');
+      pdf.setFont('times', 'normal');
       pdf.text(`• Tổng số ý tưởng: ${totalIdeas}`, 20, yPosition);
       yPosition += 8;
       pdf.text(`• Ý tưởng đã triển khai: ${implementedCount}`, 20, yPosition);
@@ -199,28 +466,33 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
       pdf.text(`• Tỷ lệ khen thưởng: ${rewardRate}%`, 20, yPosition);
       yPosition += 15;
 
-      // Add value-based statistics
+      // Value statistics
       pdf.setFontSize(16);
-      pdf.setFont('helvetica', 'bold');
+      pdf.setFont('times', 'bold');
       pdf.text('THỐNG KÊ GIÁ TRỊ', 20, yPosition);
       yPosition += 10;
 
       pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'normal');
+      pdf.setFont('times', 'normal');
       pdf.text(`• Tổng giá trị làm lợi: ${(totalBenefitValue / 1000000).toFixed(1)}M VND`, 20, yPosition);
       yPosition += 8;
       pdf.text(`• Tổng tiền thưởng: ${(totalRewardAmount / 1000000).toFixed(1)}M VND`, 20, yPosition);
       yPosition += 15;
 
-      // Add department statistics
+      // Top departments
       if (topDepartments.length > 0) {
+        if (yPosition > pageHeight - 50) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        
         pdf.setFontSize(16);
-        pdf.setFont('helvetica', 'bold');
+        pdf.setFont('times', 'bold');
         pdf.text('THỐNG KÊ THEO PHÒNG BAN', 20, yPosition);
         yPosition += 10;
 
         pdf.setFontSize(12);
-        pdf.setFont('helvetica', 'normal');
+        pdf.setFont('times', 'normal');
         
         topDepartments.forEach(([dept, count], index) => {
           if (yPosition > pageHeight - 20) {
@@ -230,190 +502,15 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
           pdf.text(`${index + 1}. ${dept}: ${count} ý tưởng`, 20, yPosition);
           yPosition += 8;
         });
-        yPosition += 10;
       }
 
-      // Add implementation statistics by department
-      if (Object.keys(departmentImplementationStats).length > 0) {
-        if (yPosition > pageHeight - 50) {
-          pdf.addPage();
-          yPosition = 20;
-        }
-        
-        pdf.setFontSize(16);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('THỐNG KÊ TRIỂN KHAI THEO PHÒNG BAN', 20, yPosition);
-        yPosition += 10;
-
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'normal');
-        
-        Object.entries(departmentImplementationStats).forEach(([dept, stats]) => {
-          if (yPosition > pageHeight - 20) {
-            pdf.addPage();
-            yPosition = 20;
-          }
-          pdf.text(`${dept}:`, 20, yPosition);
-          yPosition += 6;
-          pdf.text(`  - Tổng: ${stats.total} | Triển khai: ${stats.implemented} | Thành công: ${stats.successful}`, 25, yPosition);
-          yPosition += 6;
-          pdf.text(`  - Tỷ lệ thành công: ${stats.successRate.toFixed(1)}%`, 25, yPosition);
-          yPosition += 6;
-          pdf.text(`  - Giá trị làm lợi: ${(stats.benefitValue / 1000000).toFixed(1)}M VND`, 25, yPosition);
-          yPosition += 6;
-          pdf.text(`  - Tiền thưởng: ${(stats.rewardAmount / 1000000).toFixed(1)}M VND`, 25, yPosition);
-          yPosition += 8;
-        });
-        yPosition += 10;
-      }
-
-      // Add top departments by benefit value
-      if (topDeptByBenefit.length > 0) {
-        if (yPosition > pageHeight - 50) {
-          pdf.addPage();
-          yPosition = 20;
-        }
-        
-        pdf.setFontSize(16);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('TOP PHÒNG BAN CÓ GIÁ TRỊ LÀM LỢI CAO NHẤT', 20, yPosition);
-        yPosition += 10;
-
-        pdf.setFontSize(12);
-        pdf.setFont('helvetica', 'normal');
-        
-        topDeptByBenefit.forEach(([dept, stats], index) => {
-          if (yPosition > pageHeight - 20) {
-            pdf.addPage();
-            yPosition = 20;
-          }
-          pdf.text(`${index + 1}. ${dept}: ${(stats.benefitValue / 1000000).toFixed(1)}M VND`, 20, yPosition);
-          yPosition += 8;
-        });
-        yPosition += 10;
-      }
-
-      // Add top departments by reward amount
-      if (topDeptByReward.length > 0) {
-        if (yPosition > pageHeight - 50) {
-          pdf.addPage();
-          yPosition = 20;
-        }
-        
-        pdf.setFontSize(16);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('TOP PHÒNG BAN CÓ TIỀN THƯỞNG CAO NHẤT', 20, yPosition);
-        yPosition += 10;
-
-        pdf.setFontSize(12);
-        pdf.setFont('helvetica', 'normal');
-        
-        topDeptByReward.forEach(([dept, stats], index) => {
-          if (yPosition > pageHeight - 20) {
-            pdf.addPage();
-            yPosition = 20;
-          }
-          pdf.text(`${index + 1}. ${dept}: ${(stats.rewardAmount / 1000000).toFixed(1)}M VND`, 20, yPosition);
-          yPosition += 8;
-        });
-        yPosition += 10;
-      }
-
-      // Add top users by reward amount
-      if (topUsersByReward.length > 0) {
-        if (yPosition > pageHeight - 50) {
-          pdf.addPage();
-          yPosition = 20;
-        }
-        
-        pdf.setFontSize(16);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('TOP CÁ NHÂN CÓ TIỀN THƯỞNG CAO NHẤT', 20, yPosition);
-        yPosition += 10;
-
-        pdf.setFontSize(12);
-        pdf.setFont('helvetica', 'normal');
-        
-        topUsersByReward.forEach((user, index) => {
-          if (yPosition > pageHeight - 20) {
-            pdf.addPage();
-            yPosition = 20;
-          }
-          pdf.text(`${index + 1}. ${user.name} (${user.department}): ${(user.totalReward / 1000000).toFixed(1)}M VND`, 20, yPosition);
-          yPosition += 6;
-          pdf.text(`   Số ý tưởng: ${user.ideaCount} | Giá trị làm lợi: ${(user.totalBenefit / 1000000).toFixed(1)}M VND`, 20, yPosition);
-          yPosition += 8;
-        });
-        yPosition += 10;
-      }
-
-      // Add detailed ideas list if requested
-      if (reportType === 'detailed') {
-        pdf.setFontSize(16);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('DANH SÁCH CHI TIẾT Ý TƯỞNG', 20, yPosition);
-        yPosition += 10;
-
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'normal');
-        
-        filteredIdeas.forEach((idea, index) => {
-          if (yPosition > pageHeight - 30) {
-            pdf.addPage();
-            yPosition = 20;
-          }
-          
-          pdf.text(`${index + 1}. Mã: ${idea.ideaCode}`, 20, yPosition);
-          yPosition += 6;
-          pdf.text(`   Tên: ${idea.fullName}`, 20, yPosition);
-          yPosition += 6;
-          pdf.text(`   Phòng ban: ${idea.department}`, 20, yPosition);
-          yPosition += 6;
-          pdf.text(`   Trạng thái: ${getStatusLabel(idea.status)}`, 20, yPosition);
-          yPosition += 6;
-          pdf.text(`   Hướng triển khai: ${idea.implementationDirection || 'Chưa xác định'}`, 20, yPosition);
-          yPosition += 6;
-          pdf.text(`   Phòng ban triển khai: ${(idea as any).implementationDepartment || 'Chưa xác định'}`, 20, yPosition);
-          yPosition += 6;
-          pdf.text(`   Giá trị làm lợi: ${((idea as any).benefitValue || 0).toLocaleString('vi-VN')} VND`, 20, yPosition);
-          yPosition += 6;
-          pdf.text(`   Tiền thưởng: ${((idea as any).rewardAmount || 0).toLocaleString('vi-VN')} VND`, 20, yPosition);
-          yPosition += 6;
-          pdf.text(`   Ngày gửi: ${new Date(idea.submissionDate).toLocaleDateString('vi-VN')}`, 20, yPosition);
-          yPosition += 6;
-          pdf.text(`   Ý tưởng: ${idea.idea.substring(0, 100)}${idea.idea.length > 100 ? '...' : ''}`, 20, yPosition);
-          yPosition += 10;
-        });
-      }
-
-      // Save the PDF
       const fileName = `bao_cao_thong_ke_${new Date().toISOString().split('T')[0]}.pdf`;
       pdf.save(fileName);
-      
       setOpen(false);
+      
     } catch (error) {
-      console.error('Error generating PDF:', error);
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const getTimeRangeLabel = (range: string) => {
-    switch (range) {
-      case 'week': return '7 ngày qua';
-      case 'month': return '30 ngày qua';
-      case 'quarter': return '3 tháng qua';
-      case 'year': return '1 năm qua';
-      default: return 'Tất cả';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'pending': return 'Chưa xem xét';
-      case 'rewarded': return 'Đã khen thưởng';
-      case 'rejected': return 'Không khen thưởng';
-      default: return 'Chưa xem xét';
+      console.error('Fallback PDF generation failed:', error);
+      throw error;
     }
   };
 
@@ -491,11 +588,11 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="body2">Giá trị làm lợi:</Typography>
-                  <Chip label={`${(totalBenefitValue / 1000000).toFixed(1)}M VND`} color="secondary" size="small" />
+                  <Chip label={`${(totalBenefitValue / 1000000).toFixed(1)}M VNĐ`} color="secondary" size="small" />
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="body2">Tổng tiền thưởng:</Typography>
-                  <Chip label={`${(totalRewardAmount / 1000000).toFixed(1)}M VND`} color="error" size="small" />
+                  <Chip label={`${(totalRewardAmount / 1000000).toFixed(1)}M VNĐ`} color="error" size="small" />
                 </Grid>
               </Grid>
             </Card>
@@ -503,7 +600,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
             {generating && (
               <Alert severity="info" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <CircularProgress size={20} />
-                Đang tạo báo cáo PDF...
+                Đang tạo báo cáo PDF... (Quá trình này có thể mất vài giây)
               </Alert>
             )}
           </Box>

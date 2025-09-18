@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -33,7 +33,7 @@ import {
   LineElement,
   Filler
 } from 'chart.js';
-import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import { Bar, Doughnut, Line, getElementAtEvent } from 'react-chartjs-2';
 import { 
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
@@ -543,6 +543,11 @@ const StatisticsDashboard: React.FC = () => {
     }
   };
 
+  // Refs for charts to detect clicked elements
+  const departmentBarRef = useRef<any>(null);
+  const statusDoughnutRef = useRef<any>(null);
+  const trendLineRef = useRef<any>(null);
+
   // Comparison Card Component
   const ComparisonCard: React.FC<{ 
     title: string; 
@@ -1043,7 +1048,21 @@ const StatisticsDashboard: React.FC = () => {
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
       <Grid item xs={12} sm={6} md={6}>
-          <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
+          <Card 
+            elevation={3} 
+            sx={{ 
+              textAlign: 'center', 
+              p: 2,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: '#f5f5f5',
+                transform: 'translateY(-2px)',
+                boxShadow: 6
+              },
+              transition: 'all 0.2s'
+            }}
+            onClick={() => navigate('/admin')}
+          >
             <CardContent>
               <Typography variant="h3" color="primary" sx={{ fontWeight: 'bold' }}>
                 {totalIdeas}
@@ -1056,7 +1075,21 @@ const StatisticsDashboard: React.FC = () => {
         </Grid>
         
         <Grid item xs={12} sm={6} md={6}>
-          <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
+          <Card 
+            elevation={3} 
+            sx={{ 
+              textAlign: 'center', 
+              p: 2,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: '#f5f5f5',
+                transform: 'translateY(-2px)',
+                boxShadow: 6
+              },
+              transition: 'all 0.2s'
+            }}
+            onClick={() => navigate('/admin?implementationDirection=Triển khai,Làm báo cáo A3')}
+          >
             <CardContent>
               <Typography variant="h3" color="error.main" sx={{ fontWeight: 'bold' }}>
                 {implementationSuccessRate}%
@@ -1069,7 +1102,21 @@ const StatisticsDashboard: React.FC = () => {
         </Grid>
         
         <Grid item xs={12} sm={6} md={3}>
-          <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
+          <Card 
+            elevation={3} 
+            sx={{ 
+              textAlign: 'center', 
+              p: 2,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: '#f5f5f5',
+                transform: 'translateY(-2px)',
+                boxShadow: 6
+              },
+              transition: 'all 0.2s'
+            }}
+            onClick={() => navigate('/admin?status=rewarded')}
+          >
             <CardContent>
               <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
                 {implementedCount}
@@ -1082,7 +1129,21 @@ const StatisticsDashboard: React.FC = () => {
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
+          <Card 
+            elevation={3} 
+            sx={{ 
+              textAlign: 'center', 
+              p: 2,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: '#f5f5f5',
+                transform: 'translateY(-2px)',
+                boxShadow: 6
+              },
+              transition: 'all 0.2s'
+            }}
+            onClick={() => navigate('/admin?implementationDirection=Triển khai,Làm báo cáo A3')}
+          >
             <CardContent>
               <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
                 {implementedCountDeployed}
@@ -1096,7 +1157,21 @@ const StatisticsDashboard: React.FC = () => {
 
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
+          <Card 
+            elevation={3} 
+            sx={{ 
+              textAlign: 'center', 
+              p: 2,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: '#f5f5f5',
+                transform: 'translateY(-2px)',
+                boxShadow: 6
+              },
+              transition: 'all 0.2s'
+            }}
+            onClick={() => navigate('/admin?implementationDirection=Làm báo cáo A3')}
+          >
             <CardContent>
               <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
                 {implementationSuccess}
@@ -1109,7 +1184,21 @@ const StatisticsDashboard: React.FC = () => {
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <Card elevation={3} sx={{ textAlign: 'center', p: 2 }}>
+          <Card 
+            elevation={3} 
+            sx={{ 
+              textAlign: 'center', 
+              p: 2,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: '#f5f5f5',
+                transform: 'translateY(-2px)',
+                boxShadow: 6
+              },
+              transition: 'all 0.2s'
+            }}
+            onClick={() => navigate('/admin?status=pending')}
+          >
             <CardContent>
               <Typography variant="h3" color="warning.main" sx={{ fontWeight: 'bold' }}>
                 {pendingIdeas}
@@ -1133,7 +1222,23 @@ const StatisticsDashboard: React.FC = () => {
               Phân bố Trạng thái Ý tưởng
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
-              <Doughnut data={statusChartData} options={doughnutOptions} />
+              <Doughnut 
+                ref={statusDoughnutRef}
+                data={statusChartData} 
+                options={doughnutOptions}
+                onClick={(event) => {
+                  const chart = statusDoughnutRef.current;
+                  if (!chart) return;
+                  const elements = getElementAtEvent(chart, event);
+                  if (!elements || elements.length === 0) return;
+                  const index = (elements[0] as any).index as number;
+                  const statusMap = ['pending', 'rewarded', 'rejected'];
+                  const status = statusMap[index];
+                  if (status) {
+                    navigate(`/admin?status=${status}`);
+                  }
+                }}
+              />
             </Box>
           </Card>
         </Grid>
@@ -1145,7 +1250,22 @@ const StatisticsDashboard: React.FC = () => {
               Top 10 Phòng ban có nhiều ý tưởng nhất
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
-              <Bar data={departmentChartData} options={chartOptions} />
+              <Bar 
+                ref={departmentBarRef}
+                data={departmentChartData} 
+                options={chartOptions}
+                onClick={(event) => {
+                  const chart = departmentBarRef.current;
+                  if (!chart) return;
+                  const elements = getElementAtEvent(chart, event);
+                  if (!elements || elements.length === 0) return;
+                  const index = (elements[0] as any).index as number;
+                  const dept = topDepartments[index]?.[0];
+                  if (dept) {
+                    navigate(`/admin?department=${encodeURIComponent(dept)}`);
+                  }
+                }}
+              />
             </Box>
           </Card>
         </Grid>
@@ -1157,7 +1277,25 @@ const StatisticsDashboard: React.FC = () => {
               Xu hướng Ý tưởng theo Tháng
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
-              <Line data={trendChartData} options={chartOptions} />
+              <Line 
+                ref={trendLineRef}
+                data={trendChartData} 
+                options={chartOptions}
+                onClick={(event) => {
+                  const chart = trendLineRef.current;
+                  if (!chart) return;
+                  const elements = getElementAtEvent(chart, event);
+                  if (!elements || elements.length === 0) return;
+                  const index = (elements[0] as any).index as number;
+                  const monthLabel = monthlyLabels[index];
+                  if (monthLabel) {
+                    const [year, month] = monthLabel.split('-');
+                    const startDate = `${year}-${month}-01`;
+                    const endDate = new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0];
+                    navigate(`/admin?dateFrom=${startDate}&dateTo=${endDate}`);
+                  }
+                }}
+              />
             </Box>
           </Card>
         </Grid>
@@ -1214,7 +1352,21 @@ const StatisticsDashboard: React.FC = () => {
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {topDepartments.slice(0, 10).map(([dept, count], index) => (
-                <Box key={dept} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box 
+                  key={dept} 
+                  sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    p: 1,
+                    borderRadius: 1,
+                    '&:hover': {
+                      backgroundColor: '#f5f5f5'
+                    }
+                  }}
+                  onClick={() => navigate(`/admin?department=${encodeURIComponent(dept)}`)}
+                >
                   <Typography variant="body2" sx={{ flex: 1, mr: 1 }}>
                     {index + 1}. {dept.length > 30 ? dept.substring(0, 30) + '...' : dept}
                   </Typography>
@@ -1232,15 +1384,23 @@ const StatisticsDashboard: React.FC = () => {
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxHeight: 300, overflowY: 'auto' }}>
               {topUsers.slice(0, 10).map((user, index) => (
-                <Box key={user.name} sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  p: 1,
-                  borderRadius: 1,
-                  backgroundColor: index < 3 ? '#f5f5f5' : 'transparent',
-                  border: index < 3 ? '1px solid #e0e0e0' : 'none'
-                }}>
+                <Box 
+                  key={user.name} 
+                  sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    p: 1,
+                    borderRadius: 1,
+                    backgroundColor: index < 3 ? '#f5f5f5' : 'transparent',
+                    border: index < 3 ? '1px solid #e0e0e0' : 'none',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: index < 3 ? '#eeeeee' : '#f5f5f5'
+                    }
+                  }}
+                  onClick={() => navigate(`/admin?fullName=${encodeURIComponent(user.name)}`)}
+                >
                   <Box sx={{ flex: 1, mr: 1 }}>
                     <Typography variant="body2" sx={{ fontWeight: index < 3 ? 'bold' : 'normal' }}>
                       {index + 1}. {user.name}
