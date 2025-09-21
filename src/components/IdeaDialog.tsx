@@ -190,7 +190,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
             {/* Mã ý tưởng được tạo tự động ở backend; không cần nhập ở đây */}
             <TextField
               name="idea"
-              label="Vấn đề"
+              label="Ý tưởng"
               value={formData.idea}
               onChange={handleTextChange}
               required
@@ -200,7 +200,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
             />
             <TextField
               name="solution"
-              label="Giải pháp"
+              label="Thực trạng"
               value={formData.solution}
               onChange={handleTextChange}
               required
@@ -210,7 +210,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
             />
             <TextField
               name="benefit"
-              label="Lợi ích"
+              label="Giải pháp"
               value={formData.benefit}
               onChange={handleTextChange}
               required

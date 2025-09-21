@@ -46,9 +46,7 @@ const IdeaForm: React.FC = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     department: '',
-    idea: '',
-    solution: '',
-    benefit: ''
+    idea: ''
   });
   const [errors, setErrors] = useState({
     department: '',
@@ -70,10 +68,9 @@ const IdeaForm: React.FC = () => {
       isValid = false;
     }
     if (!formData.idea.trim()) {
-      newErrors.idea = 'Vui lòng nhập ý tưởng ';
+      newErrors.idea = 'Vui lòng nhập ý tưởng';
       isValid = false;
     }
-    // Solution and benefit are optional per current backend
 
     setErrors(newErrors);
     return isValid;
@@ -114,24 +111,15 @@ const IdeaForm: React.FC = () => {
     if (!validateForm()) return;
 
     try {
-      const combinedIdea = [
-        formData.idea?.trim(),
-        formData.solution?.trim() ? `\nGiải pháp: ${formData.solution.trim()}` : '',
-        formData.benefit?.trim() ? `\nLợi ích: ${formData.benefit.trim()}` : ''
-      ].filter(Boolean).join('');
-
       const response = await axios.post('https://idea-managment.onrender.com/api/ideas', {
-        ...formData,
-        idea: combinedIdea
+        ...formData
       });
       setSuccess(true);
       setIdeaCode(response.data.ideaCode);
       setFormData({
         fullName: '',
         department: '',
-        idea: '',
-        solution: '',
-        benefit: ''
+        idea: ''
       });
       setTimeout(() => {
         setSuccess(false);
@@ -244,51 +232,16 @@ const IdeaForm: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 name="idea"
-                label="Thực trạng"
+                label="Ý tưởng"
                 value={formData.idea}
                 onChange={handleChange}
                 required
                 fullWidth
                 multiline
-                rows={4}
+                rows={6}
                 error={!!errors.idea}
                 helperText={errors.idea}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#1976d2',
-                    },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="solution"
-                label="Giải pháp"
-                value={formData.solution}
-                onChange={handleChange}
-                fullWidth
-                multiline
-                rows={3}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#1976d2',
-                    },
-                  },
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="benefit"
-                label="Lợi ích"
-                value={formData.benefit}
-                onChange={handleChange}
-                fullWidth
-                multiline
-                rows={3}
+                placeholder="Mô tả chi tiết ý tưởng cải tiến của bạn..."
                 sx={{
                   '& .MuiOutlinedInput-root': {
                     '&:hover fieldset': {
