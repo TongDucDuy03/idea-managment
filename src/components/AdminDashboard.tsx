@@ -223,6 +223,35 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleImplementationStatusChange = async (
+    id: string,
+    implementationStatus: 'Đề xuất mới' | 'Xem xét' | 'Phê duyệt' | 'Phản hồi phê duyệt' | 'Đang triển khai' | 'Lập báo cáo A3' | 'Phê duyệt khen thưởng' | 'Đã khen thưởng' | 'Không đạt'
+  ) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      await axios.put(`https://idea-managment.onrender.com/api/ideas/${id}`, {
+        implementationStatus
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      fetchIdeas();
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        navigate('/login');
+      } else {
+        setError('Không thể cập nhật trạng thái triển khai');
+      }
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa ý tưởng này?')) {
       try {
@@ -449,6 +478,65 @@ const AdminDashboard: React.FC = () => {
     );
   };
 
+  const ImplementationStatusCell: React.FC<{ row: Idea }> = ({ row }) => {
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
+
+    const getImplementationStatusColor = (status: string) => {
+      switch (status) {
+        case 'Đề xuất mới': return '#2196F3';
+        case 'Xem xét': return '#FF9800';
+        case 'Phê duyệt': return '#4CAF50';
+        case 'Phản hồi phê duyệt': return '#9C27B0';
+        case 'Đang triển khai': return '#00BCD4';
+        case 'Lập báo cáo A3': return '#795548';
+        case 'Phê duyệt khen thưởng': return '#607D8B';
+        case 'Đã khen thưởng': return '#2E7D32';
+        case 'Không đạt': return '#F44336';
+        default: return '#757575';
+      }
+    };
+
+    const handleOpen = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
+    const handleClose = () => setAnchorEl(null);
+    const selectImplementationStatus = (
+      s: 'Đề xuất mới' | 'Xem xét' | 'Phê duyệt' | 'Phản hồi phê duyệt' | 'Đang triển khai' | 'Lập báo cáo A3' | 'Phê duyệt khen thưởng' | 'Đã khen thưởng' | 'Không đạt'
+    ) => {
+      handleImplementationStatusChange(row._id, s);
+      handleClose();
+    };
+
+    const current = (row as any).implementationStatus || 'Đề xuất mới';
+
+    return (
+      <>
+        <Chip
+          label={current}
+          sx={{
+            backgroundColor: getImplementationStatusColor(current),
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '0.75rem',
+            cursor: 'pointer'
+          }}
+          size="small"
+          onClick={handleOpen}
+        />
+        <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+          <MenuItem onClick={() => selectImplementationStatus('Đề xuất mới')}>Đề xuất mới</MenuItem>
+          <MenuItem onClick={() => selectImplementationStatus('Xem xét')}>Xem xét</MenuItem>
+          <MenuItem onClick={() => selectImplementationStatus('Phê duyệt')}>Phê duyệt</MenuItem>
+          <MenuItem onClick={() => selectImplementationStatus('Phản hồi phê duyệt')}>Phản hồi phê duyệt</MenuItem>
+          <MenuItem onClick={() => selectImplementationStatus('Đang triển khai')}>Đang triển khai</MenuItem>
+          <MenuItem onClick={() => selectImplementationStatus('Lập báo cáo A3')}>Lập báo cáo A3</MenuItem>
+          <MenuItem onClick={() => selectImplementationStatus('Phê duyệt khen thưởng')}>Phê duyệt khen thưởng</MenuItem>
+          <MenuItem onClick={() => selectImplementationStatus('Đã khen thưởng')}>Đã khen thưởng</MenuItem>
+          <MenuItem onClick={() => selectImplementationStatus('Không đạt')}>Không đạt</MenuItem>
+        </Menu>
+      </>
+    );
+  };
+
   const parseFieldFromIdea = (ideaText: string | undefined, key: 'Giải pháp' | 'Lợi ích') => {
     if (!ideaText) return '';
     const lines = ideaText.split(/\n+/);
@@ -617,35 +705,11 @@ const AdminDashboard: React.FC = () => {
       width: 180,
       align: 'center',
       headerAlign: 'center',
-      renderCell: (params) => {
-        const getImplementationStatusColor = (status: string) => {
-          switch (status) {
-            case 'Đề xuất mới': return '#2196F3';
-            case 'Xem xét': return '#FF9800';
-            case 'Phê duyệt': return '#4CAF50';
-            case 'Phản hồi phê duyệt': return '#9C27B0';
-            case 'Đang triển khai': return '#00BCD4';
-            case 'Lập báo cáo A3': return '#795548';
-            case 'Phê duyệt khen thưởng': return '#607D8B';
-            case 'Đã khen thưởng': return '#2E7D32';
-            case 'Không đạt': return '#F44336';
-            default: return '#757575';
-          }
-        };
-        
-        return (
-          <Chip
-            label={params.value || 'Đề xuất mới'}
-            sx={{
-              backgroundColor: getImplementationStatusColor(params.value || 'Đề xuất mới'),
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '0.75rem'
-            }}
-            size="small"
-          />
-        );
-      },
+      renderCell: (params) => (
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          <ImplementationStatusCell row={params.row as any} />
+        </div>
+      ),
       sortable: false
     },
     {
