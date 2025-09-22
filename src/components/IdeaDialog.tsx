@@ -83,10 +83,10 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
     idea: '',
     solution: '',
     benefit: '',
-    implementationDirection: '',
     implementationDepartment: '',
     note: '',
     status: 'pending',
+    implementationStatus: 'Đề xuất mới',
     benefitValue: 0,
     rewardAmount: 0
   });
@@ -101,10 +101,10 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         // Prefer explicit fields; fall back to parsing from legacy combined text
         solution: idea.solution || parseFieldFromIdea(idea.idea, 'Giải pháp'),
         benefit: idea.benefit || parseFieldFromIdea(idea.idea, 'Lợi ích'),
-        implementationDirection: idea.implementationDirection || '',
         implementationDepartment: idea.implementationDepartment || '',
         note: idea.note || '',
         status: idea.status || 'pending',
+        implementationStatus: idea.implementationStatus || 'Đề xuất mới',
         benefitValue: idea.benefitValue || 0,
         rewardAmount: idea.rewardAmount || 0
       });
@@ -115,10 +115,10 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         idea: '',
         solution: '',
         benefit: '',
-        implementationDirection: '',
         implementationDepartment: '',
         note: '',
         status: 'pending',
+        implementationStatus: 'Đề xuất mới',
         benefitValue: 0,
         rewardAmount: 0
       });
@@ -219,18 +219,36 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               rows={6}
             />
             <FormControl fullWidth>
-              <InputLabel>Hướng triển khai</InputLabel>
+              <InputLabel>Quyết định phê duyệt</InputLabel>
               <Select
-                name="implementationDirection"
-                value={formData.implementationDirection || ''}
+                name="status"
+                value={formData.status || 'pending'}
                 onChange={handleSelectChange}
-                label="Hướng triển khai"
+                label="Quyết định phê duyệt"
               >
-                <MenuItem value="">Chọn Hướng triển khai</MenuItem>
-                <MenuItem value="Lưu ý tưởng">Lưu ý tưởng</MenuItem>
-                <MenuItem value="Triển khai">Triển khai</MenuItem>
-                <MenuItem value="Làm báo cáo A3">Làm báo cáo A3</MenuItem>
+                <MenuItem value="pending">Chưa phê duyệt</MenuItem>
+                <MenuItem value="rejected">Không phù hợp</MenuItem>
+                <MenuItem value="noted">Lưu ý tưởng</MenuItem>
+                <MenuItem value="approved">Phê duyệt triển khai</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Trạng thái triển khai</InputLabel>
+              <Select
+                name="implementationStatus"
+                value={formData.implementationStatus || 'Đề xuất mới'}
+                onChange={handleSelectChange}
+                label="Trạng thái triển khai"
+              >
+                <MenuItem value="Đề xuất mới">Đề xuất mới</MenuItem>
                 <MenuItem value="Xem xét">Xem xét</MenuItem>
+                <MenuItem value="Phê duyệt">Phê duyệt</MenuItem>
+                <MenuItem value="Phản hồi phê duyệt">Phản hồi phê duyệt</MenuItem>
+                <MenuItem value="Đang triển khai">Đang triển khai</MenuItem>
+                <MenuItem value="Lập báo cáo A3">Lập báo cáo A3</MenuItem>
+                <MenuItem value="Phê duyệt khen thưởng">Phê duyệt khen thưởng</MenuItem>
+                <MenuItem value="Đã khen thưởng">Đã khen thưởng</MenuItem>
+                <MenuItem value="Không đạt">Không đạt</MenuItem>
               </Select>
             </FormControl>
             <FormControl fullWidth>
@@ -280,7 +298,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
             />
             {isEdit && (
               <FormControl fullWidth>
-                <InputLabel>Trạng thái</InputLabel>
+                {/* <InputLabel>Trạng thái</InputLabel>
                 <Select
                   name="status"
                   value={formData.status || 'pending'}
@@ -290,7 +308,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
                   <MenuItem value="pending">Chưa xem xét</MenuItem>
                   <MenuItem value="rejected">Không khen thưởng</MenuItem>
                   <MenuItem value="rewarded">Đã khen thưởng</MenuItem>
-                </Select>
+                </Select> */}
               </FormControl>
             )}
           </Box>

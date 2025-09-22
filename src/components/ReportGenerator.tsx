@@ -48,12 +48,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
   };
 
   const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'pending': return 'Chưa xem xét';
-      case 'rewarded': return 'Đã khen thưởng';
-      case 'rejected': return 'Không khen thưởng';
-      default: return 'Chưa xem xét';
-    }
+    return status; // Trả về trạng thái trực tiếp vì đã là tiếng Việt
   };
 
   // Filter data based on time range and department
@@ -88,16 +83,22 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
 
   // Calculate statistics
   const totalIdeas = filteredIdeas.length;
-  const pendingIdeas = filteredIdeas.filter(idea => idea.status === 'pending').length;
-  const rewardedIdeas = filteredIdeas.filter(idea => idea.status === 'rewarded').length;
-  const rejectedIdeas = filteredIdeas.filter(idea => idea.status === 'rejected').length;
-  const rewardRate = totalIdeas > 0 ? ((rewardedIdeas / totalIdeas) * 100).toFixed(1) : '0';
+  const newIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Đề xuất mới').length;
+  const reviewingIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Xem xét').length;
+  const approvedIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Phê duyệt').length;
+  const feedbackIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Phản hồi phê duyệt').length;
+  const implementingIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Đang triển khai').length;
+  const a3Ideas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Lập báo cáo A3').length;
+  const rewardApprovedIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Phê duyệt khen thưởng').length;
+  const rewardedIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Đã khen thưởng').length;
+  const failedIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Không đạt').length;
+  const approvalRate = totalIdeas > 0 ? ((approvedIdeas / totalIdeas) * 100).toFixed(1) : '0';
 
   // Implementation-based statistics
-  const isImplemented = (dir?: string) => dir === 'Triển khai' || dir === 'Làm báo cáo A3';
-  const isSuccessful = (dir?: string) => dir === 'Làm báo cáo A3';
-  const implementedCount = filteredIdeas.filter(idea => isImplemented(idea.implementationDirection)).length;
-  const implementationSuccessRate = totalIdeas > 0 ? ((filteredIdeas.filter(i => isSuccessful(i.implementationDirection)).length / totalIdeas) * 100).toFixed(1) : '0';
+  const isImplemented = (status?: string) => status === 'Đang triển khai' || status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
+  const isSuccessful = (status?: string) => status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
+  const implementedCount = filteredIdeas.filter(idea => isImplemented((idea as any).implementationStatus)).length;
+  const implementationSuccessRate = totalIdeas > 0 ? ((filteredIdeas.filter(i => isSuccessful((i as any).implementationStatus)).length / totalIdeas) * 100).toFixed(1) : '0';
 
   // Value-based statistics
   const totalBenefitValue = filteredIdeas.reduce((sum, idea) => sum + ((idea as any).benefitValue || 0), 0);
@@ -127,8 +128,8 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
       };
     }
     acc[dept].total++;
-    if (isImplemented(idea.implementationDirection)) acc[dept].implemented++;
-    if (isSuccessful(idea.implementationDirection)) acc[dept].successful++;
+    if (isImplemented((idea as any).implementationStatus)) acc[dept].implemented++;
+    if (isSuccessful((idea as any).implementationStatus)) acc[dept].successful++;
     acc[dept].benefitValue += (idea as any).benefitValue || 0;
     acc[dept].rewardAmount += (idea as any).rewardAmount || 0;
     return acc;
@@ -191,9 +192,9 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
             <p>• Tổng số ý tưởng: <strong>${totalIdeas}</strong></p>
             <p>• Ý tưởng đã triển khai: <strong>${implementedCount}</strong></p>
             <p>• Tỷ lệ triển khai thành công: <strong>${implementationSuccessRate}%</strong></p>
-            <p>• Chưa xem xét: <strong>${pendingIdeas}</strong></p>
-            <p>• Không khen thưởng: <strong>${rejectedIdeas}</strong></p>
-            <p>• Tỷ lệ khen thưởng: <strong>${rewardRate}%</strong></p>
+            <p>• Đề xuất mới: <strong>${newIdeas}</strong></p>
+            <p>• Không đạt: <strong>${failedIdeas}</strong></p>
+            <p>• Tỷ lệ phê duyệt: <strong>${approvalRate}%</strong></p>
           </div>
         </div>
 
@@ -278,8 +279,8 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
                 <p style="margin: 0; font-weight: bold;">${index + 1}. Mã: ${idea.ideaCode}</p>
                 <p style="margin: 2px 0;"><strong>Tên:</strong> ${idea.fullName}</p>
                 <p style="margin: 2px 0;"><strong>Phòng ban:</strong> ${idea.department}</p>
-                <p style="margin: 2px 0;"><strong>Trạng thái:</strong> ${getStatusLabel(idea.status)}</p>
-                <p style="margin: 2px 0;"><strong>Hướng triển khai:</strong> ${idea.implementationDirection || 'Chưa xác định'}</p>
+                <p style="margin: 2px 0;"><strong>Quyết định phê duyệt:</strong> ${idea.status}</p>
+                <p style="margin: 2px 0;"><strong>Trạng thái triển khai:</strong> ${(idea as any).implementationStatus || 'Đề xuất mới'}</p>
                 <p style="margin: 2px 0;"><strong>Phòng ban triển khai:</strong> ${(idea as any).implementationDepartment || 'Chưa xác định'}</p>
                 <p style="margin: 2px 0;"><strong>Giá trị làm lợi:</strong> ${((idea as any).benefitValue || 0).toLocaleString('vi-VN')} VNĐ</p>
                 <p style="margin: 2px 0;"><strong>Tiền thưởng:</strong> ${((idea as any).rewardAmount || 0).toLocaleString('vi-VN')} VNĐ</p>
@@ -459,11 +460,11 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
       yPosition += 8;
       pdf.text(`• Tỷ lệ triển khai thành công: ${implementationSuccessRate}%`, 20, yPosition);
       yPosition += 8;
-      pdf.text(`• Chưa xem xét: ${pendingIdeas}`, 20, yPosition);
+      pdf.text(`• Đề xuất mới: ${newIdeas}`, 20, yPosition);
       yPosition += 8;
-      pdf.text(`• Không khen thưởng: ${rejectedIdeas}`, 20, yPosition);
+      pdf.text(`• Không đạt: ${failedIdeas}`, 20, yPosition);
       yPosition += 8;
-      pdf.text(`• Tỷ lệ khen thưởng: ${rewardRate}%`, 20, yPosition);
+      pdf.text(`• Tỷ lệ phê duyệt: ${approvalRate}%`, 20, yPosition);
       yPosition += 15;
 
       // Value statistics
@@ -583,8 +584,8 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
                   <Chip label={`${implementationSuccessRate}%`} color="success" size="small" />
                 </Grid>
                 <Grid item xs={6}>
-                  <Typography variant="body2">Tỷ lệ khen thưởng:</Typography>
-                  <Chip label={`${rewardRate}%`} color="warning" size="small" />
+                  <Typography variant="body2">Tỷ lệ phê duyệt:</Typography>
+                  <Chip label={`${approvalRate}%`} color="warning" size="small" />
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="body2">Giá trị làm lợi:</Typography>

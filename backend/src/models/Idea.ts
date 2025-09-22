@@ -9,8 +9,8 @@ export interface IIdea extends Document {
   ideaCode: string;
   submissionDate: Date;
   isPaid: boolean;
-  status: 'pending' | 'rejected' | 'rewarded';
-  implementationDirection?: 'Lưu ý tưởng' | 'Triển khai' | 'Làm báo cáo A3' | 'Xem xét' | '';
+  status: 'pending' | 'rejected' | 'noted' | 'approved'; // Quyết định phê duyệt (cũ)
+  implementationStatus: 'Đề xuất mới' | 'Xem xét' | 'Phê duyệt' | 'Phản hồi phê duyệt' | 'Đang triển khai' | 'Lập báo cáo A3' | 'Phê duyệt khen thưởng' | 'Đã khen thưởng' | 'Không đạt'; // Trạng thái triển khai (mới)
   implementationDepartment?: string;
   note?: string;
   benefitValue?: number; // Giá trị làm lợi (VND)
@@ -28,13 +28,13 @@ const IdeaSchema: Schema = new Schema({
   isPaid: { type: Boolean, default: false },
   status: { 
     type: String, 
-    enum: ['pending', 'rejected', 'rewarded'], 
+    enum: ['pending', 'rejected', 'noted', 'approved'], 
     default: 'pending' 
   },
-  implementationDirection: { 
+  implementationStatus: { 
     type: String, 
-    enum: ['', 'Lưu ý tưởng', 'Triển khai', 'Làm báo cáo A3', 'Xem xét'],
-    default: ''
+    enum: ['Đề xuất mới', 'Xem xét', 'Phê duyệt', 'Phản hồi phê duyệt', 'Đang triển khai', 'Lập báo cáo A3', 'Phê duyệt khen thưởng', 'Đã khen thưởng', 'Không đạt'], 
+    default: 'Đề xuất mới' 
   },
   implementationDepartment: { type: String, required: false },
   note: { type: String, required: false },

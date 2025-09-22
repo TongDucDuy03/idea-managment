@@ -38,9 +38,9 @@ const AdminDashboard: React.FC = () => {
   const [selectedIdea, setSelectedIdea] = useState<Idea | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<Array<'pending' | 'rejected' | 'rewarded'>>([]);
+  const [statusFilter, setStatusFilter] = useState<Array<'pending' | 'rejected' | 'noted' | 'approved'>>([]);
+  const [implementationStatusFilter, setImplementationStatusFilter] = useState<Array<'Đề xuất mới' | 'Xem xét' | 'Phê duyệt' | 'Phản hồi phê duyệt' | 'Đang triển khai' | 'Lập báo cáo A3' | 'Phê duyệt khen thưởng' | 'Đã khen thưởng' | 'Không đạt'>>([]);
   const [departmentFilter, setDepartmentFilter] = useState<string[]>([]);
-  const [implementationDirectionFilter, setImplementationDirectionFilter] = useState<Array<'Lưu ý tưởng' | 'Triển khai' | 'Làm báo cáo A3' | 'Xem xét' | ''>>([]);
   const [implementationDepartmentFilter, setImplementationDepartmentFilter] = useState<string[]>([]);
   const [ideaCodeFilter, setIdeaCodeFilter] = useState('');
   const [fullNameFilter, setFullNameFilter] = useState('');
@@ -125,8 +125,14 @@ const AdminDashboard: React.FC = () => {
     
     // Status filter
     const status = params.get('status');
-    if (status && ['pending', 'rejected', 'rewarded'].includes(status)) {
-      setStatusFilter([status as 'pending' | 'rejected' | 'rewarded']);
+    if (status && ['pending', 'rejected', 'noted', 'approved'].includes(status)) {
+      setStatusFilter([status as 'pending' | 'rejected' | 'noted' | 'approved']);
+    }
+    
+    // Implementation status filter
+    const implStatus = params.get('implementationStatus');
+    if (implStatus && ['Đề xuất mới', 'Xem xét', 'Phê duyệt', 'Phản hồi phê duyệt', 'Đang triển khai', 'Lập báo cáo A3', 'Phê duyệt khen thưởng', 'Đã khen thưởng', 'Không đạt'].includes(implStatus)) {
+      setImplementationStatusFilter([implStatus as 'Đề xuất mới' | 'Xem xét' | 'Phê duyệt' | 'Phản hồi phê duyệt' | 'Đang triển khai' | 'Lập báo cáo A3' | 'Phê duyệt khen thưởng' | 'Đã khen thưởng' | 'Không đạt']);
     }
     
     // Date range filter
@@ -139,30 +145,24 @@ const AdminDashboard: React.FC = () => {
     const fullName = params.get('fullName');
     if (fullName) setFullNameFilter(fullName);
     
-    // Implementation direction filter
-    const implDirection = params.get('implementationDirection');
-    if (implDirection) {
-      const directions = implDirection.split(',').map(d => d.trim());
-      setImplementationDirectionFilter(directions as any);
-    }
     
     setPaginationModel(prev => ({ ...prev, page: 0 }));
   }, [location.search]);
   
 
   const handleStatusFilterChange = (event: any) => {
-    const value = event.target.value as Array<'pending' | 'rejected' | 'rewarded'>;
+    const value = event.target.value as Array<'pending' | 'rejected' | 'noted' | 'approved'>;
     setStatusFilter(value);
+  };
+
+  const handleImplementationStatusFilterChange = (event: any) => {
+    const value = event.target.value as Array<'Đề xuất mới' | 'Xem xét' | 'Phê duyệt' | 'Phản hồi phê duyệt' | 'Đang triển khai' | 'Lập báo cáo A3' | 'Phê duyệt khen thưởng' | 'Đã khen thưởng' | 'Không đạt'>;
+    setImplementationStatusFilter(value);
   };
 
   const handleDepartmentFilterChange = (event: any) => {
     const value = event.target.value as string[];
     setDepartmentFilter(value);
-  };
-
-  const handleImplementationDirectionFilterChange = (event: any) => {
-    const value = event.target.value as Array<'Lưu ý tưởng' | 'Triển khai' | 'Làm báo cáo A3' | 'Xem xét' | ''>;
-    setImplementationDirectionFilter(value);
   };
 
   const handleImplementationDepartmentFilterChange = (event: any) => {
@@ -197,7 +197,7 @@ const AdminDashboard: React.FC = () => {
   };
 
 
-  const handleStatusChange = async (id: string, status: 'pending' | 'rejected' | 'rewarded') => {
+  const handleStatusChange = async (id: string, status: 'pending' | 'rejected' | 'noted' | 'approved') => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -304,9 +304,6 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleExportExcel = () => {
-    const statusLabel = (s: 'pending' | 'rejected' | 'rewarded') => (
-      s === 'pending' ? 'Chưa xem xét' : s === 'rejected' ? 'Không khen thưởng' : 'Đã khen thưởng'
-    );
     const exportData = ideas.map(idea => ({
       'Mã ý tưởng': idea.ideaCode,
       'Họ và tên': idea.fullName,
@@ -314,8 +311,8 @@ const AdminDashboard: React.FC = () => {
       'Ý tưởng': idea.idea,
       'Thực trạng': idea.solution,
       'Giải pháp': idea.benefit ,
-      'Trạng thái': statusLabel(idea.status),
-      'Hướng triển khai': (idea as any).implementationDirection || '',
+      'Quyết định phê duyệt': idea.status,
+      'Trạng thái triển khai': (idea as any).implementationStatus || 'Đề xuất mới',
       'Phòng ban triển khai': (idea as any).implementationDepartment || '',
       'Ghi chú': (idea as any).note || '',
       'Giá trị làm lợi (VND)': (idea as any).benefitValue ? (idea as any).benefitValue.toLocaleString('vi-VN') : '0',
@@ -343,8 +340,8 @@ const AdminDashboard: React.FC = () => {
     const matchesFullName = normalizeText(fullNameFilter) === '' || normalizeText((idea as any).fullName || '').includes(normalizeText(fullNameFilter));
     const matchesIdeaText = normalizeText(ideaTextFilter) === '' || normalizeText((idea as any).idea || '').includes(normalizeText(ideaTextFilter));
     const matchesStatus = statusFilter.length === 0 || statusFilter.includes((idea as any).status);
+    const matchesImplementationStatus = implementationStatusFilter.length === 0 || implementationStatusFilter.includes(((idea as any).implementationStatus || ''));
     const matchesDepartment = departmentFilter.length === 0 || departmentFilter.includes((idea as any).department);
-    const matchesImplementationDirection = implementationDirectionFilter.length === 0 || implementationDirectionFilter.includes((((idea as any).implementationDirection || '') as any));
     const matchesImplementationDepartment = implementationDepartmentFilter.length === 0 || implementationDepartmentFilter.includes(((idea as any).implementationDepartment || ''));
     const submissionMs = idea.submissionDate ? new Date(idea.submissionDate).getTime() : NaN;
     const fromMs = dateFrom ? new Date(dateFrom).setHours(0, 0, 0, 0) : NaN;
@@ -357,8 +354,8 @@ const AdminDashboard: React.FC = () => {
       matchesFullName &&
       matchesIdeaText &&
       matchesStatus &&
+      matchesImplementationStatus &&
       matchesDepartment &&
-      matchesImplementationDirection &&
       matchesImplementationDepartment &&
       matchesDateFrom &&
       matchesDateTo
@@ -373,7 +370,7 @@ const AdminDashboard: React.FC = () => {
     if (!topScrollElement || !dataGridElement) return;
 
     // Tính tổng chiều rộng của các cột (hardcode để tránh lỗi dependency)
-    const totalWidth = 150+ 200 + 200 + 300 + 300 +300 + 200 + 180 + 180 + 200 + 200 + 180 + 180 + 120 ; // Tổng chiều rộng các cột
+    const totalWidth = 150+ 200 + 200 + 300 + 300 +300 + 180 + 180 + 180 + 200 + 200 + 180 + 180 + 120 ; // Tổng chiều rộng các cột
     
     // Cập nhật chiều rộng của thanh cuộn trên
     const invisibleContent = topScrollElement.querySelector('div');
@@ -405,13 +402,30 @@ const AdminDashboard: React.FC = () => {
   const StatusCell: React.FC<{ row: Idea }> = ({ row }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
-    const label = row.status ? (row.status === 'pending' ? 'Chưa xem xét' : row.status === 'rejected' ? 'Không khen thưởng' : 'Đã khen thưởng') : 'Chưa xem xét';
-    const color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' =
-      row.status === 'rejected' ? 'error' : row.status === 'rewarded' ? 'success' : 'info';
+    const getStatusColor = (status: string): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
+      switch(status) {
+        case 'rejected': return 'error';
+        case 'noted': return 'warning';
+        case 'approved': return 'success';
+        case 'pending': 
+        default: return 'info';
+      }
+    };
+    const color = getStatusColor(row.status || 'pending');
+
+    const getStatusLabel = (status: string) => {
+      switch (status) {
+        case 'pending': return 'Chưa phê duyệt';
+        case 'rejected': return 'Không phù hợp';
+        case 'noted': return 'Lưu ý tưởng';
+        case 'approved': return 'Phê duyệt triển khai';
+        default: return 'Chưa phê duyệt';
+      }
+    };
 
     const handleOpen = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
     const handleClose = () => setAnchorEl(null);
-    const selectStatus = (s: 'pending' | 'rejected' | 'rewarded') => {
+    const selectStatus = (s: 'pending' | 'rejected' | 'noted' | 'approved') => {
       handleStatusChange(row._id, s);
       handleClose();
     };
@@ -419,16 +433,17 @@ const AdminDashboard: React.FC = () => {
     return (
       <>
         <Chip
-          label={label}
+          label={getStatusLabel(row.status || 'pending')}
           color={color}
           size="small"
           onClick={handleOpen}
           sx={{ fontWeight: 'bold', cursor: 'pointer' }}
         />
         <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-          <MenuItem onClick={() => selectStatus('pending')}>Chưa xem xét</MenuItem>
-          <MenuItem onClick={() => selectStatus('rejected')}>Không khen thưởng</MenuItem>
-          <MenuItem onClick={() => selectStatus('rewarded')}>Đã khen thưởng</MenuItem>
+          <MenuItem onClick={() => selectStatus('pending')}>Chưa phê duyệt</MenuItem>
+          <MenuItem onClick={() => selectStatus('rejected')}>Không phù hợp</MenuItem>
+          <MenuItem onClick={() => selectStatus('noted')}>Lưu ý tưởng</MenuItem>
+          <MenuItem onClick={() => selectStatus('approved')}>Phê duyệt triển khai</MenuItem>
         </Menu>
       </>
     );
@@ -585,8 +600,8 @@ const AdminDashboard: React.FC = () => {
     },
     {
       field: 'status',
-      headerName: 'Trạng thái',
-      width: 150,
+      headerName: 'Quyết định phê duyệt',
+      width: 180,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (
@@ -594,6 +609,43 @@ const AdminDashboard: React.FC = () => {
           <StatusCell row={params.row} />
         </div>
       ),
+      sortable: false
+    },
+    {
+      field: 'implementationStatus',
+      headerName: 'Trạng thái triển khai',
+      width: 180,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => {
+        const getImplementationStatusColor = (status: string) => {
+          switch (status) {
+            case 'Đề xuất mới': return '#2196F3';
+            case 'Xem xét': return '#FF9800';
+            case 'Phê duyệt': return '#4CAF50';
+            case 'Phản hồi phê duyệt': return '#9C27B0';
+            case 'Đang triển khai': return '#00BCD4';
+            case 'Lập báo cáo A3': return '#795548';
+            case 'Phê duyệt khen thưởng': return '#607D8B';
+            case 'Đã khen thưởng': return '#2E7D32';
+            case 'Không đạt': return '#F44336';
+            default: return '#757575';
+          }
+        };
+        
+        return (
+          <Chip
+            label={params.value || 'Đề xuất mới'}
+            sx={{
+              backgroundColor: getImplementationStatusColor(params.value || 'Đề xuất mới'),
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '0.75rem'
+            }}
+            size="small"
+          />
+        );
+      },
       sortable: false
     },
     {
@@ -607,24 +659,7 @@ const AdminDashboard: React.FC = () => {
         return new Date(params.value).toLocaleString('vi-VN');
       },
     },
-    {
-      field: 'implementationDirection',
-      headerName: 'Hướng triển khai',
-      width: 180,
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params) => (
-        <div style={{
-          width: '100%',
-          textAlign: 'center',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
-        }}>
-          {params.value || '-'}
-        </div>
-      )
-    },
+    
     {
       field: 'implementationDepartment',
       headerName: 'Phòng ban triển khai',
@@ -813,22 +848,18 @@ const AdminDashboard: React.FC = () => {
                     onChange={handleStatusFilterChange}
                     renderValue={(selected) => {
                       if ((selected as string[]).length === 0) {
-                        return 'Lọc trạng thái';
+                        return 'Lọc quyết định phê duyệt';
                       }
-                      const map: any = {
-                        pending: 'Chưa xem xét',
-                        rejected: 'Không khen thưởng',
-                        rewarded: 'Đã khen thưởng'
-                      };
-                      return (selected as string[]).map(s => map[s]).join(', ');
+                      return (selected as string[]).join(', ');
                     }}
                     size="small"
                     sx={{ minWidth: 200, maxWidth: 280, flexShrink: 1 }}
                   >
                     {[
-                      { value: 'pending', label: 'Chưa xem xét' },
-                      { value: 'rejected', label: 'Không khen thưởng' },
-                      { value: 'rewarded', label: 'Đã khen thưởng' }
+                      { value: 'pending', label: 'Chưa phê duyệt' },
+                      { value: 'rejected', label: 'Không phù hợp' },
+                      { value: 'noted', label: 'Lưu ý tưởng' },
+                      { value: 'approved', label: 'Phê duyệt triển khai' }
                     ].map(opt => (
                       <MenuItem key={opt.value} value={opt.value}>
                         <Checkbox checked={statusFilter.indexOf(opt.value as any) > -1} />
@@ -836,28 +867,38 @@ const AdminDashboard: React.FC = () => {
                       </MenuItem>
                     ))}
                   </Select>
-
                   <Select
                     multiple
                     displayEmpty
-                    value={implementationDirectionFilter}
-                    onChange={handleImplementationDirectionFilterChange}
+                    value={implementationStatusFilter}
+                    onChange={handleImplementationStatusFilterChange}
                     renderValue={(selected) => {
                       if ((selected as string[]).length === 0) {
-                        return 'Lọc hướng triển khai';
+                        return 'Lọc trạng thái triển khai';
                       }
                       return (selected as string[]).join(', ');
                     }}
                     size="small"
-                    sx={{ minWidth: 220, maxWidth: 320, flexShrink: 1 }}
+                    sx={{ minWidth: 200, maxWidth: 280, flexShrink: 1 }}
                   >
-                    {['Lưu ý tưởng', 'Triển khai', 'Làm báo cáo A3', 'Xem xét'].map(val => (
-                      <MenuItem key={val} value={val as any}>
-                        <Checkbox checked={implementationDirectionFilter.indexOf(val as any) > -1} />
-                        <ListItemText primary={val} />
+                    {[
+                      { value: 'Đề xuất mới', label: 'Đề xuất mới' },
+                      { value: 'Xem xét', label: 'Xem xét' },
+                      { value: 'Phê duyệt', label: 'Phê duyệt' },
+                      { value: 'Phản hồi phê duyệt', label: 'Phản hồi phê duyệt' },
+                      { value: 'Đang triển khai', label: 'Đang triển khai' },
+                      { value: 'Lập báo cáo A3', label: 'Lập báo cáo A3' },
+                      { value: 'Phê duyệt khen thưởng', label: 'Phê duyệt khen thưởng' },
+                      { value: 'Đã khen thưởng', label: 'Đã khen thưởng' },
+                      { value: 'Không đạt', label: 'Không đạt' }
+                    ].map(opt => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        <Checkbox checked={implementationStatusFilter.indexOf(opt.value as any) > -1} />
+                        <ListItemText primary={opt.label} />
                       </MenuItem>
                     ))}
                   </Select>
+
 
                   <Select
                     multiple

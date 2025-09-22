@@ -261,13 +261,13 @@ const StatisticsDashboard: React.FC = () => {
     const totalChangePercent = previousTotal > 0 ? ((totalChange / previousTotal) * 100) : 0;
 
     // Implemented and success (A3)
-    const currentImplemented = current.filter(i => isImplemented(i.implementationDirection)).length;
-    const previousImplemented = previous.filter(i => isImplemented(i.implementationDirection)).length;
+    const currentImplemented = current.filter(i => isImplemented(i.status)).length;
+    const previousImplemented = previous.filter(i => isImplemented(i.status)).length;
     const implementedChange = currentImplemented - previousImplemented;
     const implementedChangePercent = previousImplemented > 0 ? ((implementedChange / previousImplemented) * 100) : 0;
 
-    const currentSuccessful = current.filter(i => isSuccessful(i.implementationDirection)).length;
-    const previousSuccessful = previous.filter(i => isSuccessful(i.implementationDirection)).length;
+    const currentSuccessful = current.filter(i => isSuccessful(i.status)).length;
+    const previousSuccessful = previous.filter(i => isSuccessful(i.status)).length;
     const currentImplSuccessRate = currentTotal > 0 ? (currentSuccessful / currentTotal) * 100 : 0;
     const previousImplSuccessRate = previousTotal > 0 ? (previousSuccessful / previousTotal) * 100 : 0;
     const implSuccessRateChange = currentImplSuccessRate - previousImplSuccessRate;
@@ -328,19 +328,25 @@ const StatisticsDashboard: React.FC = () => {
 
   // Calculate statistics
   const totalIdeas = filteredIdeas.length;
-  const pendingIdeas = filteredIdeas.filter(idea => idea.status === 'pending').length;
-  const rewardedIdeas = filteredIdeas.filter(idea => idea.status === 'rewarded').length;
-  const rejectedIdeas = filteredIdeas.filter(idea => idea.status === 'rejected').length;
-  const rewardRate = totalIdeas > 0 ? ((rewardedIdeas / totalIdeas) * 100).toFixed(1) : '0';
+  const newIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Đề xuất mới').length;
+  const reviewingIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Xem xét').length;
+  const approvedIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Phê duyệt').length;
+  const feedbackIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Phản hồi phê duyệt').length;
+  const implementingIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Đang triển khai').length;
+  const a3Ideas = filteredIdeas.filter(idea => idea.implementationStatus === 'Lập báo cáo A3').length;
+  const rewardApprovedIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Phê duyệt khen thưởng').length;
+  const rewardedIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Đã khen thưởng').length;
+  const failedIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Không đạt').length;
+  const approvalRate = totalIdeas > 0 ? ((approvedIdeas / totalIdeas) * 100).toFixed(1) : '0';
 
   // Implementation-based statistics
-  const isImplemented = (dir?: string) => dir === 'Lưu ý tưởng' || dir === 'Triển khai' || dir === 'Xem xét' || dir === 'Làm báo cáo A3';
-  const implementedDeployed = (dir?: string) => dir === 'Triển khai' || dir === 'Làm báo cáo A3';
-  const isSuccessful = (dir?: string) => dir === 'Làm báo cáo A3';
-  const implementedCount = filteredIdeas.filter(idea => isImplemented(idea.implementationDirection)).length;
-  const implementedCountDeployed = filteredIdeas.filter(idea => implementedDeployed(idea.implementationDirection)).length;
-  const implementationSuccess = filteredIdeas.filter(idea => isSuccessful(idea.implementationDirection)).length;
-  const implementationSuccessRate = totalIdeas > 0 ? ((filteredIdeas.filter(i => isSuccessful(i.implementationDirection)).length / totalIdeas) * 100).toFixed(1) : '0';
+  const isImplemented = (status?: string) => status === 'Đang triển khai' || status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
+  const implementedDeployed = (status?: string) => status === 'Đang triển khai' || status === 'Lập báo cáo A3';
+  const isSuccessful = (status?: string) => status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
+  const implementedCount = filteredIdeas.filter(idea => isImplemented(idea.implementationStatus)).length;
+  const implementedCountDeployed = filteredIdeas.filter(idea => implementedDeployed(idea.implementationStatus)).length;
+  const implementationSuccess = filteredIdeas.filter(idea => isSuccessful(idea.implementationStatus)).length;
+  const implementationSuccessRate = totalIdeas > 0 ? ((filteredIdeas.filter(i => isSuccessful(i.implementationStatus)).length / totalIdeas) * 100).toFixed(1) : '0';
 
   // Department statistics
   const departmentStats = filteredIdeas.reduce((acc, idea) => {
@@ -359,16 +365,22 @@ const StatisticsDashboard: React.FC = () => {
       acc[userName] = {
         name: userName,
         total: 0,
-        rewarded: 0,
-        pending: 0,
-        rejected: 0,
+        'Đề xuất mới': 0,
+        'Xem xét': 0,
+        'Phê duyệt': 0,
+        'Phản hồi phê duyệt': 0,
+        'Đang triển khai': 0,
+        'Lập báo cáo A3': 0,
+        'Phê duyệt khen thưởng': 0,
+        'Đã khen thưởng': 0,
+        'Không đạt': 0,
         department: idea.department
       };
     }
     acc[userName].total++;
-    acc[userName][idea.status]++;
+    acc[userName][idea.implementationStatus as keyof typeof acc[typeof userName]]++;
     return acc;
-  }, {} as Record<string, { name: string; total: number; rewarded: number; pending: number; rejected: number; department: string }>);
+  }, {} as Record<string, { name: string; total: number; 'Đề xuất mới': number; 'Xem xét': number; 'Phê duyệt': number; 'Phản hồi phê duyệt': number; 'Đang triển khai': number; 'Lập báo cáo A3': number; 'Phê duyệt khen thưởng': number; 'Đã khen thưởng': number; 'Không đạt': number; department: string }>);
 
   const topUsers = Object.values(userStats)
     .sort((a, b) => b.total - a.total)
@@ -379,33 +391,68 @@ const StatisticsDashboard: React.FC = () => {
     const date = new Date(idea.submissionDate);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     if (!acc[monthKey]) {
-      acc[monthKey] = { total: 0, rewarded: 0, rejected: 0, pending: 0 };
+      acc[monthKey] = { 
+        total: 0, 
+        'Đề xuất mới': 0, 
+        'Xem xét': 0, 
+        'Phê duyệt': 0, 
+        'Phản hồi phê duyệt': 0, 
+        'Đang triển khai': 0, 
+        'Lập báo cáo A3': 0, 
+        'Phê duyệt khen thưởng': 0, 
+        'Đã khen thưởng': 0, 
+        'Không đạt': 0 
+      };
     }
     acc[monthKey].total++;
-    acc[monthKey][idea.status]++;
+    acc[monthKey][idea.implementationStatus as keyof typeof acc[typeof monthKey]]++;
     return acc;
-  }, {} as Record<string, { total: number; rewarded: number; rejected: number; pending: number }>);
+  }, {} as Record<string, { 
+    total: number; 
+    'Đề xuất mới': number; 
+    'Xem xét': number; 
+    'Phê duyệt': number; 
+    'Phản hồi phê duyệt': number; 
+    'Đang triển khai': number; 
+    'Lập báo cáo A3': number; 
+    'Phê duyệt khen thưởng': number; 
+    'Đã khen thưởng': number; 
+    'Không đạt': number 
+  }>);
 
   const monthlyLabels = Object.keys(monthlyData).sort();
   const monthlyTotals = monthlyLabels.map(label => monthlyData[label].total);
-  const monthlyRewarded = monthlyLabels.map(label => monthlyData[label].rewarded);
-  const monthlyRejected = monthlyLabels.map(label => monthlyData[label].rejected);
+  const monthlyApproved = monthlyLabels.map(label => monthlyData[label]['Phê duyệt']);
+  const monthlyRejected = monthlyLabels.map(label => monthlyData[label]['Không đạt']);
+  const monthlyNoted = monthlyLabels.map(label => monthlyData[label]['Xem xét']);
 
   // Chart configurations
   const statusChartData = {
-    labels: ['Chưa xem xét', 'Đã khen thưởng', 'Không khen thưởng'],
+    labels: ['Đề xuất mới', 'Xem xét', 'Phê duyệt', 'Phản hồi phê duyệt', 'Đang triển khai', 'Lập báo cáo A3', 'Phê duyệt khen thưởng', 'Đã khen thưởng', 'Không đạt'],
     datasets: [
       {
-        data: [pendingIdeas, rewardedIdeas, rejectedIdeas],
+        data: [newIdeas, reviewingIdeas, approvedIdeas, feedbackIdeas, implementingIdeas, a3Ideas, rewardApprovedIdeas, rewardedIdeas, failedIdeas],
         backgroundColor: [
-          '#FFA726',
-          '#66BB6A',
-          '#EF5350'
-        ],
-        borderColor: [
+          '#2196F3',
           '#FF9800',
           '#4CAF50',
+          '#9C27B0',
+          '#00BCD4',
+          '#795548',
+          '#607D8B',
+          '#2E7D32',
           '#F44336'
+        ],
+        borderColor: [
+          '#1976D2',
+          '#F57C00',
+          '#2E7D32',
+          '#7B1FA2',
+          '#0097A7',
+          '#5D4037',
+          '#455A64',
+          '#1B5E20',
+          '#D32F2F'
         ],
         borderWidth: 2
       }
@@ -1088,7 +1135,7 @@ const StatisticsDashboard: React.FC = () => {
               },
               transition: 'all 0.2s'
             }}
-            onClick={() => navigate('/admin?implementationDirection=Triển khai,Làm báo cáo A3')}
+            onClick={() => navigate('/admin?status=Đang triển khai,Lập báo cáo A3')}
           >
             <CardContent>
               <Typography variant="h3" color="error.main" sx={{ fontWeight: 'bold' }}>
@@ -1115,14 +1162,14 @@ const StatisticsDashboard: React.FC = () => {
               },
               transition: 'all 0.2s'
             }}
-            onClick={() => navigate('/admin?status=rewarded')}
+            onClick={() => navigate('/admin?status=Phê duyệt')}
           >
             <CardContent>
               <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
                 {implementedCount}
               </Typography>
               <Typography variant="h6" color="text.secondary">
-                Ý tưởng được thưởng 50k
+                Ý tưởng được phê duyệt
               </Typography>
             </CardContent>
           </Card>
@@ -1142,7 +1189,7 @@ const StatisticsDashboard: React.FC = () => {
               },
               transition: 'all 0.2s'
             }}
-            onClick={() => navigate('/admin?implementationDirection=Triển khai,Làm báo cáo A3')}
+            onClick={() => navigate('/admin?status=Đang triển khai,Lập báo cáo A3')}
           >
             <CardContent>
               <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
@@ -1170,7 +1217,7 @@ const StatisticsDashboard: React.FC = () => {
               },
               transition: 'all 0.2s'
             }}
-            onClick={() => navigate('/admin?implementationDirection=Làm báo cáo A3')}
+            onClick={() => navigate('/admin?status=Lập báo cáo A3')}
           >
             <CardContent>
               <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
@@ -1197,14 +1244,14 @@ const StatisticsDashboard: React.FC = () => {
               },
               transition: 'all 0.2s'
             }}
-            onClick={() => navigate('/admin?status=pending')}
+            onClick={() => navigate('/admin?status=Đề xuất mới')}
           >
             <CardContent>
               <Typography variant="h3" color="warning.main" sx={{ fontWeight: 'bold' }}>
-                {pendingIdeas}
+                {newIdeas}
               </Typography>
               <Typography variant="h6" color="text.secondary">
-                Chờ xem xét
+                Đề xuất mới
               </Typography>
             </CardContent>
           </Card>
@@ -1232,10 +1279,10 @@ const StatisticsDashboard: React.FC = () => {
                   const elements = getElementAtEvent(chart, event);
                   if (!elements || elements.length === 0) return;
                   const index = (elements[0] as any).index as number;
-                  const statusMap = ['pending', 'rewarded', 'rejected'];
+                  const statusMap = ['Đề xuất mới', 'Xem xét', 'Phê duyệt', 'Phản hồi phê duyệt', 'Đang triển khai', 'Lập báo cáo A3', 'Phê duyệt khen thưởng', 'Đã khen thưởng', 'Không đạt'];
                   const status = statusMap[index];
                   if (status) {
-                    navigate(`/admin?status=${status}`);
+                    navigate(`/admin?status=${encodeURIComponent(status)}`);
                   }
                 }}
               />

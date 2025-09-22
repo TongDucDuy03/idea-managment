@@ -107,13 +107,19 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
 
   // Calculate advanced statistics
   const totalIdeas = filteredIdeas.length;
-  const pendingIdeas = filteredIdeas.filter(idea => idea.status === 'pending').length;
-  const rewardedIdeas = filteredIdeas.filter(idea => idea.status === 'rewarded').length;
-  const rejectedIdeas = filteredIdeas.filter(idea => idea.status === 'rejected').length;
+  const newIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Đề xuất mới').length;
+  const reviewingIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Xem xét').length;
+  const approvedIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Phê duyệt').length;
+  const feedbackIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Phản hồi phê duyệt').length;
+  const implementingIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Đang triển khai').length;
+  const a3Ideas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Lập báo cáo A3').length;
+  const rewardApprovedIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Phê duyệt khen thưởng').length;
+  const rewardedIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Đã khen thưởng').length;
+  const failedIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Không đạt').length;
 
   // Helpers for implementation status (defined early for reuse)
-  const isImplemented = (dir?: string) => dir === 'Triển khai' || dir === 'Làm báo cáo A3';
-  const isSuccessful = (dir?: string) => dir === 'Làm báo cáo A3';
+  const isImplemented = (status?: string) => status === 'Đang triển khai' || status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
+  const isSuccessful = (status?: string) => status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
 
   // Department performance analysis (quality-focused) - based on implementation success
   const departmentPerformance = filteredIdeas.reduce((acc, idea) => {
@@ -127,8 +133,8 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
       } as any;
     }
     acc[dept].total++;
-    if (isImplemented(idea.implementationDirection)) acc[dept].implemented++;
-    if (isSuccessful(idea.implementationDirection)) acc[dept].successful++;
+    if (isImplemented((idea as any).implementationStatus)) acc[dept].implemented++;
+    if (isSuccessful((idea as any).implementationStatus)) acc[dept].successful++;
     return acc;
   }, {} as Record<string, { total: number; implemented: number; successful: number; successRate: number }>);
 
@@ -147,12 +153,34 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
     const date = new Date(idea.submissionDate);
     const weekKey = `${date.getFullYear()}-W${String(Math.ceil(date.getDate() / 7)).padStart(2, '0')}`;
     if (!acc[weekKey]) {
-      acc[weekKey] = { total: 0, rewarded: 0, rejected: 0, pending: 0 };
+      acc[weekKey] = { 
+        total: 0, 
+        'Đề xuất mới': 0, 
+        'Xem xét': 0, 
+        'Phê duyệt': 0, 
+        'Phản hồi phê duyệt': 0, 
+        'Đang triển khai': 0, 
+        'Lập báo cáo A3': 0, 
+        'Phê duyệt khen thưởng': 0, 
+        'Đã khen thưởng': 0, 
+        'Không đạt': 0 
+      };
     }
     acc[weekKey].total++;
-    acc[weekKey][idea.status]++;
+    acc[weekKey][(idea as any).implementationStatus as keyof typeof acc[typeof weekKey]]++;
     return acc;
-  }, {} as Record<string, { total: number; rewarded: number; rejected: number; pending: number }>);
+  }, {} as Record<string, { 
+    total: number; 
+    'Đề xuất mới': number; 
+    'Xem xét': number; 
+    'Phê duyệt': number; 
+    'Phản hồi phê duyệt': number; 
+    'Đang triển khai': number; 
+    'Lập báo cáo A3': number; 
+    'Phê duyệt khen thưởng': number; 
+    'Đã khen thưởng': number; 
+    'Không đạt': number 
+  }>);
 
   const weeklyLabels = Object.keys(weeklyData).sort();
   const weeklyTotals = weeklyLabels.map(label => weeklyData[label].total);
@@ -165,7 +193,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
       acc[monthKey] = { total: 0, successful: 0 } as any;
     }
     acc[monthKey].total++;
-    if (isSuccessful(idea.implementationDirection)) acc[monthKey].successful++;
+    if (isSuccessful((idea as any).implementationStatus)) acc[monthKey].successful++;
     return acc;
   }, {} as Record<string, { total: number; successful: number }>);
 
@@ -242,19 +270,31 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   };
 
   const statusDistributionData = {
-    labels: ['Chưa xem xét', 'Đã khen thưởng', 'Không khen thưởng'],
+    labels: ['Đề xuất mới', 'Xem xét', 'Phê duyệt', 'Phản hồi phê duyệt', 'Đang triển khai', 'Lập báo cáo A3', 'Phê duyệt khen thưởng', 'Đã khen thưởng', 'Không đạt'],
     datasets: [
       {
-        data: [pendingIdeas, rewardedIdeas, rejectedIdeas],
+        data: [newIdeas, reviewingIdeas, approvedIdeas, feedbackIdeas, implementingIdeas, a3Ideas, rewardApprovedIdeas, rewardedIdeas, failedIdeas],
         backgroundColor: [
-          '#FFA726',
-          '#66BB6A',
-          '#EF5350'
-        ],
-        borderColor: [
+          '#2196F3',
           '#FF9800',
           '#4CAF50',
+          '#9C27B0',
+          '#00BCD4',
+          '#795548',
+          '#607D8B',
+          '#2E7D32',
           '#F44336'
+        ],
+        borderColor: [
+          '#1976D2',
+          '#F57C00',
+          '#2E7D32',
+          '#7B1FA2',
+          '#0097A7',
+          '#5D4037',
+          '#455A64',
+          '#1B5E20',
+          '#D32F2F'
         ],
         borderWidth: 2
       }
@@ -433,16 +473,16 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   const deptImplStats = filteredIdeas.reduce((acc, idea) => {
     const key = idea.department || 'Khác';
     if (!acc[key]) acc[key] = { implemented: 0, successful: 0 } as ImplStats;
-    if (isImplemented(idea.implementationDirection)) acc[key].implemented += 1;
-    if (isSuccessful(idea.implementationDirection)) acc[key].successful += 1;
+    if (isImplemented((idea as any).implementationStatus)) acc[key].implemented += 1;
+    if (isSuccessful((idea as any).implementationStatus)) acc[key].successful += 1;
     return acc;
   }, {} as Record<string, ImplStats>);
 
   const userImplStats = filteredIdeas.reduce((acc, idea) => {
     const key = idea.fullName || 'Không rõ';
     if (!acc[key]) acc[key] = { implemented: 0, successful: 0 } as ImplStats;
-    if (isImplemented(idea.implementationDirection)) acc[key].implemented += 1;
-    if (isSuccessful(idea.implementationDirection)) acc[key].successful += 1;
+    if (isImplemented((idea as any).implementationStatus)) acc[key].implemented += 1;
+    if (isSuccessful((idea as any).implementationStatus)) acc[key].successful += 1;
     return acc;
   }, {} as Record<string, ImplStats>);
 
