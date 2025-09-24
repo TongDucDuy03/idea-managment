@@ -123,7 +123,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   const failedIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Không đạt').length;
 
   // Helpers for implementation status (defined early for reuse)
-  const isImplemented = (status?: string) =>  status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
+  const isImplemented = (status?: string) =>  status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng' || status === 'Không đạt';
   const isSuccessful = (status?: string) => status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
   const isImplementedFinal = (status?: string) => status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng' || status === 'Không đạt';
   const isDeploying = (status?: string) => status === 'Đang triển khai';
@@ -592,7 +592,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   };
 
   // Sort state for Department Ranking Table (default: by success rate desc)
-  type DeptSortKey = 'department' | 'total' | 'approved' | 'deploying' | 'implemented' | 'implementedFinal' | 'rate';
+  type DeptSortKey = 'department' | 'total' | 'approved' | 'deploying' | 'implemented' | 'successful' | 'rate';
   const [deptOrderBy, setDeptOrderBy] = useState<DeptSortKey>('rate');
   const [deptOrder, setDeptOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -619,8 +619,8 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
         return (dataA.deploying || 0) - (dataB.deploying || 0);
       case 'implemented':
         return (dataA.implemented || 0) - (dataB.implemented || 0);
-      case 'implementedFinal':
-        return (dataA.implementedFinal || 0) - (dataB.implementedFinal || 0);
+      case 'successful':
+        return (dataA.successful || 0) - (dataB.successful || 0);
       case 'rate': {
         const rateA = (dataA.approved > 0 ? dataA.implementedFinal / dataA.approved : 0);
         const rateB = (dataB.approved > 0 ? dataB.implementedFinal / dataB.approved : 0);
@@ -630,7 +630,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   };
 
   // Sort state for User Ranking Table (default: by success rate desc)
-  type UserSortKey = 'name' | 'total' | 'approved' | 'deploying' | 'implemented' | 'implementedFinal' | 'rate';
+  type UserSortKey = 'name' | 'total' | 'approved' | 'deploying' | 'implemented' | 'successful' | 'rate';
   const [userOrderBy, setUserOrderBy] = useState<UserSortKey>('total');
   const [userOrder, setUserOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -657,8 +657,8 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
         return (dataA.deploying || 0) - (dataB.deploying || 0);
       case 'implemented':
         return (dataA.implemented || 0) - (dataB.implemented || 0);
-      case 'implementedFinal':
-        return (dataA.implementedFinal || 0) - (dataB.implementedFinal || 0);
+      case 'successful':
+        return (dataA.successful || 0) - (dataB.successful || 0);
       case 'rate': {
         const rateA = (dataA.approved > 0 ? dataA.implementedFinal / dataA.approved : 0);
         const rateB = (dataB.approved > 0 ? dataB.implementedFinal / dataB.approved : 0);
@@ -810,7 +810,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                         <Chip label={(data as any).implemented} color="primary" size="small" />
                       </TableCell>
                       <TableCell align="center">
-                        <Chip label={(data as any).implementedFinal} color="success" size="small" />
+                        <Chip label={(data as any).successful} color="success" size="small" />
                       </TableCell>
                       <TableCell align="center">
                         <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
@@ -881,11 +881,11 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                         <strong>Đã triển khai</strong>
                       </TableSortLabel>
                     </TableCell>
-                    <TableCell align="center" sortDirection={deptOrderBy === 'implementedFinal' ? deptOrder : false as any}>
+                    <TableCell align="center" sortDirection={deptOrderBy === 'successful' ? deptOrder : false as any}>
                       <TableSortLabel
-                        active={deptOrderBy === 'implementedFinal'}
-                        direction={deptOrderBy === 'implementedFinal' ? deptOrder : 'asc'}
-                        onClick={() => handleDeptSort('implementedFinal')}
+                        active={deptOrderBy === 'successful'}
+                        direction={deptOrderBy === 'successful' ? deptOrder : 'asc'}
+                        onClick={() => handleDeptSort('successful')}
                       >
                         <strong>Triển khai thành công</strong>
                       </TableSortLabel>
@@ -896,7 +896,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                         direction={deptOrderBy === 'rate' ? deptOrder : 'asc'}
                         onClick={() => handleDeptSort('rate')}
                       >
-                        <strong>Tỷ lệ triển khai thành công</strong>
+                        <strong>Tỷ lệ triển khai </strong>
                       </TableSortLabel>
                     </TableCell>
                     <TableCell align="center"><strong>Thanh tiến độ</strong></TableCell>
@@ -942,7 +942,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                         <Chip label={data.implemented} color="primary" size="small" />
                       </TableCell>
                       <TableCell align="center">
-                        <Chip label={data.implementedFinal} color="success" size="small" />
+                        <Chip label={data.successful} color="success" size="small" />
                       </TableCell>
                       <TableCell align="center">
                         <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
@@ -1029,11 +1029,11 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                         <strong>Đã triển khai</strong>
                       </TableSortLabel>
                     </TableCell>
-                    <TableCell align="center" sortDirection={userOrderBy === 'implementedFinal' ? userOrder : false as any}>
+                    <TableCell align="center" sortDirection={userOrderBy === 'successful' ? userOrder : false as any}>
                       <TableSortLabel
-                        active={userOrderBy === 'implementedFinal'}
-                        direction={userOrderBy === 'implementedFinal' ? userOrder : 'asc'}
-                        onClick={() => handleUserSort('implementedFinal')}
+                        active={userOrderBy === 'successful'}
+                        direction={userOrderBy === 'successful' ? userOrder : 'asc'}
+                        onClick={() => handleUserSort('successful')}
                       >
                         <strong>Triển khai thành công</strong>
                       </TableSortLabel>
@@ -1044,7 +1044,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                         direction={userOrderBy === 'rate' ? userOrder : 'asc'}
                         onClick={() => handleUserSort('rate')}
                       >
-                        <strong>Tỷ lệ triển khai thành công</strong>
+                        <strong>Tỷ lệ triển khai</strong>
                       </TableSortLabel>
                     </TableCell>
                   </TableRow>
@@ -1086,7 +1086,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                         <Chip label={(data as any).implemented} color="primary" size="small" />
                       </TableCell>
                       <TableCell align="center">
-                        <Chip label={(data as any).implementedFinal} color="success" size="small" />
+                        <Chip label={(data as any).successful} color="success" size="small" />
                       </TableCell>
                       <TableCell align="center">
                         <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
