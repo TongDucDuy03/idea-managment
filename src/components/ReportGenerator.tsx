@@ -98,7 +98,11 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
   const isImplemented = (status?: string) => status === 'Đang triển khai' || status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
   const isSuccessful = (status?: string) => status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
   const implementedCount = filteredIdeas.filter(idea => isImplemented((idea as any).implementationStatus)).length;
-  const implementationSuccessRate = totalIdeas > 0 ? ((filteredIdeas.filter(i => isSuccessful((i as any).implementationStatus)).length / totalIdeas) * 100).toFixed(1) : '0';
+  // Success rate per new definition: (A3 + Phê duyệt khen thưởng + Đã khen thưởng) / (A3 + Phê duyệt khen thưởng + Đã khen thưởng + Không đạt)
+  const successNumerator = filteredIdeas.filter(i => isSuccessful((i as any).implementationStatus)).length;
+  const failedCount = filteredIdeas.filter(i => (i as any).implementationStatus === 'Không đạt').length;
+  const successDenominator = successNumerator + failedCount;
+  const implementationSuccessRate = successDenominator > 0 ? ((successNumerator / successDenominator) * 100).toFixed(1) : '0';
 
   // Value-based statistics
   const totalBenefitValue = filteredIdeas.reduce((sum, idea) => sum + ((idea as any).benefitValue || 0), 0);

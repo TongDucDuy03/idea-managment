@@ -260,16 +260,24 @@ const StatisticsDashboard: React.FC = () => {
     const totalChange = currentTotal - previousTotal;
     const totalChangePercent = previousTotal > 0 ? ((totalChange / previousTotal) * 100) : 0;
 
-    // Implemented and success (A3)
-    const currentImplemented = current.filter(i => isImplemented(i.status)).length;
-    const previousImplemented = previous.filter(i => isImplemented(i.status)).length;
+    // Implemented ideas: A3, Reward Approved, Rewarded, Failed (per requirement)
+    const implementedStatuses: Array<'Lập báo cáo A3' | 'Phê duyệt khen thưởng' | 'Đã khen thưởng' | 'Không đạt'> = [
+      'Lập báo cáo A3', 'Phê duyệt khen thưởng', 'Đã khen thưởng', 'Không đạt'
+    ];
+    const currentImplemented = current.filter(i => implementedStatuses.includes((i as any).implementationStatus)).length;
+    const previousImplemented = previous.filter(i => implementedStatuses.includes((i as any).implementationStatus)).length;
     const implementedChange = currentImplemented - previousImplemented;
     const implementedChangePercent = previousImplemented > 0 ? ((implementedChange / previousImplemented) * 100) : 0;
 
-    const currentSuccessful = current.filter(i => isSuccessful(i.status)).length;
-    const previousSuccessful = previous.filter(i => isSuccessful(i.status)).length;
-    const currentImplSuccessRate = currentTotal > 0 ? (currentSuccessful / currentTotal) * 100 : 0;
-    const previousImplSuccessRate = previousTotal > 0 ? (previousSuccessful / previousTotal) * 100 : 0;
+    // Success rate: Reward decision / (Reward decision + Failed)
+    const currentSuccessNumerator = current.filter(i => (i as any).implementationStatus === 'Phê duyệt khen thưởng').length;
+    const currentFailCount = current.filter(i => (i as any).implementationStatus === 'Không đạt').length;
+    const previousSuccessNumerator = previous.filter(i => (i as any).implementationStatus === 'Phê duyệt khen thưởng').length;
+    const previousFailCount = previous.filter(i => (i as any).implementationStatus === 'Không đạt').length;
+    const currentDenom = currentSuccessNumerator + currentFailCount;
+    const previousDenom = previousSuccessNumerator + previousFailCount;
+    const currentImplSuccessRate = currentDenom > 0 ? (currentSuccessNumerator / currentDenom) * 100 : 0;
+    const previousImplSuccessRate = previousDenom > 0 ? (previousSuccessNumerator / previousDenom) * 100 : 0;
     const implSuccessRateChange = currentImplSuccessRate - previousImplSuccessRate;
 
     // Calculate benefit value and reward amount
@@ -326,18 +334,21 @@ const StatisticsDashboard: React.FC = () => {
     }
   };
 
-  // Calculate statistics
+  // Calculate statistics (updated per requirements)
   const totalIdeas = filteredIdeas.length;
-  const newIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Đề xuất mới').length;
-  const reviewingIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Xem xét').length;
-  const approvedIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Phê duyệt').length;
-  const feedbackIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Phản hồi phê duyệt').length;
-  const implementingIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Đang triển khai').length;
-  const a3Ideas = filteredIdeas.filter(idea => idea.implementationStatus === 'Lập báo cáo A3').length;
-  const rewardApprovedIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Phê duyệt khen thưởng').length;
-  const rewardedIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Đã khen thưởng').length;
+  const approvedForImplementation = filteredIdeas.filter(idea => idea.status === 'approved').length; // Quyết định phê duyệt = Phê duyệt triển khai
+  const deployingIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Đang triển khai').length; // Trạng thái triển khai = Đang triển khai
+  const a3Ideas = filteredIdeas.filter(idea => idea.implementationStatus === 'Lập báo cáo A3').length; // Trạng thái triển khai = Lập báo cáo A3
+  const rewardDecisionIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Phê duyệt khen thưởng').length; // Phê duyệt khen thưởng
+  const rewardedIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Đã khen thưởng').length; // Đã khen thưởng
+  const a3SuccessIdeas = a3Ideas; // Lập báo cáo A3
+  const waitingDeployIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Phản hồi phê duyệt').length; // Chờ triển khai
+  const waitingApprovalIdeas = filteredIdeas.filter(idea => idea.status === 'pending').length; // Chờ phê duyệt (quyết định phê duyệt = chưa phê duyệt)
   const failedIdeas = filteredIdeas.filter(idea => idea.implementationStatus === 'Không đạt').length;
-  const approvalRate = totalIdeas > 0 ? ((approvedIdeas / totalIdeas) * 100).toFixed(1) : '0';
+  // Success rate per new definition: (A3 + Phê duyệt khen thưởng + Đã khen thưởng) / (A3 + Phê duyệt khen thưởng + Đã khen thưởng + Không đạt)
+  const successNumerator = a3SuccessIdeas + rewardDecisionIdeas + rewardedIdeas;
+  const successDenominator = successNumerator + failedIdeas;
+  const newSuccessRate = successDenominator > 0 ? ((successNumerator / successDenominator) * 100).toFixed(1) : '0';
 
   // Implementation-based statistics
   const isImplemented = (status?: string) => status === 'Đang triển khai' || status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
@@ -346,7 +357,7 @@ const StatisticsDashboard: React.FC = () => {
   const implementedCount = filteredIdeas.filter(idea => isImplemented(idea.implementationStatus)).length;
   const implementedCountDeployed = filteredIdeas.filter(idea => implementedDeployed(idea.implementationStatus)).length;
   const implementationSuccess = filteredIdeas.filter(idea => isSuccessful(idea.implementationStatus)).length;
-  const implementationSuccessRate = totalIdeas > 0 ? ((filteredIdeas.filter(i => isSuccessful(i.implementationStatus)).length / totalIdeas) * 100).toFixed(1) : '0';
+  const implementationSuccessRate = newSuccessRate; // New success rate definition
 
   // Department statistics
   const departmentStats = filteredIdeas.reduce((acc, idea) => {
@@ -427,11 +438,24 @@ const StatisticsDashboard: React.FC = () => {
   const monthlyNoted = monthlyLabels.map(label => monthlyData[label]['Xem xét']);
 
   // Chart configurations
+  const countByImplementationStatus = (status: 'Đề xuất mới' | 'Xem xét' | 'Phê duyệt' | 'Phản hồi phê duyệt' | 'Đang triển khai' | 'Lập báo cáo A3' | 'Phê duyệt khen thưởng' | 'Đã khen thưởng' | 'Không đạt') =>
+    filteredIdeas.filter(i => i.implementationStatus === status).length;
+
   const statusChartData = {
     labels: ['Đề xuất mới', 'Xem xét', 'Phê duyệt', 'Phản hồi phê duyệt', 'Đang triển khai', 'Lập báo cáo A3', 'Phê duyệt khen thưởng', 'Đã khen thưởng', 'Không đạt'],
     datasets: [
       {
-        data: [newIdeas, reviewingIdeas, approvedIdeas, feedbackIdeas, implementingIdeas, a3Ideas, rewardApprovedIdeas, rewardedIdeas, failedIdeas],
+        data: [
+          countByImplementationStatus('Đề xuất mới'),
+          countByImplementationStatus('Xem xét'),
+          countByImplementationStatus('Phê duyệt'),
+          countByImplementationStatus('Phản hồi phê duyệt'),
+          deployingIdeas,
+          a3Ideas,
+          rewardDecisionIdeas,
+          countByImplementationStatus('Đã khen thưởng'),
+          failedIdeas
+        ],
         backgroundColor: [
           '#2196F3',
           '#FF9800',
@@ -1092,9 +1116,10 @@ const StatisticsDashboard: React.FC = () => {
         );
       })()}
 
-      {/* Statistics Cards */}
+      {/* Statistics Cards (2 rows x 4 columns) */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-      <Grid item xs={12} sm={6} md={6}>
+        {/* Tổng số ý tưởng */}
+        <Grid item xs={12} sm={6} md={3}>
           <Card 
             elevation={3} 
             sx={{ 
@@ -1111,17 +1136,28 @@ const StatisticsDashboard: React.FC = () => {
             onClick={() => navigate('/admin')}
           >
             <CardContent>
-              <Typography variant="h3" color="primary" sx={{ fontWeight: 'bold' }}>
-                {totalIdeas}
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                Tổng số ý tưởng
-              </Typography>
+              <Typography variant="h3" color="primary" sx={{ fontWeight: 'bold' }}>{totalIdeas}</Typography>
+              <Typography variant="h6" color="text.secondary">Tổng số ý tưởng</Typography>
             </CardContent>
           </Card>
         </Grid>
         
-        <Grid item xs={12} sm={6} md={6}>
+        {/* Số ý tưởng chờ phê duyệt triển khai (implementationStatus=Phê duyệt) */}
+        <Grid item xs={12} sm={6} md={3}>
+          <Card 
+            elevation={3} 
+            sx={{ textAlign: 'center', p: 2, cursor: 'pointer', '&:hover': { backgroundColor: '#f5f5f5', transform: 'translateY(-2px)', boxShadow: 6 }, transition: 'all 0.2s' }}
+            onClick={() => navigate('/admin?status=pending')}
+          >
+            <CardContent>
+              <Typography variant="h3" color="warning.main" sx={{ fontWeight: 'bold' }}>{waitingApprovalIdeas}</Typography>
+              <Typography variant="h6" color="text.secondary">Ý tưởng chờ phê duyệt </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Số ý tưởng được duyệt triển khai (status=approved) */}
+        <Grid item xs={12} sm={6} md={3}>
           <Card 
             elevation={3} 
             sx={{ 
@@ -1135,19 +1171,31 @@ const StatisticsDashboard: React.FC = () => {
               },
               transition: 'all 0.2s'
             }}
-            onClick={() => navigate('/admin?status=Đang triển khai,Lập báo cáo A3')}
+            onClick={() => navigate('/admin?status=approved')}
           >
             <CardContent>
-              <Typography variant="h3" color="error.main" sx={{ fontWeight: 'bold' }}>
-                {implementationSuccessRate}%
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                Tỷ lệ triển khai thành công
-              </Typography>
+              <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>{approvedForImplementation}</Typography>
+              <Typography variant="h6" color="text.secondary">Ý tưởng được duyệt triển khai</Typography>
             </CardContent>
           </Card>
         </Grid>
         
+
+        {/* Số ý tưởng chờ triển khai (implementationStatus=Phản hồi phê duyệt) */}{/* Số ý tưởng chờ triển khai (implementationStatus=Phản hồi phê duyệt) */}
+        <Grid item xs={12} sm={6} md={3}>
+          <Card 
+            elevation={3} 
+            sx={{ textAlign: 'center', p: 2, cursor: 'pointer', '&:hover': { backgroundColor: '#f5f5f5', transform: 'translateY(-2px)', boxShadow: 6 }, transition: 'all 0.2s' }}
+            onClick={() => navigate('/admin?implementationStatus=Phản hồi phê duyệt')}
+          >
+            <CardContent>
+              <Typography variant="h3" color="info.main" sx={{ fontWeight: 'bold' }}>{waitingDeployIdeas}</Typography>
+              <Typography variant="h6" color="text.secondary">Ý tưởng chờ triển khai</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        {/* Số ý tưởng đang triển khai (implementationStatus=Đang triển khai) */}
         <Grid item xs={12} sm={6} md={3}>
           <Card 
             elevation={3} 
@@ -1162,19 +1210,16 @@ const StatisticsDashboard: React.FC = () => {
               },
               transition: 'all 0.2s'
             }}
-            onClick={() => navigate('/admin?status=Phê duyệt')}
+            onClick={() => navigate('/admin?implementationStatus=Đang triển khai')}
           >
             <CardContent>
-              <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
-                {implementedCount}
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                Ý tưởng được phê duyệt
-              </Typography>
+              <Typography variant="h3" color="info.main" sx={{ fontWeight: 'bold' }}>{deployingIdeas}</Typography>
+              <Typography variant="h6" color="text.secondary">Ý tưởng đang triển khai</Typography>
             </CardContent>
           </Card>
         </Grid>
 
+        {/* Số ý tưởng đang lập báo cáo A3 (implementationStatus=Lập báo cáo A3) */}
         <Grid item xs={12} sm={6} md={3}>
           <Card 
             elevation={3} 
@@ -1189,20 +1234,17 @@ const StatisticsDashboard: React.FC = () => {
               },
               transition: 'all 0.2s'
             }}
-            onClick={() => navigate('/admin?status=Đang triển khai,Lập báo cáo A3')}
+            onClick={() => navigate('/admin?implementationStatus=Lập báo cáo A3')}
           >
             <CardContent>
-              <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
-                {implementedCountDeployed}
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                Ý tưởng được duyệt triển khai
-              </Typography>
+              <Typography variant="h3" color="warning.main" sx={{ fontWeight: 'bold' }}>{a3Ideas}</Typography>
+              <Typography variant="h6" color="text.secondary">Ý tưởng đang lập báo cáo A3</Typography>
             </CardContent>
           </Card>
         </Grid>
 
 
+        {/* Số ý tưởng đã khen thưởng (implementationStatus=Đã khen thưởng) */}
         <Grid item xs={12} sm={6} md={3}>
           <Card 
             elevation={3} 
@@ -1217,19 +1259,16 @@ const StatisticsDashboard: React.FC = () => {
               },
               transition: 'all 0.2s'
             }}
-            onClick={() => navigate('/admin?status=Lập báo cáo A3')}
+            onClick={() => navigate('/admin?implementationStatus=Đã khen thưởng')}
           >
             <CardContent>
-              <Typography variant="h3" color="success.main" sx={{ fontWeight: 'bold' }}>
-                {implementationSuccess}
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                Ý tưởng triển khai thành công
-              </Typography>
+              <Typography variant="h3" color="secondary" sx={{ fontWeight: 'bold' }}>{rewardedIdeas}</Typography>
+              <Typography variant="h6" color="text.secondary">Ý tưởng đã khen thưởng</Typography>
             </CardContent>
           </Card>
         </Grid>
 
+        {/* Tỷ lệ triển khai thành công = Đã lập quyết định / (Đã lập quyết định + Không đạt) */}
         <Grid item xs={12} sm={6} md={3}>
           <Card 
             elevation={3} 
@@ -1244,24 +1283,46 @@ const StatisticsDashboard: React.FC = () => {
               },
               transition: 'all 0.2s'
             }}
-            onClick={() => navigate('/admin?status=Đề xuất mới')}
+            
           >
             <CardContent>
-              <Typography variant="h3" color="warning.main" sx={{ fontWeight: 'bold' }}>
-                {newIdeas}
-              </Typography>
-              <Typography variant="h6" color="text.secondary">
-                Đề xuất mới
-              </Typography>
+              <Typography variant="h3" color="success.dark" sx={{ fontWeight: 'bold' }}>{implementationSuccessRate}%</Typography>
+              <Typography variant="h6" color="text.secondary">Tỷ lệ triển khai thành công</Typography>
             </CardContent>
           </Card>
         </Grid>
+
+        
+        
+        
 
         
       </Grid>
 
       {/* Charts */}
       <Grid container spacing={3}>
+        {/* Bổ sung hai thẻ trạng thái trung gian */}
+        {/* <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+              Trạng thái chờ triển khai / chờ phê duyệt triển khai
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={1} sx={{ p: 2, textAlign: 'center', cursor: 'pointer' }} onClick={() => navigate('/admin?implementationStatus=Phản hồi phê duyệt')}>
+                  <Typography variant="h4" color="info.main" sx={{ fontWeight: 'bold' }}>{waitingDeployIdeas}</Typography>
+                  <Typography variant="body1" color="text.secondary">Ý tưởng chờ triển khai</Typography>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={1} sx={{ p: 2, textAlign: 'center', cursor: 'pointer' }} onClick={() => navigate('/admin?implementationStatus=Phê duyệt')}>
+                  <Typography variant="h4" color="warning.main" sx={{ fontWeight: 'bold' }}>{waitingApprovalIdeas}</Typography>
+                  <Typography variant="body1" color="text.secondary">Số ý tưởng chờ phê duyệt triển khai</Typography>
+                </Card>
+              </Grid>
+            </Grid>
+          </Card>
+        </Grid> */}
         {/* Status Distribution Chart */}
         <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ p: 3, height: 400 }}>

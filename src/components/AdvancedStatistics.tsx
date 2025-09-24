@@ -18,7 +18,9 @@ import {
   TableHead,
   TableRow,
   Paper,
-  LinearProgress
+  LinearProgress,
+  TableSortLabel,
+  Button
 } from '@mui/material';
 import {
   Chart as ChartJS,
@@ -74,6 +76,9 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   const monthlyRewardRef = useRef<any>(null);
   const departmentPerformanceRef = useRef<any>(null);
   const monthlySuccessRateRef = useRef<any>(null);
+  const departmentApprovalRateRef = useRef<any>(null);
+  const departmentImplementedPerApprovedRef = useRef<any>(null);
+  const departmentIdeaShareRef = useRef<any>(null);
 
   // Filter data based on time range and department
   const getFilteredIdeas = () => {
@@ -118,8 +123,10 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
   const failedIdeas = filteredIdeas.filter(idea => (idea as any).implementationStatus === 'Không đạt').length;
 
   // Helpers for implementation status (defined early for reuse)
-  const isImplemented = (status?: string) => status === 'Đang triển khai' || status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
+  const isImplemented = (status?: string) =>  status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
   const isSuccessful = (status?: string) => status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng';
+  const isImplementedFinal = (status?: string) => status === 'Lập báo cáo A3' || status === 'Phê duyệt khen thưởng' || status === 'Đã khen thưởng' || status === 'Không đạt';
+  const isDeploying = (status?: string) => status === 'Đang triển khai';
 
   // Department performance analysis (quality-focused) - based on implementation success
   const departmentPerformance = filteredIdeas.reduce((acc, idea) => {
@@ -190,30 +197,103 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
     const date = new Date(idea.submissionDate);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     if (!acc[monthKey]) {
-      acc[monthKey] = { total: 0, successful: 0 } as any;
+      acc[monthKey] = { successful: 0, failed: 0 } as any;
     }
-    acc[monthKey].total++;
     if (isSuccessful((idea as any).implementationStatus)) acc[monthKey].successful++;
+    if ((idea as any).implementationStatus === 'Không đạt') acc[monthKey].failed++;
     return acc;
-  }, {} as Record<string, { total: number; successful: number }>);
+  }, {} as Record<string, { successful: number; failed: number }>);
 
   const monthlyLabels = Object.keys(monthlyPerformance).sort();
   const monthlySuccessRates = monthlyLabels.map(label => {
     const data = monthlyPerformance[label];
-    return data.total > 0 ? (data.successful / data.total) * 100 : 0;
+    const numerator = data.successful;
+    const denominator = data.successful + data.failed;
+    return denominator > 0 ? (numerator / denominator) * 100 : 0;
   });
 
-  // Chart configurations
-  const departmentPerformanceData = {
-    labels: sortedDepartments.slice(0, 8).map(([dept]) => 
+  // Derived implementation aggregates for rankings and rates
+  type ImplStats = { total: number; approved: number; deploying: number; implemented: number; implementedFinal: number; successful: number };
+
+  const deptImplStats: Record<string, ImplStats> = filteredIdeas.reduce((acc, idea) => {
+    const key = idea.department || 'Khác';
+    if (!acc[key]) acc[key] = { total: 0, approved: 0, deploying: 0, implemented: 0, implementedFinal: 0, successful: 0 } as ImplStats;
+    acc[key].total += 1;
+    if (idea.status === 'approved') acc[key].approved += 1;
+    if (isDeploying((idea as any).implementationStatus)) acc[key].deploying += 1;
+    if (isImplemented((idea as any).implementationStatus)) acc[key].implemented += 1;
+    if (isImplementedFinal((idea as any).implementationStatus)) acc[key].implementedFinal += 1;
+    if (isSuccessful((idea as any).implementationStatus)) acc[key].successful += 1;
+    return acc;
+  }, {} as Record<string, ImplStats>);
+
+  const userImplStats: Record<string, ImplStats> = filteredIdeas.reduce((acc, idea) => {
+    const key = idea.fullName || 'Không rõ';
+    if (!acc[key]) acc[key] = { total: 0, approved: 0, deploying: 0, implemented: 0, implementedFinal: 0, successful: 0 } as ImplStats;
+    acc[key].total += 1;
+    if (idea.status === 'approved') acc[key].approved += 1;
+    if (isDeploying((idea as any).implementationStatus)) acc[key].deploying += 1;
+    if (isImplemented((idea as any).implementationStatus)) acc[key].implemented += 1;
+    if (isImplementedFinal((idea as any).implementationStatus)) acc[key].implementedFinal += 1;
+    if (isSuccessful((idea as any).implementationStatus)) acc[key].successful += 1;
+    return acc;
+  }, {} as Record<string, ImplStats>);
+
+  const topDeptImpl: Array<[string, ImplStats]> = (Object.entries(deptImplStats) as Array<[string, ImplStats]>)
+    .sort(([,a],[,b]) => b.implementedFinal - a.implementedFinal)
+    .slice(0, 10);
+  // Removed topUserImpl; sorting and slicing handled dynamically in render
+
+  // Chart configurations (Quality section)
+  // 1) Department Approval Rate = approved / total (sorted by rate desc)
+  const departmentsForApprovalRate = (Object.entries(deptImplStats) as Array<[string, ImplStats]>)
+    .sort(([,a],[,b]) => {
+      const rateA = (a.total || 0) > 0 ? a.approved / a.total : 0;
+      const rateB = (b.total || 0) > 0 ? b.approved / b.total : 0;
+      return rateB - rateA; // desc by rate
+    })
+    .slice(0, 8);
+  const departmentApprovalRateData = {
+    labels: departmentsForApprovalRate.map(([dept]) => 
       dept.length > 15 ? dept.substring(0, 15) + '...' : dept
     ),
     datasets: [
       {
-        label: 'Tỷ lệ triển khai thành công (%)',
-        data: sortedDepartments.slice(0, 8).map(([, data]) => (data as any).successRate.toFixed(1)),
+        label: 'Tỷ lệ ý tưởng được triển khai (%)',
+        data: departmentsForApprovalRate.map(([, d]) => {
+          const total = (d as any).total || 0;
+          const approved = (d as any).approved || 0;
+          return total > 0 ? ((approved / total) * 100).toFixed(1) : '0.0';
+        }),
         backgroundColor: '#1976d2',
         borderColor: '#1565c0',
+        borderWidth: 1
+      }
+    ]
+  };
+
+  // 2) Department Implemented per Approved Rate = implementedFinal / approved (sorted by rate desc)
+  const departmentsForImplPerApproved = (Object.entries(deptImplStats) as Array<[string, ImplStats]>)
+    .sort(([,a],[,b]) => {
+      const rateA = (a.approved || 0) > 0 ? a.implementedFinal / a.approved : 0;
+      const rateB = (b.approved || 0) > 0 ? b.implementedFinal / b.approved : 0;
+      return rateB - rateA; // desc by rate
+    })
+    .slice(0, 8);
+  const departmentImplementedPerApprovedRateData = {
+    labels: departmentsForImplPerApproved.map(([dept]) => 
+      dept.length > 15 ? dept.substring(0, 15) + '...' : dept
+    ),
+    datasets: [
+      {
+        label: 'Tỷ lệ ý tưởng đang triển khai (%)',
+        data: departmentsForImplPerApproved.map(([, d]) => {
+          const approved = (d as any).approved || 0;
+          const implementedFinal = (d as any).implementedFinal || 0;
+          return approved > 0 ? ((implementedFinal / approved) * 100).toFixed(1) : '0.0';
+        }),
+        backgroundColor: '#43A047',
+        borderColor: '#2E7D32',
         borderWidth: 1
       }
     ]
@@ -233,6 +313,27 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
         data: sortedDepartmentsByTotal.slice(0, 8).map(([, data]) => data.total),
         backgroundColor: '#42A5F5',
         borderColor: '#1E88E5',
+        borderWidth: 1
+      }
+    ]
+  };
+
+  // Department idea share over total company ideas (percentage)
+  const departmentsByIdeaShare = Object.entries(departmentPerformance)
+    .map(([dept, data]) => ({ dept, share: totalIdeas > 0 ? (data.total / totalIdeas) * 100 : 0 }))
+    .sort((a, b) => b.share - a.share)
+    .slice(0, 8);
+
+  const departmentIdeaShareData = {
+    labels: departmentsByIdeaShare.map(({ dept }) =>
+      dept.length > 15 ? dept.substring(0, 15) + '...' : dept
+    ),
+    datasets: [
+      {
+        label: 'Tỷ lệ đóng góp ý tưởng (%)',
+        data: departmentsByIdeaShare.map(({ share }) => Number(share.toFixed(1))),
+        backgroundColor: '#7E57C2',
+        borderColor: '#5E35B1',
         borderWidth: 1
       }
     ]
@@ -468,30 +569,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
     ]
   };
 
-  type ImplStats = { implemented: number; successful: number };
-
-  const deptImplStats = filteredIdeas.reduce((acc, idea) => {
-    const key = idea.department || 'Khác';
-    if (!acc[key]) acc[key] = { implemented: 0, successful: 0 } as ImplStats;
-    if (isImplemented((idea as any).implementationStatus)) acc[key].implemented += 1;
-    if (isSuccessful((idea as any).implementationStatus)) acc[key].successful += 1;
-    return acc;
-  }, {} as Record<string, ImplStats>);
-
-  const userImplStats = filteredIdeas.reduce((acc, idea) => {
-    const key = idea.fullName || 'Không rõ';
-    if (!acc[key]) acc[key] = { implemented: 0, successful: 0 } as ImplStats;
-    if (isImplemented((idea as any).implementationStatus)) acc[key].implemented += 1;
-    if (isSuccessful((idea as any).implementationStatus)) acc[key].successful += 1;
-    return acc;
-  }, {} as Record<string, ImplStats>);
-
-  const topDeptImpl = Object.entries(deptImplStats)
-    .sort(([,a],[,b]) => b.implemented - a.implemented)
-    .slice(0, 10);
-  const topUserImpl = Object.entries(userImplStats)
-    .sort(([,a],[,b]) => b.implemented - a.implemented)
-    .slice(0, 10);
+  
 
   const chartOptions = {
     responsive: true,
@@ -512,6 +590,85 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
       },
     },
   };
+
+  // Sort state for Department Ranking Table (default: by success rate desc)
+  type DeptSortKey = 'department' | 'total' | 'approved' | 'deploying' | 'implemented' | 'implementedFinal' | 'rate';
+  const [deptOrderBy, setDeptOrderBy] = useState<DeptSortKey>('rate');
+  const [deptOrder, setDeptOrder] = useState<'asc' | 'desc'>('desc');
+
+  const handleDeptSort = (key: DeptSortKey) => {
+    if (deptOrderBy === key) {
+      setDeptOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setDeptOrderBy(key);
+      setDeptOrder('asc');
+    }
+  };
+
+  const getDeptComparator = (key: DeptSortKey) => (a: [string, ImplStats], b: [string, ImplStats]) => {
+    const [deptA, dataA] = a;
+    const [deptB, dataB] = b;
+    switch (key) {
+      case 'department':
+        return deptA.localeCompare(deptB);
+      case 'total':
+        return (dataA.total || 0) - (dataB.total || 0);
+      case 'approved':
+        return (dataA.approved || 0) - (dataB.approved || 0);
+      case 'deploying':
+        return (dataA.deploying || 0) - (dataB.deploying || 0);
+      case 'implemented':
+        return (dataA.implemented || 0) - (dataB.implemented || 0);
+      case 'implementedFinal':
+        return (dataA.implementedFinal || 0) - (dataB.implementedFinal || 0);
+      case 'rate': {
+        const rateA = (dataA.approved > 0 ? dataA.implementedFinal / dataA.approved : 0);
+        const rateB = (dataB.approved > 0 ? dataB.implementedFinal / dataB.approved : 0);
+        return rateA - rateB;
+      }
+    }
+  };
+
+  // Sort state for User Ranking Table (default: by success rate desc)
+  type UserSortKey = 'name' | 'total' | 'approved' | 'deploying' | 'implemented' | 'implementedFinal' | 'rate';
+  const [userOrderBy, setUserOrderBy] = useState<UserSortKey>('total');
+  const [userOrder, setUserOrder] = useState<'asc' | 'desc'>('desc');
+
+  const handleUserSort = (key: UserSortKey) => {
+    if (userOrderBy === key) {
+      setUserOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setUserOrderBy(key);
+      setUserOrder('asc');
+    }
+  };
+
+  const getUserComparator = (key: UserSortKey) => (a: [string, ImplStats], b: [string, ImplStats]) => {
+    const [nameA, dataA] = a;
+    const [nameB, dataB] = b;
+    switch (key) {
+      case 'name':
+        return nameA.localeCompare(nameB);
+      case 'total':
+        return (dataA.total || 0) - (dataB.total || 0);
+      case 'approved':
+        return (dataA.approved || 0) - (dataB.approved || 0);
+      case 'deploying':
+        return (dataA.deploying || 0) - (dataB.deploying || 0);
+      case 'implemented':
+        return (dataA.implemented || 0) - (dataB.implemented || 0);
+      case 'implementedFinal':
+        return (dataA.implementedFinal || 0) - (dataB.implementedFinal || 0);
+      case 'rate': {
+        const rateA = (dataA.approved > 0 ? dataA.implementedFinal / dataA.approved : 0);
+        const rateB = (dataB.approved > 0 ? dataB.implementedFinal / dataB.approved : 0);
+        return rateA - rateB;
+      }
+    }
+  };
+
+  // Toggle to expand/collapse personal ranking list
+  const [showAllUsers, setShowAllUsers] = useState(false);
 
   return (
     <Container maxWidth="xl" sx={{ py: 2 }}>
@@ -603,7 +760,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
         </Grid>
 
         {/* Rankings by Department (Implementation) */}
-        <Grid item xs={12} md={6}>
+        {/* <Grid item xs={12} md={12}>
           <Card elevation={3} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
               Xếp hạng Phòng ban theo triển khai
@@ -614,8 +771,12 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                   <TableRow>
                     <TableCell><strong>Xếp hạng</strong></TableCell>
                     <TableCell><strong>Phòng ban</strong></TableCell>
+                    <TableCell align="center"><strong>Tổng số ý tưởng</strong></TableCell>
+                    <TableCell align="center"><strong>Được duyệt triển khai</strong></TableCell>
+                    <TableCell align="center"><strong>Đang triển khai</strong></TableCell>
                     <TableCell align="center"><strong>Đã triển khai</strong></TableCell>
-                    <TableCell align="center"><strong>Thành công (A3)</strong></TableCell>
+                    <TableCell align="center"><strong>Triển khai thành công</strong></TableCell>
+                    <TableCell align="center"><strong>Tỷ lệ triển khai thành công</strong></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -637,10 +798,172 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Chip label={(data as any).implemented} color="info" size="small" />
+                        <Chip label={(data as any).total} color="default" size="small" />
                       </TableCell>
                       <TableCell align="center">
-                        <Chip label={(data as any).successful} color="success" size="small" />
+                        <Chip label={(data as any).approved} color="warning" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={(data as any).deploying} color="info" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={(data as any).implemented} color="primary" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={(data as any).implementedFinal} color="success" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                          {((data as any).approved > 0 ? ((data as any).implementedFinal / (data as any).approved) * 100 : 0).toFixed(1)}%
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Card>
+        </Grid> */}
+        
+        {/* Department Performance Table (sorted ascending by implementation rate) */}
+        <Grid item xs={12}>
+          <Card elevation={3} sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+              Bảng Xếp hạng Phòng ban 
+            </Typography>
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Xếp hạng</strong></TableCell>
+                    <TableCell sortDirection={deptOrderBy === 'department' ? deptOrder : false as any}>
+                      <TableSortLabel
+                        active={deptOrderBy === 'department'}
+                        direction={deptOrderBy === 'department' ? deptOrder : 'asc'}
+                        onClick={() => handleDeptSort('department')}
+                      >
+                        <strong>Phòng ban</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sortDirection={deptOrderBy === 'total' ? deptOrder : false as any}>
+                      <TableSortLabel
+                        active={deptOrderBy === 'total'}
+                        direction={deptOrderBy === 'total' ? deptOrder : 'asc'}
+                        onClick={() => handleDeptSort('total')}
+                      >
+                        <strong>Tổng số ý tưởng</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sortDirection={deptOrderBy === 'approved' ? deptOrder : false as any}>
+                      <TableSortLabel
+                        active={deptOrderBy === 'approved'}
+                        direction={deptOrderBy === 'approved' ? deptOrder : 'asc'}
+                        onClick={() => handleDeptSort('approved')}
+                      >
+                        <strong>Được duyệt triển khai</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sortDirection={deptOrderBy === 'deploying' ? deptOrder : false as any}>
+                      <TableSortLabel
+                        active={deptOrderBy === 'deploying'}
+                        direction={deptOrderBy === 'deploying' ? deptOrder : 'asc'}
+                        onClick={() => handleDeptSort('deploying')}
+                      >
+                        <strong>Đang triển khai</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sortDirection={deptOrderBy === 'implemented' ? deptOrder : false as any}>
+                      <TableSortLabel
+                        active={deptOrderBy === 'implemented'}
+                        direction={deptOrderBy === 'implemented' ? deptOrder : 'asc'}
+                        onClick={() => handleDeptSort('implemented')}
+                      >
+                        <strong>Đã triển khai</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sortDirection={deptOrderBy === 'implementedFinal' ? deptOrder : false as any}>
+                      <TableSortLabel
+                        active={deptOrderBy === 'implementedFinal'}
+                        direction={deptOrderBy === 'implementedFinal' ? deptOrder : 'asc'}
+                        onClick={() => handleDeptSort('implementedFinal')}
+                      >
+                        <strong>Triển khai thành công</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sortDirection={deptOrderBy === 'rate' ? deptOrder : false as any}>
+                      <TableSortLabel
+                        active={deptOrderBy === 'rate'}
+                        direction={deptOrderBy === 'rate' ? deptOrder : 'asc'}
+                        onClick={() => handleDeptSort('rate')}
+                      >
+                        <strong>Tỷ lệ triển khai thành công</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center"><strong>Thanh tiến độ</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {(Object.entries(deptImplStats) as Array<[string, ImplStats]>)
+                    .sort((a,b) => {
+                      const cmp = getDeptComparator(deptOrderBy)(a,b);
+                      return deptOrder === 'asc' ? cmp : -cmp;
+                    })
+                    .map(([dept, data], index) => (
+                    <TableRow 
+                      key={dept}
+                      sx={{ 
+                        cursor: 'pointer',
+                        '&:hover': { backgroundColor: '#f5f5f5' }
+                      }}
+                      onClick={() => navigate(`/admin?department=${encodeURIComponent(dept)}`)}
+                    >
+                      <TableCell>
+                        <Chip 
+                          label={index + 1} 
+                          color={index < 3 ? 'primary' : 'default'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {dept.length > 40 ? dept.substring(0, 40) + '...' : dept}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={data.total} color="primary" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={data.approved} color="warning" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={data.deploying} color="info" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={data.implemented} color="primary" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={data.implementedFinal} color="success" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                          {(((data.approved > 0 ? data.implementedFinal / data.approved : 0) * 100)).toFixed(1)}%
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                      </TableCell>
+                      <TableCell align="center" sx={{ minWidth: 150 }}>
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={(data.approved > 0 ? (data.implementedFinal / data.approved) * 100 : 0)} 
+                          sx={{ 
+                            height: 8, 
+                            borderRadius: 4,
+                            backgroundColor: '#e0e0e0',
+                            '& .MuiLinearProgress-bar': {
+                              backgroundColor: ((data.approved > 0 ? (data.implementedFinal / data.approved) * 100 : 0) > 50) ? '#4CAF50' : ((data.approved > 0 ? (data.implementedFinal / data.approved) * 100 : 0) > 25 ? '#FF9800' : '#F44336')
+                            }
+                          }} 
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -651,7 +974,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
         </Grid>
 
         {/* Rankings by Individual (Implementation) */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={12}>
           <Card elevation={3} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
               Xếp hạng Cá nhân theo triển khai
@@ -661,13 +984,79 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                 <TableHead>
                   <TableRow>
                     <TableCell><strong>Xếp hạng</strong></TableCell>
-                    <TableCell><strong>Họ và tên</strong></TableCell>
-                    <TableCell align="center"><strong>Đã triển khai</strong></TableCell>
-                    <TableCell align="center"><strong>Thành công (A3)</strong></TableCell>
+                    <TableCell sortDirection={userOrderBy === 'name' ? userOrder : false as any}>
+                      <TableSortLabel
+                        active={userOrderBy === 'name'}
+                        direction={userOrderBy === 'name' ? userOrder : 'asc'}
+                        onClick={() => handleUserSort('name')}
+                      >
+                        <strong>Họ và tên</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sortDirection={userOrderBy === 'total' ? userOrder : false as any}>
+                      <TableSortLabel
+                        active={userOrderBy === 'total'}
+                        direction={userOrderBy === 'total' ? userOrder : 'asc'}
+                        onClick={() => handleUserSort('total')}
+                      >
+                        <strong>Tổng số ý tưởng</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sortDirection={userOrderBy === 'approved' ? userOrder : false as any}>
+                      <TableSortLabel
+                        active={userOrderBy === 'approved'}
+                        direction={userOrderBy === 'approved' ? userOrder : 'asc'}
+                        onClick={() => handleUserSort('approved')}
+                      >
+                        <strong>Được duyệt triển khai</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sortDirection={userOrderBy === 'deploying' ? userOrder : false as any}>
+                      <TableSortLabel
+                        active={userOrderBy === 'deploying'}
+                        direction={userOrderBy === 'deploying' ? userOrder : 'asc'}
+                        onClick={() => handleUserSort('deploying')}
+                      >
+                        <strong>Đang triển khai</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sortDirection={userOrderBy === 'implemented' ? userOrder : false as any}>
+                      <TableSortLabel
+                        active={userOrderBy === 'implemented'}
+                        direction={userOrderBy === 'implemented' ? userOrder : 'asc'}
+                        onClick={() => handleUserSort('implemented')}
+                      >
+                        <strong>Đã triển khai</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sortDirection={userOrderBy === 'implementedFinal' ? userOrder : false as any}>
+                      <TableSortLabel
+                        active={userOrderBy === 'implementedFinal'}
+                        direction={userOrderBy === 'implementedFinal' ? userOrder : 'asc'}
+                        onClick={() => handleUserSort('implementedFinal')}
+                      >
+                        <strong>Triển khai thành công</strong>
+                      </TableSortLabel>
+                    </TableCell>
+                    <TableCell align="center" sortDirection={userOrderBy === 'rate' ? userOrder : false as any}>
+                      <TableSortLabel
+                        active={userOrderBy === 'rate'}
+                        direction={userOrderBy === 'rate' ? userOrder : 'asc'}
+                        onClick={() => handleUserSort('rate')}
+                      >
+                        <strong>Tỷ lệ triển khai thành công</strong>
+                      </TableSortLabel>
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {topUserImpl.map(([name, data], index) => (
+                  {(Object.entries(userImplStats) as Array<[string, ImplStats]>)
+                    .sort((a,b) => {
+                      const cmp = getUserComparator(userOrderBy)(a,b);
+                      return userOrder === 'asc' ? cmp : -cmp;
+                    })
+                    .slice(0, showAllUsers ? undefined : 15)
+                    .map(([name, data], index) => (
                     <TableRow 
                       key={name}
                       sx={{ 
@@ -685,16 +1074,38 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Chip label={(data as any).implemented} color="info" size="small" />
+                        <Chip label={(data as any).total} color="default" size="small" />
                       </TableCell>
                       <TableCell align="center">
-                        <Chip label={(data as any).successful} color="success" size="small" />
+                        <Chip label={(data as any).approved} color="warning" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={(data as any).deploying} color="info" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={(data as any).implemented} color="primary" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip label={(data as any).implementedFinal} color="success" size="small" />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                          {((data as any).approved > 0 ? ((data as any).implementedFinal / (data as any).approved) * 100 : 0).toFixed(1)}%
+                        </Typography>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <Button
+                variant="outlined"
+                onClick={() => setShowAllUsers(prev => !prev)}
+              >
+                {showAllUsers ? 'Thu gọn' : 'Xem thêm'}
+              </Button>
+            </Box>
           </Card>
         </Grid>
 
@@ -907,26 +1318,96 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
           <Typography variant="h5" sx={{ fontWeight: 'bold', mt: 3 }}>Chất lượng</Typography>
         </Grid>
 
-        {/* Department Performance Chart (Implementation Success Rate) */}
+        {/* Department Approval Rate Chart */}
         <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ p: 3, height: 400 }}>
             <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
-              Tỷ lệ Triển khai Thành công theo Phòng ban (Top 8)
+              Tỷ lệ Ý tưởng được triển khai theo Phòng ban (Top 8)
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
-              <Bar data={departmentPerformanceData} options={chartOptions} />
+              <Bar 
+                ref={departmentApprovalRateRef}
+                data={departmentApprovalRateData} 
+                options={chartOptions}
+                onClick={(event) => {
+                  const chart = departmentApprovalRateRef.current;
+                  if (!chart) return;
+                  const elements = getElementAtEvent(chart, event);
+                  if (!elements || elements.length === 0) return;
+                  const index = (elements[0] as any).index as number;
+                  const dept = departmentsForApprovalRate[index]?.[0];
+                  if (dept) {
+                    navigate(`/admin?department=${encodeURIComponent(dept)}`);
+                  }
+                }}
+              />
             </Box>
           </Card>
         </Grid>
 
-        {/* Monthly Implementation Success Rate Chart */}
+        {/* Department Implemented per Approved Rate Chart */}
         <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ p: 3, height: 400 }}>
             <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
-              Tỷ lệ Triển khai Thành công Theo Tháng
+              Tỷ lệ Ý tưởng đang triển khai theo Phòng ban (Top 8)
             </Typography>
             <Box sx={{ height: 300, mt: 2 }}>
-              <Line data={monthlySuccessRateData} options={chartOptions} />
+              <Bar 
+                ref={departmentImplementedPerApprovedRef}
+                data={departmentImplementedPerApprovedRateData} 
+                options={chartOptions}
+                onClick={(event) => {
+                  const chart = departmentImplementedPerApprovedRef.current;
+                  if (!chart) return;
+                  const elements = getElementAtEvent(chart, event);
+                  if (!elements || elements.length === 0) return;
+                  const index = (elements[0] as any).index as number;
+                  const dept = departmentsForImplPerApproved[index]?.[0];
+                  if (dept) {
+                    navigate(`/admin?department=${encodeURIComponent(dept)}`);
+                  }
+                }}
+              />
+            </Box>
+          </Card>
+        </Grid>
+
+        {/* Department Idea Share Percentage Chart */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ p: 3, height: 400 }}>
+            <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 'bold' }}>
+              Tỷ lệ % số ý tưởng theo Phòng ban (Top 8)
+            </Typography>
+            <Box sx={{ height: 300, mt: 2 }}>
+              <Bar 
+                ref={departmentIdeaShareRef}
+                data={departmentIdeaShareData} 
+                options={{
+                  ...chartOptions,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      max: 100,
+                      ticks: {
+                        callback: function(value) {
+                          return value + '%';
+                        }
+                      }
+                    }
+                  }
+                }}
+                onClick={(event) => {
+                  const chart = departmentIdeaShareRef.current;
+                  if (!chart) return;
+                  const elements = getElementAtEvent(chart, event);
+                  if (!elements || elements.length === 0) return;
+                  const index = (elements[0] as any).index as number;
+                  const dept = departmentsByIdeaShare[index]?.dept;
+                  if (dept) {
+                    navigate(`/admin?department=${encodeURIComponent(dept)}`);
+                  }
+                }}
+              />
             </Box>
           </Card>
         </Grid>
@@ -943,84 +1424,7 @@ const AdvancedStatistics: React.FC<AdvancedStatisticsProps> = ({
           </Card>
         </Grid> */}
 
-        {/* Department Performance Table */}
-        <Grid item xs={12}>
-          <Card elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-              Bảng Xếp hạng Phòng ban (theo tỷ lệ triển khai thành công)
-            </Typography>
-            <TableContainer component={Paper} sx={{ mt: 2 }}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell><strong>Xếp hạng</strong></TableCell>
-                    <TableCell><strong>Phòng ban</strong></TableCell>
-                    <TableCell align="center"><strong>Tổng ý tưởng</strong></TableCell>
-                    <TableCell align="center"><strong>Được triển khai</strong></TableCell>
-                    <TableCell align="center"><strong>Triển khai thành công (A3)</strong></TableCell>
-                    <TableCell align="center"><strong>Tỷ lệ thành công</strong></TableCell>
-                    <TableCell align="center"><strong>Thanh tiến độ</strong></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {sortedDepartments.map(([dept, data], index) => (
-                    <TableRow 
-                      key={dept}
-                      sx={{ 
-                        cursor: 'pointer',
-                        '&:hover': { backgroundColor: '#f5f5f5' }
-                      }}
-                      onClick={() => navigate(`/admin?department=${encodeURIComponent(dept)}`)}
-                    >
-                      <TableCell>
-                        <Chip 
-                          label={index + 1} 
-                          color={index < 3 ? 'primary' : 'default'}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {dept.length > 40 ? dept.substring(0, 40) + '...' : dept}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip label={data.total} color="primary" size="small" />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip label={(data as any).implemented} color="info" size="small" />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip label={(data as any).successful} color="success" size="small" />
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                          {(data as any).successRate.toFixed(1)}%
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                      </TableCell>
-                      <TableCell align="center" sx={{ minWidth: 150 }}>
-                        <LinearProgress 
-                          variant="determinate" 
-                          value={(data as any).successRate} 
-                          sx={{ 
-                            height: 8, 
-                            borderRadius: 4,
-                            backgroundColor: '#e0e0e0',
-                            '& .MuiLinearProgress-bar': {
-                              backgroundColor: (data as any).successRate > 50 ? '#4CAF50' : (data as any).successRate > 25 ? '#FF9800' : '#F44336'
-                            }
-                          }} 
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Card>
-        </Grid>
+        
       </Grid>
     </Container>
   );

@@ -701,7 +701,7 @@ const AdminDashboard: React.FC = () => {
     },
     {
       field: 'implementationStatus',
-      headerName: 'Trạng thái triển khai',
+      headerName: 'Trạng thái',
       width: 180,
       align: 'center',
       headerAlign: 'center',
