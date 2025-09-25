@@ -13,6 +13,12 @@ export interface Idea {
   note?: string;
   benefitValue?: number; // Giá trị làm lợi (VND)
   rewardAmount?: number; // Tiền thưởng (VND)
+  // New fields
+  benefitOutcome?: string; // Lợi ích mang lại (mô tả)
+  resourcesUsed?: string; // Nguồn lực sử dụng
+  calculationDescription?: string; // Mô tả cách tính
+  topicTitle?: string; // Tên đề tài
+  scalingOpportunity?: string; // Cơ hội nhân rộng phát triển
 }
 
 export interface IdeaFormData {
@@ -21,4 +27,10 @@ export interface IdeaFormData {
   idea: string;
   solution: string;
   benefit?: string;
+  // New fields
+  benefitOutcome?: string;
+  resourcesUsed?: string;
+  calculationDescription?: string;
+  topicTitle?: string;
+  scalingOpportunity?: string;
 } 
