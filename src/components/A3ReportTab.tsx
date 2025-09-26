@@ -46,7 +46,7 @@ const A3ReportTab: React.FC = () => {
       }
 
       // Tìm ý tưởng theo mã
-      const response = await axios.get(`https://idea-managment.onrender.com/api/ideas?ideaCode=${ideaCode}`, {
+      const response = await axios.get(`https://idea-managment.onrender.com/api/ideas?search=${ideaCode}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -57,7 +57,13 @@ const A3ReportTab: React.FC = () => {
         return;
       }
 
-      const foundIdea = response.data[0];
+      // Tìm chính xác theo ideaCode (có thể có nhiều kết quả từ search)
+      const foundIdea = response.data.find((idea: Idea) => idea.ideaCode === ideaCode);
+      
+      if (!foundIdea) {
+        setError('Không tìm thấy ý tưởng với mã: ' + ideaCode);
+        return;
+      }
       
       // Kiểm tra trạng thái triển khai
       if (foundIdea.implementationStatus !== 'Lập báo cáo A3') {
