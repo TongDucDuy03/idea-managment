@@ -847,29 +847,6 @@ const AdminDashboard: React.FC = () => {
       )
     },
     {
-      field: 'topicTitle',
-      headerName: 'Tên đề tài',
-      width: 300,
-      align: 'center',
-      headerAlign: 'center',
-      renderCell: (params) => (
-        <div style={{
-          whiteSpace: 'normal',
-          wordBreak: 'break-word',
-          width: '100%',
-          textAlign: 'left',
-          maxHeight: '180px',
-          overflowY: 'auto',
-          paddingRight: '8px',
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#ccc transparent'
-        }}>
-          {(params.row as any).topicTitle || ''}
-        </div>
-      )
-    },
-
-    {
       field: 'scalingOpportunity',
       headerName: 'Cơ hội nhân rộng phát triển',
       width: 300,
