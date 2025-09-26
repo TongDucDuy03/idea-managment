@@ -56,6 +56,65 @@ const AdminDashboard: React.FC = () => {
   const topScrollRef = useRef<HTMLDivElement>(null);
   const dataGridRef = useRef<HTMLDivElement>(null);
 
+  // Column visibility management
+  const allColumnFields = [
+    'ideaCode',
+    'fullName',
+    'department',
+    'idea',
+    'solution',
+    'benefit',
+    'benefitOutcome',
+    'resourcesUsed',
+    'calculationDescription',
+    'topicTitle',
+    'scalingOpportunity',
+    'status',
+    'implementationStatus',
+    'submissionDate',
+    'implementationDepartment',
+    'note',
+    'benefitValue',
+    'rewardAmount',
+    'actions'
+  ] as const;
+
+  const defaultVisibleFields = new Set<string>([
+    'ideaCode',
+    'idea',
+    'solution',
+    'benefit',
+    'topicTitle',
+    'status',
+    'implementationStatus',
+    'note',
+    'actions'
+  ]);
+
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('admin_column_visibility');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    const model: Record<string, boolean> = {};
+    allColumnFields.forEach(f => { model[f] = defaultVisibleFields.has(f); });
+    return model;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('admin_column_visibility', JSON.stringify(columnVisibilityModel));
+    } catch {}
+  }, [columnVisibilityModel]);
+
+  const [colMenuAnchor, setColMenuAnchor] = useState<null | HTMLElement>(null);
+  const isColMenuOpen = Boolean(colMenuAnchor);
+  const openColMenu = (e: React.MouseEvent<HTMLElement>) => setColMenuAnchor(e.currentTarget);
+  const closeColMenu = () => setColMenuAnchor(null);
+  const handleToggleColumn = (field: string) => {
+    setColumnVisibilityModel(prev => ({ ...prev, [field]: !prev[field] }));
+  };
+
   // Function to approximate row height based on content length
   // const calculateRowHeight = (params: GridRowHeightParams) => {
   //   const ideaLength = params.model.idea ? params.model.idea.length : 0;
@@ -398,8 +457,15 @@ const AdminDashboard: React.FC = () => {
 
     if (!topScrollElement || !dataGridElement) return;
 
+<<<<<<< Updated upstream
     // Tính tổng chiều rộng của các cột (hardcode để tránh lỗi dependency)
     const totalWidth = 150+ 200 + 200 + 300 + 300 +300 + 180 + 180 + 180 + 200 + 200 + 180 + 180 + 120 ; // Tổng chiều rộng các cột
+=======
+    // Tính tổng chiều rộng của các cột đang hiển thị
+    const totalWidth = columns
+      .filter(c => columnVisibilityModel[c.field] !== false)
+      .reduce((sum, c) => sum + (c.width ? c.width : 150), 0);
+>>>>>>> Stashed changes
     
     // Cập nhật chiều rộng của thanh cuộn trên
     const invisibleContent = topScrollElement.querySelector('div');
@@ -615,6 +681,28 @@ const AdminDashboard: React.FC = () => {
 
     },
     {
+      field: 'topicTitle',
+      headerName: 'Tên đề tài',
+      width: 200,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          width: '100%',
+          textAlign: 'left',
+          maxHeight: '180px',
+          overflowY: 'auto',
+          paddingRight: '8px',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#ccc transparent'
+        }}>
+          {(params.row as any).topicTitle || ''}
+        </div>
+      )
+    },
+    {
       field: 'idea',
       headerName: 'Ý tưởng ',
       width: 300,
@@ -687,6 +775,98 @@ const AdminDashboard: React.FC = () => {
 
     },
     {
+<<<<<<< Updated upstream
+=======
+      field: 'benefitOutcome',
+      headerName: 'Lợi ích mang lại',
+      width: 300,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          width: '100%',
+          textAlign: 'left',
+          maxHeight: '180px',
+          overflowY: 'auto',
+          paddingRight: '8px',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#ccc transparent'
+        }}>
+          {(params.row as any).benefitOutcome || ''}
+        </div>
+      )
+    },
+    {
+      field: 'resourcesUsed',
+      headerName: 'Nguồn lực sử dụng',
+      width: 300,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          width: '100%',
+          textAlign: 'left',
+          maxHeight: '180px',
+          overflowY: 'auto',
+          paddingRight: '8px',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#ccc transparent'
+        }}>
+          {(params.row as any).resourcesUsed || ''}
+        </div>
+      )
+    },
+    {
+      field: 'calculationDescription',
+      headerName: 'Mô tả cách tính',
+      width: 300,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          width: '100%',
+          textAlign: 'left',
+          maxHeight: '180px',
+          overflowY: 'auto',
+          paddingRight: '8px',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#ccc transparent'
+        }}>
+          {(params.row as any).calculationDescription || ''}
+        </div>
+      )
+    },
+    
+    {
+      field: 'scalingOpportunity',
+      headerName: 'Cơ hội nhân rộng phát triển',
+      width: 300,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          width: '100%',
+          textAlign: 'left',
+          maxHeight: '180px',
+          overflowY: 'auto',
+          paddingRight: '8px',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#ccc transparent'
+        }}>
+          {(params.row as any).scalingOpportunity || ''}
+        </div>
+      )
+    },
+    {
+>>>>>>> Stashed changes
       field: 'status',
       headerName: 'Quyết định phê duyệt',
       width: 180,
@@ -990,6 +1170,56 @@ const AdminDashboard: React.FC = () => {
                 {/* Hàng 3 */}
                 <Box sx={{ display: 'flex', gap: 2, marginLeft: 'auto', alignItems: 'center' }}>
                   <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={openColMenu}
+                    sx={{
+                      py: 1.0,
+                      px: 2.0,
+                      fontSize: '0.95rem',
+                      fontWeight: 'bold',
+                      textTransform: 'none',
+                      whiteSpace: 'nowrap',
+                      minWidth: 'max-content'
+                    }}
+                  >
+                    Quản lý cột
+                  </Button>
+                  <Menu anchorEl={colMenuAnchor} open={isColMenuOpen} onClose={closeColMenu}>
+                    {allColumnFields.map((field) => (
+                      <MenuItem key={field} onClick={() => handleToggleColumn(field)}>
+                        <Checkbox checked={!!columnVisibilityModel[field]} />
+                        <ListItemText
+                          primary={
+                            (
+                              {
+                                ideaCode: 'Mã ý tưởng',
+                                fullName: 'Họ và tên',
+                                department: 'Đơn vị',
+                                idea: 'Ý tưởng',
+                                solution: 'Thực trạng',
+                                benefit: 'Giải pháp',
+                                benefitOutcome: 'Lợi ích mang lại',
+                                resourcesUsed: 'Nguồn lực sử dụng',
+                                calculationDescription: 'Mô tả cách tính',
+                                topicTitle: 'Tên đề tài',
+                                scalingOpportunity: 'Cơ hội nhân rộng phát triển',
+                                status: 'Quyết định phê duyệt',
+                                implementationStatus: 'Trạng thái',
+                                submissionDate: 'Thời gian nộp',
+                                implementationDepartment: 'Phòng ban triển khai',
+                                note: 'Ghi chú',
+                                benefitValue: 'Giá trị làm lợi (VND)',
+                                rewardAmount: 'Tiền thưởng (VND)',
+                                actions: 'Thao tác'
+                              } as Record<string, string>
+                            )[field]
+                          }
+                        />
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                  <Button
                       variant="contained"
                       color="info"
                       startIcon={<BarChartIcon />}
@@ -1156,6 +1386,8 @@ const AdminDashboard: React.FC = () => {
           <DataGrid
             rows={filteredIdeas}
             columns={columns}
+            columnVisibilityModel={columnVisibilityModel}
+            onColumnVisibilityModelChange={(model) => setColumnVisibilityModel(model)}
             getRowId={(row) => row._id}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
