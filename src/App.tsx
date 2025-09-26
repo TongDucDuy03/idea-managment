@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import MainPageWithTabs from './components/MainPageWithTabs';
-import AdminDashboardWithTabs from './components/AdminDashboardWithTabs';
+import AdminDashboard from './components/AdminDashboard';
 import StatisticsDashboard from './components/StatisticsDashboard';
 import Login from './components/Login';
 import PrivateRoute from './components/PrivateRoute';
@@ -32,7 +32,7 @@ function App() {
             path="/admin"
             element={
               <PrivateRoute>
-                <AdminDashboardWithTabs />
+                <AdminDashboard />
               </PrivateRoute>
             }
           />

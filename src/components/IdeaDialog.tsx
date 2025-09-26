@@ -179,6 +179,14 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
             </Alert>
           )}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <TextField
+              name="ideaCode"
+              label="mã ý tưởng"
+              value={formData.ideaCode}
+              onChange={handleTextChange}
+              required
+              fullWidth
+            />
             <TextField
               name="fullName"
               label="Họ và tên"
