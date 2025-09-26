@@ -457,15 +457,12 @@ const AdminDashboard: React.FC = () => {
 
     if (!topScrollElement || !dataGridElement) return;
 
-<<<<<<< Updated upstream
-    // Tính tổng chiều rộng của các cột (hardcode để tránh lỗi dependency)
-    const totalWidth = 150+ 200 + 200 + 300 + 300 +300 + 180 + 180 + 180 + 200 + 200 + 180 + 180 + 120 ; // Tổng chiều rộng các cột
-=======
+
     // Tính tổng chiều rộng của các cột đang hiển thị
     const totalWidth = columns
       .filter(c => columnVisibilityModel[c.field] !== false)
       .reduce((sum, c) => sum + (c.width ? c.width : 150), 0);
->>>>>>> Stashed changes
+
     
     // Cập nhật chiều rộng của thanh cuộn trên
     const invisibleContent = topScrollElement.querySelector('div');
@@ -775,8 +772,7 @@ const AdminDashboard: React.FC = () => {
 
     },
     {
-<<<<<<< Updated upstream
-=======
+
       field: 'benefitOutcome',
       headerName: 'Lợi ích mang lại',
       width: 300,
@@ -866,7 +862,7 @@ const AdminDashboard: React.FC = () => {
       )
     },
     {
->>>>>>> Stashed changes
+
       field: 'status',
       headerName: 'Quyết định phê duyệt',
       width: 180,
