@@ -250,23 +250,25 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         }
         
         .content-section {
-            border: 1px solid #000;
-            padding: 10px;
             position: relative;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
-        }
-        
-        .section-title {
+            margin-bottom: 15px; /* khoảng cách giữa các section */
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            background: #fff;
+          }
+
+          .section-title {
             position: absolute;
-            top: -1px;
+            top: -10px; /* nhô ra trên khung 1 chút */
             left: 10px;
-            background: white;
-            padding: 0 5px;
+            background: #fff;
+            padding: 0 6px;
             font-weight: bold;
             font-size: 12px;
-            z-index: 1;
+            color: #333;
         }
         
         .bottom-row {
@@ -276,17 +278,39 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
             gap: 0;
             min-height: 150px;
         }
+        .image-box { border: 1px dashed #999; height: 180px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#fff; }
+        .image-box img { width:100%; height:100%; object-fit:contain; display:block; }
         
+        // .section-content {
+        //     flex: 1;
+        //     border: none;
+        //     resize: none;
+        //     font-family: inherit;
+        //     padding: 5px;
+        //     overflow: hidden;
+        //     word-wrap: break-word;
+        //     white-space: pre-wrap;
+        //     text-overflow: ellipsis;
+        // }
+
         .section-content {
-            flex: 1;
-            border: none;
-            resize: none;
-            font-family: inherit;
-            padding: 15px 5px 5px 5px;
-            overflow: hidden;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-            text-overflow: ellipsis;
+          flex: 1;
+          border: none;
+          padding: 5px; /* giảm padding để ảnh không bị đẩy xuống xa */
+        }
+
+        .section-content .image-box {
+          margin-top: 8px;  /* tạo khoảng vừa phải giữa chữ và ảnh */
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .section-content .image-box img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 4px;
+          border: 1px solid #ccc;
         }
         
         /* Dynamic content styling */
@@ -431,12 +455,20 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
                 <!-- Middle Row -->
                 <div class="content-section">
                     <div class="section-title">HÌNH ẢNH TRƯỚC</div>
-                    <div class="section-content">[Hình ảnh trước cải tiến]<br><em>Chú thích hình ảnh trước cải tiến</em></div>
+                    <div class="section-content">
+                      ${(idea as any).beforeImage
+                        ? `<div class=\"image-box\"><img src=\"${(idea as any).beforeImage}\" alt=\"Hình ảnh trước\" /></div>`
+                        : '<div class=\"image-box\" style=\"color:#999; font-style:italic;\">Chưa có hình ảnh trước</div>'}
+                    </div>
                 </div>
                 
                 <div class="content-section">
                     <div class="section-title">HÌNH ẢNH SAU</div>
-                    <div class="section-content">[Hình ảnh sau cải tiến]<br><em>Chú thích hình ảnh sau cải tiến</em></div>
+                    <div class="section-content">
+                      ${(idea as any).afterImage
+                        ? `<div class=\"image-box\"><img src=\"${(idea as any).afterImage}\" alt=\"Hình ảnh sau\" /></div>`
+                        : '<div class=\"image-box\" style=\"color:#999; font-style:italic;\">Chưa có hình ảnh sau</div>'}
+                    </div>
                 </div>
 
                 <!-- Bottom Row -->

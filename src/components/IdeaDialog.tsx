@@ -93,7 +93,9 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
     resourcesUsed: '',
     calculationDescription: '',
     topicTitle: '',
-    scalingOpportunity: ''
+    scalingOpportunity: '',
+    beforeImage: '',
+    afterImage: ''
   });
   const [error, setError] = useState('');
 
@@ -116,7 +118,9 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         resourcesUsed: (idea as any).resourcesUsed || '',
         calculationDescription: (idea as any).calculationDescription || '',
         topicTitle: (idea as any).topicTitle || '',
-        scalingOpportunity: (idea as any).scalingOpportunity || ''
+        scalingOpportunity: (idea as any).scalingOpportunity || '',
+        beforeImage: (idea as any).beforeImage || '',
+        afterImage: (idea as any).afterImage || ''
       });
     } else {
       setFormData({
@@ -135,7 +139,9 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         resourcesUsed: '',
         calculationDescription: '',
         topicTitle: '',
-        scalingOpportunity: ''
+        scalingOpportunity: '',
+        beforeImage: '',
+        afterImage: ''
       });
     }
   }, [idea]);
@@ -154,6 +160,20 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: 'beforeImage' | 'afterImage'
+  ) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      setFormData(prev => ({ ...prev, [field]: dataUrl }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -287,6 +307,37 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               multiline
               rows={4}
             />
+            {/* Hình ảnh trước và sau */}
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ flex: 1, minWidth: 260 }}>
+                <Button variant="outlined" component="label" fullWidth>
+                  Tải lên Hình ảnh Trước
+                  <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, 'beforeImage')} />
+                </Button>
+                <Box sx={{ mt: 0.5, color: '#777', fontSize: 12 }}>
+                  Gợi ý: ảnh ngang ~1200×800px, dung lượng nhỏ hơn 2 MB
+                </Box>
+                {(formData as any).beforeImage && (
+                  <Box sx={{ mt: 1 }}>
+                    <img src={(formData as any).beforeImage} alt="Hình ảnh trước" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }} />
+                  </Box>
+                )}
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 260 }}>
+                <Button variant="outlined" component="label" fullWidth>
+                  Tải lên Hình ảnh Sau
+                  <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, 'afterImage')} />
+                </Button>
+                <Box sx={{ mt: 0.5, color: '#777', fontSize: 12 }}>
+                  Gợi ý: ảnh ngang ~1200×800px, dung lượng nhỏ hơn 2 MB
+                </Box>
+                {(formData as any).afterImage && (
+                  <Box sx={{ mt: 1 }}>
+                    <img src={(formData as any).afterImage} alt="Hình ảnh sau" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }} />
+                  </Box>
+                )}
+              </Box>
+            </Box>
             <FormControl fullWidth>
               <InputLabel>Quyết định phê duyệt</InputLabel>
               <Select

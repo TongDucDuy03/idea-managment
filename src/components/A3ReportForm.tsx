@@ -65,6 +65,20 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
     }));
   };
 
+  const handleImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: 'beforeImage' | 'afterImage'
+  ) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      setReportData(prev => ({ ...prev, [field]: dataUrl }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = async () => {
     if (!idea) return;
     
@@ -289,6 +303,21 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             gap: 0;
             min-height: 150px;
         }
+        .image-box {
+            border: 1px dashed #999;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #fff;
+        }
+        .image-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
         
         .section-content {
             flex: 1;
@@ -398,12 +427,20 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
 
                 <div class="content-section">
                     <div class="section-title">HÌNH ẢNH TRƯỚC</div>
-                    <div class="section-content">[Hình ảnh trước cải tiến]<br><em>Chú thích hình ảnh trước cải tiến</em></div>
+                    <div class="section-content">
+                      ${(idea as any).beforeImage
+                        ? `<div class=\"image-box\"><img src=\"${(idea as any).beforeImage}\" alt=\"Hình ảnh trước\" /></div>`
+                        : '<div class=\"image-box\" style=\"color:#999; font-style:italic;\">Chưa có hình ảnh trước</div>'}
+                    </div>
                 </div>
                 
                 <div class="content-section">
                     <div class="section-title">HÌNH ẢNH SAU</div>
-                    <div class="section-content">[Hình ảnh sau cải tiến]<br><em>Chú thích hình ảnh sau cải tiến</em></div>
+                    <div class="section-content">
+                      ${(idea as any).afterImage
+                        ? `<div class=\"image-box\"><img src=\"${(idea as any).afterImage}\" alt=\"Hình ảnh sau\" /></div>`
+                        : '<div class=\"image-box\" style=\"color:#999; font-style:italic;\">Chưa có hình ảnh sau</div>'}
+                    </div>
                 </div>
 
                 <div class="bottom-row">
@@ -563,6 +600,40 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
           )}
 
           <Grid container spacing={3}>
+            {/* Hình ảnh trước/sau */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
+                Hình ảnh minh họa
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Button variant="outlined" component="label" fullWidth>
+                Tải lên Hình ảnh Trước
+                <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, 'beforeImage')} />
+              </Button>
+              <Box sx={{ mt: 0.5, color: '#777', fontSize: 12 }}>
+                Gợi ý: ảnh ngang ~1200×800px, dung lượng nhỏ hơn 2MB
+              </Box>
+              {(reportData as any).beforeImage && (
+                <Box sx={{ mt: 1 }}>
+                  <img src={(reportData as any).beforeImage} alt="Hình ảnh trước" style={{ maxWidth: '100%', maxHeight: 220, borderRadius: 8 }} />
+                </Box>
+              )}
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Button variant="outlined" component="label" fullWidth>
+                Tải lên Hình ảnh Sau
+                <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, 'afterImage')} />
+              </Button>
+              <Box sx={{ mt: 0.5, color: '#777', fontSize: 12 }}>
+                Gợi ý: ảnh ngang ~1200×800px, dung lượng nhỏ hơn 2MB
+              </Box>
+              {(reportData as any).afterImage && (
+                <Box sx={{ mt: 1 }}>
+                  <img src={(reportData as any).afterImage} alt="Hình ảnh sau" style={{ maxWidth: '100%', maxHeight: 220, borderRadius: 8 }} />
+                </Box>
+              )}
+            </Grid>
             {/* Thông tin cơ bản */}
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>

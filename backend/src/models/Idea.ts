@@ -21,6 +21,8 @@ export interface IIdea extends Document {
   calculationDescription?: string; // Mô tả cách tính
   topicTitle?: string; // Tên đề tài
   scalingOpportunity?: string; // Cơ hội nhân rộng phát triển
+  beforeImage?: string; // Hình ảnh trước (data URL hoặc URL)
+  afterImage?: string; // Hình ảnh sau (data URL hoặc URL)
 }
 
 const IdeaSchema: Schema = new Schema({
@@ -51,7 +53,9 @@ const IdeaSchema: Schema = new Schema({
   resourcesUsed: { type: String, required: false },
   calculationDescription: { type: String, required: false },
   topicTitle: { type: String, required: false },
-  scalingOpportunity: { type: String, required: false }
+  scalingOpportunity: { type: String, required: false },
+  beforeImage: { type: String, required: false },
+  afterImage: { type: String, required: false }
 });
 
 export default mongoose.model<IIdea>('Idea', IdeaSchema); 

@@ -13,7 +13,9 @@ const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+// Tăng giới hạn kích thước body để hỗ trợ upload ảnh dạng data URL
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 // Routes
 app.use('/api/ideas', ideaRoutes);

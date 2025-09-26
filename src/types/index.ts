@@ -19,6 +19,8 @@ export interface Idea {
   calculationDescription?: string; // Mô tả cách tính
   topicTitle?: string; // Tên đề tài
   scalingOpportunity?: string; // Cơ hội nhân rộng phát triển
+  beforeImage?: string; // Hình ảnh trước (data URL hoặc URL)
+  afterImage?: string; // Hình ảnh sau (data URL hoặc URL)
 }
 
 export interface IdeaFormData {
@@ -33,6 +35,8 @@ export interface IdeaFormData {
   calculationDescription?: string;
   topicTitle?: string;
   scalingOpportunity?: string;
+  beforeImage?: string;
+  afterImage?: string;
 }
 
 export interface A3Report {

@@ -71,6 +71,8 @@ const AdminDashboard: React.FC = () => {
     'calculationDescription',
     'topicTitle',
     'scalingOpportunity',
+    'beforeImage',
+    'afterImage',
     'status',
     'implementationStatus',
     'submissionDate',
@@ -87,6 +89,8 @@ const AdminDashboard: React.FC = () => {
     'solution',
     'benefit',
     'topicTitle',
+    'beforeImage',
+    'afterImage',
     'status',
     'implementationStatus',
     'note',
@@ -468,10 +472,12 @@ const AdminDashboard: React.FC = () => {
     const totalWidth = 
   150 + 200 + 200 + 
   300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 
-  180 + 180 + 180 + 
+  180 + 180 + 
+  180 + 180 + 
+  180 + 180 + 
   200 + 200 + 
   180 + 180 + 
-  120; // Tổng chiều rộng các cột
+  120; // Tổng chiều rộng các cột (bao gồm cột hình ảnh)
     
     // Cập nhật chiều rộng của thanh cuộn trên
     const invisibleContent = topScrollElement.querySelector('div');
@@ -647,6 +653,46 @@ const AdminDashboard: React.FC = () => {
         </div>
       )
 
+    },
+    {
+      field: 'beforeImage',
+      headerName: 'Hình trước',
+      width: 180,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          {(params.row as any).beforeImage ? (
+            <img
+              src={(params.row as any).beforeImage}
+              alt="Trước"
+              style={{ maxWidth: 160, maxHeight: 100, objectFit: 'contain', borderRadius: 6 }}
+            />
+          ) : (
+            <span style={{ color: '#999' }}>—</span>
+          )}
+        </div>
+      )
+    },
+    {
+      field: 'afterImage',
+      headerName: 'Hình sau',
+      width: 180,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+          {(params.row as any).afterImage ? (
+            <img
+              src={(params.row as any).afterImage}
+              alt="Sau"
+              style={{ maxWidth: 160, maxHeight: 100, objectFit: 'contain', borderRadius: 6 }}
+            />
+          ) : (
+            <span style={{ color: '#999' }}>—</span>
+          )}
+        </div>
+      )
     },
     { 
       field: 'fullName', 
