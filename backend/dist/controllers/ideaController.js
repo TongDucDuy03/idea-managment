@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -15,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteIdea = exports.updateIdea = exports.updatePaymentStatus = exports.getAllIdeas = exports.createIdea = void 0;
 const Idea_1 = __importDefault(require("../models/Idea"));
 const emailService_1 = require("../services/emailService");
-const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createIdea = async (req, res) => {
     try {
         const { fullName, department, idea, solution, benefit, status, implementationStatus, implementationDepartment, note, benefitValue, rewardAmount } = req.body;
         // Generate idea code (without name prefix)
@@ -37,7 +28,7 @@ const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             benefitValue: benefitValue || 0,
             rewardAmount: rewardAmount || 0
         });
-        const savedIdea = yield newIdea.save();
+        const savedIdea = await newIdea.save();
         // Fire-and-forget email (do not block response)
         (0, emailService_1.sendIdeaSubmittedEmail)(savedIdea).catch((err) => {
             console.error('Failed to send idea notification email:', err);
@@ -47,9 +38,9 @@ const createIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     catch (error) {
         res.status(500).json({ message: 'Error creating idea', error });
     }
-});
+};
 exports.createIdea = createIdea;
-const getAllIdeas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getAllIdeas = async (req, res) => {
     try {
         const { search, isPaid } = req.query;
         let query = {};
@@ -62,19 +53,19 @@ const getAllIdeas = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (isPaid !== undefined) {
             query.isPaid = isPaid === 'true';
         }
-        const ideas = yield Idea_1.default.find(query).sort({ submissionDate: -1 });
+        const ideas = await Idea_1.default.find(query).sort({ submissionDate: -1 });
         res.json(ideas);
     }
     catch (error) {
         res.status(500).json({ message: 'Error fetching ideas', error });
     }
-});
+};
 exports.getAllIdeas = getAllIdeas;
-const updatePaymentStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updatePaymentStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { isPaid } = req.body;
-        const updatedIdea = yield Idea_1.default.findByIdAndUpdate(id, { isPaid }, { new: true });
+        const updatedIdea = await Idea_1.default.findByIdAndUpdate(id, { isPaid }, { new: true });
         if (!updatedIdea) {
             return res.status(404).json({ message: 'Idea not found' });
         }
@@ -83,11 +74,11 @@ const updatePaymentStatus = (req, res) => __awaiter(void 0, void 0, void 0, func
     catch (error) {
         res.status(500).json({ message: 'Error updating payment status', error });
     }
-});
+};
 exports.updatePaymentStatus = updatePaymentStatus;
-const updateIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateIdea = async (req, res) => {
     try {
-        const idea = yield Idea_1.default.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const idea = await Idea_1.default.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!idea) {
             return res.status(404).json({ message: 'Không tìm thấy ý tưởng' });
         }
@@ -96,11 +87,11 @@ const updateIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     catch (error) {
         res.status(500).json({ message: 'Lỗi server', error });
     }
-});
+};
 exports.updateIdea = updateIdea;
-const deleteIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteIdea = async (req, res) => {
     try {
-        const idea = yield Idea_1.default.findByIdAndDelete(req.params.id);
+        const idea = await Idea_1.default.findByIdAndDelete(req.params.id);
         if (!idea) {
             return res.status(404).json({ message: 'Không tìm thấy ý tưởng' });
         }
@@ -109,5 +100,5 @@ const deleteIdea = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     catch (error) {
         res.status(500).json({ message: 'Lỗi server', error });
     }
-});
+};
 exports.deleteIdea = deleteIdea;

@@ -8,12 +8,12 @@ import {
   deleteA3Report,
   getA3ReportByIdeaCode
 } from '../controllers/a3ReportController';
-import { auth } from '../middleware/auth';
+import * as auth from '../middleware/auth';
 
 const router = express.Router();
 
 // Tất cả routes đều cần authentication
-router.use(auth);
+router.use(auth.auth);
 
 // Tạo báo cáo A3 mới
 router.post('/', createA3Report);
