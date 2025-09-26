@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import ideaRoutes from './routes/ideaRoutes';
 import authRoutes from './routes/authRoutes';
+import a3ReportRoutes from './routes/a3ReportRoutes';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 // Routes
 app.use('/api/ideas', ideaRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/a3-reports', a3ReportRoutes);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/idea-management')

@@ -56,6 +56,12 @@ const IdeaSchema = new mongoose_1.Schema({
     implementationDepartment: { type: String, required: false },
     note: { type: String, required: false },
     benefitValue: { type: Number, required: false, default: 0 },
-    rewardAmount: { type: Number, required: false, default: 0 }
+    rewardAmount: { type: Number, required: false, default: 0 },
+    // New fields
+    benefitOutcome: { type: String, required: false },
+    resourcesUsed: { type: String, required: false },
+    calculationDescription: { type: String, required: false },
+    topicTitle: { type: String, required: false },
+    scalingOpportunity: { type: String, required: false }
 });
 exports.default = mongoose_1.default.model('Idea', IdeaSchema);

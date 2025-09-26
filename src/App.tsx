@@ -2,8 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
-import IdeaForm from './components/IdeaForm';
-import AdminDashboard from './components/AdminDashboard';
+import MainPageWithTabs from './components/MainPageWithTabs';
+import AdminDashboardWithTabs from './components/AdminDashboardWithTabs';
 import StatisticsDashboard from './components/StatisticsDashboard';
 import Login from './components/Login';
 import PrivateRoute from './components/PrivateRoute';
@@ -26,13 +26,13 @@ function App() {
       <CssBaseline />
       <Router>
         <Routes>
-          <Route path="/" element={<IdeaForm />} />
+          <Route path="/" element={<MainPageWithTabs />} />
           <Route path="/login" element={<Login />} />
           <Route
             path="/admin"
             element={
               <PrivateRoute>
-                <AdminDashboard />
+                <AdminDashboardWithTabs />
               </PrivateRoute>
             }
           />
