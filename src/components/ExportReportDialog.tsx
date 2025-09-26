@@ -36,6 +36,11 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
 
+  // Lọc các ý tưởng có trạng thái "Lập báo cáo A3"
+  const filteredIdeas = ideas.filter(idea => 
+    idea.implementationStatus === 'Lập báo cáo A3'
+  );
+
   // Reset selected ideas when dialog opens
   useEffect(() => {
     if (open) {
@@ -71,10 +76,10 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
   };
 
   const handleSelectAll = () => {
-    if (selectedIdeas.length === ideas.length) {
+    if (selectedIdeas.length === filteredIdeas.length) {
       setSelectedIdeas([]);
     } else {
-      setSelectedIdeas(ideas.map(idea => idea._id));
+      setSelectedIdeas(filteredIdeas.map(idea => idea._id));
     }
   };
 
@@ -658,16 +663,20 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
               onClick={handleSelectAll}
               sx={{ minWidth: 120 }}
             >
-              {selectedIdeas.length === ideas.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+              {selectedIdeas.length === filteredIdeas.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
             </Button>
             <Chip 
-              label={`Đã chọn: ${selectedIdeas.length}/${ideas.length}`}
+              label={`Đã chọn: ${selectedIdeas.length}/${filteredIdeas.length}`}
               color="primary"
               size="small"
             />
           </Box>
         </Box>
 
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Chỉ hiển thị các ý tưởng có trạng thái "Lập báo cáo A3" ({filteredIdeas.length} ý tưởng)
+        </Alert>
+        
         <FormControl fullWidth>
           <InputLabel>Chọn ý tưởng cần export</InputLabel>
           <Select
@@ -683,7 +692,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
               },
             }}
           >
-            {ideas.map((idea) => (
+            {filteredIdeas.map((idea) => (
               <MenuItem key={idea._id} value={idea._id}>
                 <Checkbox checked={selectedIdeas.includes(idea._id)} />
                 <ListItemText 
