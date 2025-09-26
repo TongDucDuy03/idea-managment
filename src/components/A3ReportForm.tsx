@@ -16,8 +16,9 @@ import {
 } from '@mui/material';
 import { FileDownload as FileDownloadIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 import axios from 'axios';
-import { Idea, A3Report } from '../types';
-import * as XLSX from 'xlsx';
+import { Idea } from '../types';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface A3ReportFormProps {
   idea: Idea | null;
@@ -29,53 +30,35 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [reportData, setReportData] = useState<Partial<A3Report>>({
-    problemDescription: '',
-    currentSituation: '',
-    rootCause: '',
-    targetSituation: '',
-    solution: '',
-    implementationPlan: '',
-    resources: '',
-    timeline: '',
-    responsiblePerson: '',
-    expectedResult: '',
-    actualResult: '',
-    benefit: '',
-    cost: '',
-    risk: '',
-    followUpAction: '',
-    lessonsLearned: '',
-    scalingOpportunity: '',
-    status: 'draft'
-  });
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
+  const [reportData, setReportData] = useState<Partial<Idea>>({});
 
   useEffect(() => {
     if (idea) {
-      // Điền sẵn dữ liệu từ ý tưởng
-      setReportData(prev => ({
-        ...prev,
-        ideaId: idea._id,
-        ideaCode: idea.ideaCode,
-        fullName: idea.fullName,
-        department: idea.department,
-        topicTitle: idea.topicTitle || '',
-        submissionDate: idea.submissionDate,
-        implementationDepartment: idea.implementationDepartment,
-        problemDescription: idea.idea || '',
-        currentSituation: idea.solution || '',
-        solution: idea.benefit || '',
-        benefit: idea.benefitOutcome || '',
-        scalingOpportunity: idea.scalingOpportunity || '',
-        resources: idea.resourcesUsed || '',
-        // Điền thêm thông tin từ các trường khác nếu có
-        cost: idea.benefitValue ? idea.benefitValue.toString() : '',
-        responsiblePerson: idea.fullName
-      }));
+      setReportData(idea);
     }
   }, [idea]);
 
-  const handleInputChange = (field: keyof A3Report, value: string) => {
+  // Load logo from public folder
+  useEffect(() => {
+    let cancelled = false;
+    const loadLogo = async () => {
+      try {
+        const res = await fetch('/vico-logo.png', { cache: 'no-store' });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (!cancelled) setLogoDataUrl(typeof reader.result === 'string' ? reader.result : null);
+        };
+        reader.readAsDataURL(blob);
+      } catch {}
+    };
+    loadLogo();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleInputChange = (field: keyof Idea, value: string) => {
     setReportData(prev => ({
       ...prev,
       [field]: value
@@ -95,17 +78,8 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         return;
       }
 
-      // Lưu báo cáo A3 vào database
-      const response = await axios.post('https://idea-managment.onrender.com/api/a3-reports', {
-        ...reportData,
-        ideaId: idea._id,
-        ideaCode: idea.ideaCode,
-        fullName: idea.fullName,
-        department: idea.department,
-        topicTitle: idea.topicTitle || '',
-        submissionDate: idea.submissionDate,
-        status: 'submitted'
-      }, {
+      // Cập nhật ý tưởng với dữ liệu mới
+      await axios.put(`https://idea-managment.onrender.com/api/ideas/${idea._id}`, reportData, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -123,6 +97,411 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
     }
   };
 
+  const generateHTMLReport = (idea: Idea): string => {
+    const formatDate = (date: Date) => {
+      return new Date(date).toLocaleDateString('vi-VN');
+    };
+
+    const getContentStyle = (content: string) => {
+      const length = (content || '').length;
+      if (length > 500) return 'font-size: 9px; line-height: 1.2;';
+      if (length > 300) return 'font-size: 10px; line-height: 1.3;';
+      if (length > 200) return 'font-size: 11px; line-height: 1.4;';
+      return 'font-size: 12px; line-height: 1.4;';
+    };
+
+    return `<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Báo Cáo Cải Tiến A3 - ${idea.topicTitle || idea.ideaCode || 'N/A'}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #ffffff;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .a3-container {
+            width: 297mm;
+            height: 210mm;
+            background: white;
+            border: 2px solid #000;
+            position: relative;
+            page-break-inside: avoid;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            display: flex;
+            height: 80px;
+            border-bottom: 2px solid #000;
+            flex-shrink: 0;
+        }
+        
+        .logo-section {
+            width: 120px;
+            border-right: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .title-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .title-section h1 {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .info-sections {
+            width: 400px;
+            border-left: 2px solid #000;
+            display: flex;
+            height: 80px;
+        }
+        
+        .info-section {
+            flex: 1;
+            padding: 8px;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        
+        .info-section:first-child {
+            border-right: 2px solid #000;
+        }
+        
+        .info-row {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 2px;
+            flex-wrap: wrap;
+        }
+        
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            font-size: 10px;
+            margin-bottom: 2px;
+            display: block;
+            width: 100%;
+        }
+        
+        .info-value {
+            width: 100%;
+            font-size: 11px;
+            padding: 2px 0;
+            border-bottom: 1px dotted #ccc;
+            min-height: 16px;
+            word-wrap: break-word;
+            overflow: hidden;
+        }
+        
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .left-sidebar {
+            width: 120px;
+            border-right: 2px solid #000;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-section {
+            flex: 1;
+            border-bottom: 2px solid #000;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            text-align: center;
+            padding: 5px;
+        }
+        
+        .sidebar-section:last-child {
+            border-bottom: none;
+        }
+        
+        .content-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 200px 200px auto;
+            gap: 0;
+            overflow: hidden;
+        }
+        
+        .content-section {
+            border: 1px solid #000;
+            padding: 10px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .section-title {
+            position: absolute;
+            top: -1px;
+            left: 10px;
+            background: white;
+            padding: 0 5px;
+            font-weight: bold;
+            font-size: 12px;
+            z-index: 1;
+        }
+        
+        .bottom-row {
+            display: grid;
+            grid-column: 1 / -1;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            min-height: 150px;
+        }
+        
+        .section-content {
+            flex: 1;
+            border: none;
+            resize: none;
+            font-family: inherit;
+            padding: 15px 5px 5px 5px;
+            overflow: hidden;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            text-overflow: ellipsis;
+        }
+        
+        .content-thuc-trang {
+            ${getContentStyle(idea.solution || '')}
+        }
+        
+        .content-doi-sach {
+            ${getContentStyle(idea.benefit || '')}
+        }
+        
+        .content-loi-ich {
+            ${getContentStyle(idea.benefitOutcome || '')}
+        }
+        
+        .content-danh-gia {
+            ${getContentStyle(idea.scalingOpportunity || '')}
+        }
+        
+        .content-chi-phi {
+            ${getContentStyle(idea.resourcesUsed || '')}
+        }
+        
+        .content-khen-thuong {
+            ${getContentStyle(idea.calculationDescription || '')}
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .a3-container {
+                margin: 0;
+                border: 1px solid #000;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="a3-container">
+        <div class="header">
+            <div class="logo-section">
+                ${logoDataUrl
+                  ? `<img src="${logoDataUrl}" alt="Logo" style="max-width: 90px; max-height: 60px;" />`
+                  : 'LOGO'}
+            </div>
+            <div class="title-section">
+                <div>
+                    <h1>CÔNG TY TNHH THẮNG LỢI</h1>
+                    <h1>BÁO CÁO CẢI TIẾN A3</h1>
+                </div>
+            </div>
+            <div class="info-sections">
+                <div class="info-section">
+                    <div class="info-row">
+                        <span class="info-label">TÊN ĐỀ TÀI:</span>
+                        <div class="info-value">${idea.topicTitle || idea.idea || 'N/A'}</div>
+                    </div>
+                </div>
+                <div class="info-section">
+                    <div class="info-row">
+                        <span class="info-label">MÃ Ý TƯỞNG: ${idea.ideaCode || 'N/A'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Người lập: ${idea.fullName || 'N/A'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Ngày lập: ${formatDate(idea.submissionDate)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Đơn vị: ${idea.implementationDepartment || idea.department || 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="left-sidebar">
+                <div class="sidebar-section">NGƯỜI LẬP</div>
+                <div class="sidebar-section">P. CẢI TIẾN</div>
+                <div class="sidebar-section">GĐ KT</div>
+                <div class="sidebar-section">GĐ ĐH</div>
+            </div>
+
+            <div class="content-grid">
+                <div class="content-section">
+                    <div class="section-title">THỰC TRẠNG</div>
+                    <div class="section-content content-thuc-trang">${(idea.solution || 'Mô tả thực trạng hiện tại...').substring(0, 800)}${(idea.solution || '').length > 800 ? '...' : ''}</div>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-title">ĐỐI SÁCH</div>
+                    <div class="section-content content-doi-sach">${(idea.benefit || 'Đối sách đề xuất...').substring(0, 800)}${(idea.benefit || '').length > 800 ? '...' : ''}</div>
+                </div>
+
+                <div class="content-section">
+                    <div class="section-title">HÌNH ẢNH TRƯỚC</div>
+                    <div class="section-content">[Hình ảnh trước cải tiến]<br><em>Chú thích hình ảnh trước cải tiến</em></div>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-title">HÌNH ẢNH SAU</div>
+                    <div class="section-content">[Hình ảnh sau cải tiến]<br><em>Chú thích hình ảnh sau cải tiến</em></div>
+                </div>
+
+                <div class="bottom-row">
+                    <div class="content-section">
+                        <div class="section-title">LỢI ÍCH</div>
+                        <div class="section-content content-loi-ich">${(idea.benefitOutcome || 'Lợi ích đạt được...').substring(0, 300)}${(idea.benefitOutcome || '').length > 300 ? '...' : ''}</div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <div class="section-title">ĐÁNH GIÁ</div>
+                        <div class="section-content content-danh-gia">${(idea.scalingOpportunity || 'Đánh giá kết quả...').substring(0, 300)}${(idea.scalingOpportunity || '').length > 300 ? '...' : ''}</div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <div class="section-title">CHI PHÍ</div>
+                        <div class="section-content content-chi-phi">${(idea.resourcesUsed || 'Chi phí thực hiện...').substring(0, 300)}${(idea.resourcesUsed || '').length > 300 ? '...' : ''}</div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <div class="section-title">KHEN THƯỞNG</div>
+                        <div class="section-content content-khen-thuong">${(idea.calculationDescription || 'Đề xuất khen thưởng...').substring(0, 300)}${(idea.calculationDescription || '').length > 300 ? '...' : ''}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+  };
+
+  const createPdfFromHtml = async (htmlContent: string, filename: string) => {
+    const container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-10000px';
+    container.style.top = '0';
+    container.style.width = '297mm';
+    container.style.background = '#ffffff';
+    container.innerHTML = htmlContent;
+    document.body.appendChild(container);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const pdf = new jsPDF('l', 'mm', 'a3');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      const mainContainer = container.querySelector('.a3-container') as HTMLElement;
+      
+      if (mainContainer) {
+        const canvas = await html2canvas(mainContainer, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          allowTaint: false,
+          foreignObjectRendering: false,
+          width: Math.floor(297 * 3.78),
+          height: Math.floor(210 * 3.78),
+          onclone: (clonedDoc) => {
+            const style = clonedDoc.createElement('style');
+            style.innerHTML = `
+              * { 
+                font-family: Arial, sans-serif !important;
+                background-color: white !important;
+              }
+            `;
+            clonedDoc.head.appendChild(style);
+          }
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        
+        const margin = 5;
+        const availableWidth = pageWidth - (margin * 2);
+        const availableHeight = pageHeight - (margin * 2);
+        
+        const scaleWidth = availableWidth / (canvas.width / 3.78);
+        const scaleHeight = availableHeight / (canvas.height / 3.78);
+        const scale = Math.min(scaleWidth, scaleHeight);
+        
+        const finalWidth = (canvas.width / 3.78) * scale;
+        const finalHeight = (canvas.height / 3.78) * scale;
+        
+        const xOffset = (pageWidth - finalWidth) / 2;
+        const yOffset = (pageHeight - finalHeight) / 2;
+        
+        pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
+      }
+
+      pdf.save(filename.replace(/\s+/g, '_'));
+    } catch (error) {
+      console.error('Error creating PDF:', error);
+      throw error;
+    } finally {
+      document.body.removeChild(container);
+    }
+  };
+
   const handleExport = async () => {
     if (!idea) return;
     
@@ -130,74 +509,11 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
     setError('');
     
     try {
-      // Tạo dữ liệu cho file Excel
-      const exportData = {
-        'Mã ý tưởng': reportData.ideaCode || '',
-        'Họ và tên': reportData.fullName || '',
-        'Đơn vị': reportData.department || '',
-        'Tên đề tài': reportData.topicTitle || '',
-        'Ngày nộp': idea.submissionDate ? new Date(idea.submissionDate).toLocaleDateString('vi-VN') : '',
-        'Mô tả vấn đề': reportData.problemDescription || '',
-        'Thực trạng hiện tại': reportData.currentSituation || '',
-        'Nguyên nhân gốc': reportData.rootCause || '',
-        'Tình hình mục tiêu': reportData.targetSituation || '',
-        'Giải pháp': reportData.solution || '',
-        'Kế hoạch triển khai': reportData.implementationPlan || '',
-        'Nguồn lực': reportData.resources || '',
-        'Thời gian thực hiện': reportData.timeline || '',
-        'Người chịu trách nhiệm': reportData.responsiblePerson || '',
-        'Kết quả mong đợi': reportData.expectedResult || '',
-        'Kết quả thực tế': reportData.actualResult || '',
-        'Lợi ích': reportData.benefit || '',
-        'Chi phí': reportData.cost || '',
-        'Rủi ro': reportData.risk || '',
-        'Hành động theo dõi': reportData.followUpAction || '',
-        'Bài học kinh nghiệm': reportData.lessonsLearned || '',
-        'Cơ hội nhân rộng': reportData.scalingOpportunity || '',
-        'Phòng ban triển khai': reportData.implementationDepartment || '',
-        'Ghi chú': reportData.note || ''
-      };
-
-      // Tạo workbook và worksheet
-      const ws = XLSX.utils.json_to_sheet([exportData]);
-      const wb = XLSX.utils.book_new();
+      const htmlContent = generateHTMLReport(reportData as Idea);
+      const filename = `Bao_Cao_Cai_Tien_A3_${idea.ideaCode || idea._id}.pdf`;
+      await createPdfFromHtml(htmlContent, filename);
       
-      // Đặt chiều rộng cột
-      const colWidths = [
-        { wch: 15 }, // Mã ý tưởng
-        { wch: 25 }, // Họ và tên
-        { wch: 20 }, // Đơn vị
-        { wch: 30 }, // Tên đề tài
-        { wch: 15 }, // Ngày nộp
-        { wch: 40 }, // Mô tả vấn đề
-        { wch: 40 }, // Thực trạng hiện tại
-        { wch: 40 }, // Nguyên nhân gốc
-        { wch: 40 }, // Tình hình mục tiêu
-        { wch: 40 }, // Giải pháp
-        { wch: 40 }, // Kế hoạch triển khai
-        { wch: 30 }, // Nguồn lực
-        { wch: 20 }, // Thời gian thực hiện
-        { wch: 25 }, // Người chịu trách nhiệm
-        { wch: 40 }, // Kết quả mong đợi
-        { wch: 40 }, // Kết quả thực tế
-        { wch: 40 }, // Lợi ích
-        { wch: 20 }, // Chi phí
-        { wch: 30 }, // Rủi ro
-        { wch: 40 }, // Hành động theo dõi
-        { wch: 40 }, // Bài học kinh nghiệm
-        { wch: 40 }, // Cơ hội nhân rộng
-        { wch: 25 }, // Phòng ban triển khai
-        { wch: 30 }  // Ghi chú
-      ];
-      ws['!cols'] = colWidths;
-      
-      XLSX.utils.book_append_sheet(wb, ws, 'Báo cáo A3');
-      
-      // Xuất file
-      const fileName = `Bao_cao_A3_${reportData.ideaCode || 'unknown'}_${new Date().toISOString().split('T')[0]}.xlsx`;
-      XLSX.writeFile(wb, fileName);
-      
-      setSuccess('File báo cáo A3 đã được tải về thành công!');
+      setSuccess('File báo cáo A3 PDF đã được tải về thành công!');
     } catch (error: any) {
       console.error('Error exporting A3 report:', error);
       setError('Không thể xuất file báo cáo A3. Vui lòng thử lại.');
@@ -294,269 +610,88 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
               />
             </Grid>
 
-            {/* Mô tả vấn đề */}
+            {/* Các trường chính cho báo cáo A3 */}
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold', mt: 2 }}>
-                Mô tả vấn đề
+                Nội dung báo cáo A3
               </Typography>
             </Grid>
             
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Mô tả vấn đề"
-                multiline
-                rows={4}
-                value={reportData.problemDescription || ''}
-                onChange={(e) => handleInputChange('problemDescription', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-
-            {/* Thực trạng hiện tại */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold', mt: 2 }}>
-                Thực trạng hiện tại
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Thực trạng hiện tại"
-                multiline
-                rows={4}
-                value={reportData.currentSituation || ''}
-                onChange={(e) => handleInputChange('currentSituation', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-
-            {/* Nguyên nhân gốc */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold', mt: 2 }}>
-                Nguyên nhân gốc
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Nguyên nhân gốc"
-                multiline
-                rows={4}
-                value={reportData.rootCause || ''}
-                onChange={(e) => handleInputChange('rootCause', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-
-            {/* Tình hình mục tiêu */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold', mt: 2 }}>
-                Tình hình mục tiêu
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Tình hình mục tiêu"
-                multiline
-                rows={4}
-                value={reportData.targetSituation || ''}
-                onChange={(e) => handleInputChange('targetSituation', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-
-            {/* Giải pháp */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold', mt: 2 }}>
-                Giải pháp
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Giải pháp"
-                multiline
-                rows={4}
+                label="Thực trạng (Solution)"
                 value={reportData.solution || ''}
                 onChange={(e) => handleInputChange('solution', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-
-            {/* Kế hoạch triển khai */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold', mt: 2 }}>
-                Kế hoạch triển khai
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Kế hoạch triển khai"
                 multiline
                 rows={4}
-                value={reportData.implementationPlan || ''}
-                onChange={(e) => handleInputChange('implementationPlan', e.target.value)}
                 variant="outlined"
+                placeholder="Mô tả thực trạng hiện tại..."
               />
             </Grid>
             
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Nguồn lực"
-                multiline
-                rows={4}
-                value={reportData.resources || ''}
-                onChange={(e) => handleInputChange('resources', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-
-            {/* Thời gian và trách nhiệm */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Thời gian thực hiện"
-                value={reportData.timeline || ''}
-                onChange={(e) => handleInputChange('timeline', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Người chịu trách nhiệm"
-                value={reportData.responsiblePerson || ''}
-                onChange={(e) => handleInputChange('responsiblePerson', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-
-            {/* Kết quả */}
             <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold', mt: 2 }}>
-                Kết quả
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Kết quả mong đợi"
-                multiline
-                rows={3}
-                value={reportData.expectedResult || ''}
-                onChange={(e) => handleInputChange('expectedResult', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Kết quả thực tế"
-                multiline
-                rows={3}
-                value={reportData.actualResult || ''}
-                onChange={(e) => handleInputChange('actualResult', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-
-            {/* Lợi ích và chi phí */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Lợi ích"
-                multiline
-                rows={3}
+                label="Đối sách (Benefit)"
                 value={reportData.benefit || ''}
                 onChange={(e) => handleInputChange('benefit', e.target.value)}
+                multiline
+                rows={4}
                 variant="outlined"
+                placeholder="Đối sách đề xuất..."
               />
             </Grid>
             
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Chi phí"
+                label="Lợi ích đạt được "
+                value={reportData.benefitOutcome || ''}
+                onChange={(e) => handleInputChange('benefitOutcome', e.target.value)}
                 multiline
                 rows={3}
-                value={reportData.cost || ''}
-                onChange={(e) => handleInputChange('cost', e.target.value)}
                 variant="outlined"
-              />
-            </Grid>
-
-            {/* Rủi ro và theo dõi */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Rủi ro"
-                multiline
-                rows={3}
-                value={reportData.risk || ''}
-                onChange={(e) => handleInputChange('risk', e.target.value)}
-                variant="outlined"
+                placeholder="Lợi ích đạt được..."
               />
             </Grid>
             
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Hành động theo dõi"
-                multiline
-                rows={3}
-                value={reportData.followUpAction || ''}
-                onChange={(e) => handleInputChange('followUpAction', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-
-            {/* Bài học và cơ hội */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Bài học kinh nghiệm"
-                multiline
-                rows={3}
-                value={reportData.lessonsLearned || ''}
-                onChange={(e) => handleInputChange('lessonsLearned', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Cơ hội nhân rộng"
-                multiline
-                rows={3}
+                label="Cơ hội nhân rộng "
                 value={reportData.scalingOpportunity || ''}
                 onChange={(e) => handleInputChange('scalingOpportunity', e.target.value)}
-                variant="outlined"
-              />
-            </Grid>
-
-            {/* Ghi chú */}
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Ghi chú"
                 multiline
                 rows={3}
-                value={reportData.note || ''}
-                onChange={(e) => handleInputChange('note', e.target.value)}
                 variant="outlined"
+                placeholder="Cơ hội nhân rộng..."
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Nguồn lực sử dụng "
+                value={reportData.resourcesUsed || ''}
+                onChange={(e) => handleInputChange('resourcesUsed', e.target.value)}
+                multiline
+                rows={3}
+                variant="outlined"
+                placeholder="Nguồn lực sử dụng..."
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Mô tả tính toán "
+                value={reportData.calculationDescription || ''}
+                onChange={(e) => handleInputChange('calculationDescription', e.target.value)}
+                multiline
+                rows={3}
+                variant="outlined"
+                placeholder="Mô tả tính toán khen thưởng..."
               />
             </Grid>
           </Grid>
@@ -577,7 +712,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
               onClick={handleSave}
               disabled={saving}
               startIcon={saving ? <CircularProgress size={20} /> : <CheckCircleIcon />}
-              sx={{ minWidth: 120 }}
+              sx={{ minWidth: 150 }}
             >
               {saving ? 'Đang lưu...' : 'Lưu báo cáo'}
             </Button>
@@ -588,9 +723,9 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
               onClick={handleExport}
               disabled={loading}
               startIcon={loading ? <CircularProgress size={20} /> : <FileDownloadIcon />}
-              sx={{ minWidth: 120 }}
+              sx={{ minWidth: 200 }}
             >
-              {loading ? 'Đang xuất...' : 'Export báo cáo A3'}
+              {loading ? 'Đang xuất...' : 'Export PDF A3'}
             </Button>
             
             <Button
@@ -599,9 +734,9 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
               onClick={handleSaveAndExport}
               disabled={saving || loading}
               startIcon={saving || loading ? <CircularProgress size={20} /> : <FileDownloadIcon />}
-              sx={{ minWidth: 160 }}
+              sx={{ minWidth: 200 }}
             >
-              {saving || loading ? 'Đang xử lý...' : 'Lưu và Export'}
+              {saving || loading ? 'Đang xử lý...' : 'Lưu và Export PDF'}
             </Button>
           </Box>
         </CardContent>
