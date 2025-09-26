@@ -83,357 +83,415 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
       return new Date(date).toLocaleDateString('vi-VN');
     };
 
+    // Tự động điều chỉnh font size dựa trên độ dài nội dung
+    const getContentStyle = (content: string) => {
+      const length = (content || '').length;
+      if (length > 500) return 'font-size: 9px; line-height: 1.2;';
+      if (length > 300) return 'font-size: 10px; line-height: 1.3;';
+      if (length > 200) return 'font-size: 11px; line-height: 1.4;';
+      return 'font-size: 12px; line-height: 1.4;';
+    };
+
     return `<!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Báo Cáo Cải Tiến - ${idea.topicTitle || idea.ideaCode || 'N/A'}</title>
-  <style>
-    @page {
-      size: A4;
-      margin: 15mm;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      line-height: 1.4;
-      background-color: white;
-      font-size: 13pt;
-    }
-    .container {
-      width: 100%;
-      max-width: none;
-      background-color: white;
-      border: 2px solid #000;
-    }
-    .header-table {
-      width: 100%;
-      border-collapse: collapse;
-      border: none;
-      margin-bottom: 0;
-    }
-    .header-table td {
-      border: 2px solid #000;
-      padding: 8px;
-      vertical-align: middle;
-    }
-    .logo-cell {
-      width: 12%;
-      text-align: center;
-    }
-    .logo {
-      width: 70px;
-      height: 50px;
-      border: 3px solid #0066cc;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-      background: white;
-    }
-    .logo-text {
-      font-size: 16pt;
-      font-weight: bold;
-      color: #cc0066;
-    }
-    .company-cell {
-      width: 58%;
-      text-align: center;
-    }
-    .company-cell h3 {
-      margin: 2px 0;
-      font-size: 16pt;
-      font-weight: bold;
-    }
-    .company-cell h2 {
-      margin: 5px 0;
-      font-size: 18pt;
-      font-weight: bold;
-    }
-    .info-cell {
-      width: 30%;
-      font-size: 13pt;
-      line-height: 1.4;
-      text-align: left;
-    }
-    .info-cell p {
-      margin: 3px 0;
-    }
-    .main-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 0;
-      border: 2px solid #000;
-    }
-    .main-table th, .main-table td {
-      border: 1px solid #000;
-      padding: 8px;
-      text-align: left;
-      vertical-align: top;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-    .main-table th {
-      background-color: #f0f0f0;
-      font-weight: bold;
-      font-size: 14pt;
-    }
-    .main-table td {
-      font-size: 13pt;
-    }
-    .topic-title {
-      width: 18%;
-      font-weight: bold;
-      background-color: #f0f0f0;
-    }
-    .topic-content {
-      width: 32%;
-    }
-    .person-title {
-      width: 18%;
-      font-weight: bold;
-      background-color: #f0f0f0;
-    }
-    .person-content {
-      width: 32%;
-    }
-    .section-header {
-      font-weight: bold;
-      text-align: left;
-      background-color: #e8e8e8;
-      padding: 10px 8px;
-      font-size: 14pt;
-    }
-    .section-content {
-      padding: 12px 8px;
-      min-height: 50px;
-      vertical-align: top;
-      text-align: left;
-      line-height: 1.5;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      white-space: pre-wrap;
-    }
-    .image-header {
-      text-align: center;
-      font-weight: bold;
-      background-color: #f0f0f0;
-      height: 35px;
-      vertical-align: middle;
-      font-size: 14pt;
-    }
-    .image-section {
-      height: 200px;
-      text-align: center;
-      vertical-align: middle;
-      padding: 15px;
-      font-size: 13pt;
-      color: #666;
-    }
-    .signatures-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 0;
-      border: 2px solid #000;
-      border-top: none;
-      page-break-inside: avoid !important;
-    }
-    .signature-row {
-      text-align: center;
-      font-weight: bold;
-      height: 50px;
-      vertical-align: middle;
-      border: 1px solid #000;
-      font-size: 12pt;
-      background-color: #f0f0f0;
-      padding: 8px 4px;
-    }
-    .signature-names {
-      text-align: center;
-      height: 120px;
-      vertical-align: bottom;
-      font-size: 12pt;
-      font-weight: bold;
-      border: 1px solid #000;
-      padding: 15px 4px 15px 4px;
-    }
-    .signatures-table {
-      margin-top: 30px;
-      page-break-inside: avoid;
-    }
-    .full-width-section {
-      background-color: #e8e8e8;
-      border: 2px solid #000;
-      border-top: none;
-    }
-    .department-row th {
-      width: 18%;
-      background-color: #f0f0f0;
-    }
-    .department-row td {
-      width: 82%;
-    }
-    /* Đảm bảo không có page break trong table */
-    .main-table {
-      page-break-inside: avoid;
-    }
-    .section-table {
-      page-break-inside: avoid;
-      margin-bottom: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Báo Cáo Cải Tiến A3 - ${idea.topicTitle || idea.ideaCode || 'N/A'}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #ffffff;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .a3-container {
+            width: 297mm;
+            height: 210mm;
+            background: white;
+            border: 2px solid #000;
+            position: relative;
+            page-break-inside: avoid;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            display: flex;
+            height: 80px;
+            border-bottom: 2px solid #000;
+            flex-shrink: 0;
+        }
+        
+        .logo-section {
+            width: 120px;
+            border-right: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .title-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .title-section h1 {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .info-sections {
+            width: 400px;
+            border-left: 2px solid #000;
+            display: flex;
+            height: 80px;
+        }
+        
+        .info-section {
+            flex: 1;
+            padding: 8px;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        
+        .info-section:first-child {
+            border-right: 2px solid #000;
+        }
+        
+        .info-row {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 2px;
+            flex-wrap: wrap;
+        }
+        
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            font-size: 10px;
+            margin-bottom: 2px;
+            display: block;
+            width: 100%;
+        }
+        
+        .info-value {
+            width: 100%;
+            font-size: 11px;
+            padding: 2px 0;
+            border-bottom: 1px dotted #ccc;
+            min-height: 16px;
+            word-wrap: break-word;
+            overflow: hidden;
+        }
+        
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .left-sidebar {
+            width: 120px;
+            border-right: 2px solid #000;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-section {
+            flex: 1;
+            border-bottom: 2px solid #000;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            text-align: center;
+            padding: 5px;
+        }
+        
+        .sidebar-section:last-child {
+            border-bottom: none;
+        }
+        
+        .content-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 200px 200px auto;
+            gap: 0;
+            overflow: hidden;
+        }
+        
+        .content-section {
+            border: 1px solid #000;
+            padding: 10px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .section-title {
+            position: absolute;
+            top: -1px;
+            left: 10px;
+            background: white;
+            padding: 0 5px;
+            font-weight: bold;
+            font-size: 12px;
+            z-index: 1;
+        }
+        
+        .bottom-row {
+            display: grid;
+            grid-column: 1 / -1;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            min-height: 150px;
+        }
+        
+        .section-content {
+            flex: 1;
+            border: none;
+            resize: none;
+            font-family: inherit;
+            padding: 15px 5px 5px 5px;
+            overflow: hidden;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            text-overflow: ellipsis;
+        }
+        
+        /* Dynamic content styling */
+        .content-thuc-trang {
+            ${getContentStyle(idea.solution || '')}
+        }
+        
+        .content-doi-sach {
+            ${getContentStyle(idea.benefit || '')}
+        }
+        
+        .content-loi-ich {
+            ${getContentStyle(idea.benefitOutcome || '')}
+        }
+        
+        .content-danh-gia {
+            ${getContentStyle(idea.scalingOpportunity || '')}
+        }
+        
+        .content-chi-phi {
+            ${getContentStyle(idea.resourcesUsed || '')}
+        }
+        
+        .content-khen-thuong {
+            ${getContentStyle(idea.calculationDescription || '')}
+        }
+        
+        /* Overflow handling for long content */
+        .overflow-content {
+            page-break-before: always;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            line-height: 1.5;
+            border: 2px solid #000;
+            margin-top: 20px;
+            background: white;
+        }
+        
+        .overflow-title {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .a3-container {
+                margin: 0;
+                border: 1px solid #000;
+            }
+            
+            .overflow-content {
+                margin: 0;
+                margin-top: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="a3-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-section">
+                ${logoDataUrl
+                  ? `<img src="${logoDataUrl}" alt="Logo" style="max-width: 90px; max-height: 60px;" />`
+                  : 'LOGO'}
+            </div>
+            <div class="title-section">
+                <div>
+                    <h1>CÔNG TY TNHH THẮNG LỢI</h1>
+                    <h1>BÁO CÁO CẢI TIẾN A3</h1>
+                </div>
+            </div>
+            <div class="info-sections">
+                <!-- Ô 1: Tên đề tài và Mã ý tưởng -->
+                <div class="info-section">
+                    <div class="info-row">
+                        <span class="info-label">TÊN ĐỀ TÀI:</span>
+                        <div class="info-value">${idea.topicTitle || idea.idea || 'N/A'}</div>
+                    </div>
+                    
+                </div>
+                
+                <!-- Ô 2: Người lập, Ngày lập, Đơn vị -->
+                <div class="info-section">
+                    <div class="info-row">
+                        <span class="info-label">MÃ Ý TƯỞNG: ${idea.ideaCode || 'N/A'}</span>
+                        
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Người lâp:  ${idea.fullName || 'N/A'}</span>
+                        
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Ngày lập: ${formatDate(idea.submissionDate)}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Đơn vị: ${idea.implementationDepartment || idea.department || 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<div class="container">
-  <!-- Header -->
-  <table class="header-table">
-    <tr>
-       <td class="logo-cell">
-         ${logoDataUrl
-           ? `<img src="${logoDataUrl}" alt="Logo" style="max-width: 90px; max-height: 60px; display:block; margin: 0 auto;" />`
-           : `<div class=\"logo\"><span class=\"logo-text\">VICO</span></div>`}
-       </td>
-      <td class="company-cell">
-        <h3>CÔNG TY TNHH THẮNG LỢI</h3>
-        <h2>BÁO CÁO CẢI TIẾN</h2>
-      </td>
-      <td class="info-cell">
-        <p><strong>Mã hiệu:</strong> BM.05.04</p>
-        <p><strong>Đơn vị thực hiện:</strong> ${idea.implementationDepartment || idea.department || 'Ban Cải tiến'}</p>
-        <p><strong>Số:</strong> ${idea.ideaCode || 'N/A'}</p>
-        <p><strong>Ngày lập:</strong> ${formatDate(idea.submissionDate)}</p>
-      </td>
-    </tr>
-  </table>
-  
-  <!-- Main Content -->
-  <table class="main-table section-table">
-    <tr>
-      <th class="topic-title">Tên đề tài</th>
-      <td class="topic-content">${idea.topicTitle || idea.idea || 'N/A'}</td>
-    </tr>
-    <tr class="department-row">
-      <th>Bộ phận/ Khu vực</th>
-      <td colspan="3">${idea.implementationDepartment || idea.department || 'N/A'}</td>
-      <th class="person-title">Người đề xuất</th>
-      <td class="person-content">${idea.fullName || 'N/A'}</td>
-    </tr>
-  </table>
-  
-  <!-- Section I -->
-  <table class="main-table section-table">
-    <tr>
-      <td class="section-header">I. Mô tả trước cải tiến:</td>
-    </tr>
-    <tr>
-      <td class="section-content">
-        ${idea.solution || 'N/A'}
-      </td>
-    </tr>
-  </table>
-  
-  <!-- Section II -->
-  <table class="main-table section-table">
-    <tr>
-      <td class="section-header">II. Mô tả đối sách đã triển khai:</td>
-    </tr>
-    <tr>
-      <td class="section-content">
-        ${idea.benefit || 'N/A'}
-      </td>
-    </tr>
-  </table>
-  
-  <!-- Section III - Images -->
-  <table class="main-table section-table">
-    <tr>
-      <td colspan="2" class="section-header">III. Hình ảnh & chú thích quan trọng</td>
-    </tr>
-    <tr>
-      <th class="image-header" style="width: 50%;">TRƯỚC</th>
-      <th class="image-header" style="width: 50%;">SAU</th>
-    </tr>
-    <tr>
-      <td class="image-section">
-        [Hình ảnh trước cải tiến]<br>
-        <em>Chú thích hình ảnh trước cải tiến</em>
-      </td>
-      <td class="image-section">
-        [Hình ảnh sau cải tiến]<br>
-        <em>Chú thích hình ảnh sau cải tiến</em>
-      </td>
-    </tr>
-  </table>
-  
-  <!-- Section IV -->
-  <table class="main-table section-table">
-    <tr>
-      <td class="section-header">IV. Nguồn lực sử dụng & Chi phí</td>
-    </tr>
-    <tr>
-      <td class="section-content">${idea.resourcesUsed || 'N/A'}</td>
-    </tr>
-  </table>
-  
-  <!-- Section V -->
-  <table class="main-table section-table">
-    <tr>
-      <td class="section-header">V. Lợi ích đạt được</td>
-    </tr>
-    <tr>
-      <td class="section-content">
-        ${idea.benefitOutcome || 'N/A'}
-      </td>
-    </tr>
-  </table>
-  
-  <!-- Section VI -->
-  <table class="main-table section-table">
-    <tr>
-      <td class="section-header">VI. Xem xét cơ hội nhân rộng phát triển</td>
-    </tr>
-    <tr>
-      <td class="section-content">
-        ${idea.scalingOpportunity || 'N/A'}
-      </td>
-    </tr>
-  </table>
-  
-  <!-- Section VII -->
-  <table class="main-table section-table">
-    <tr>
-      <td class="section-header">VII. Tính toán giá trị kinh tế của cải tiến</td>
-    </tr>
-    <tr>
-      <td class="section-content">${idea.calculationDescription || 'N/A'}</td>
-    </tr>
-  </table>
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar -->
+            <div class="left-sidebar">
+                <div class="sidebar-section">
+                    NGƯỜI LẬP
+                </div>
+                <div class="sidebar-section">
+                    P. CẢI TIẾN
+                </div>
+                <div class="sidebar-section">
+                    GĐ KT
+                </div>
+                <div class="sidebar-section">
+                    GĐ ĐH
+                </div>
+            </div>
 
-  <!-- Signatures -->
-  <div style="margin-top: 30px; page-break-inside: avoid;">
-    <table class="signatures-table">
-      <tr>
-        <td class="signature-row" style="width: 25%;">GIÁM ĐỐC</td>
-        <td class="signature-row" style="width: 25%;">XEM XÉT</td>
-        <td class="signature-row" style="width: 25%;">TRƯỞNG PHÒNG CẢI TIẾN</td>
-        <td class="signature-row" style="width: 25%;">THƯ KÝ CẢI TIẾN</td>
-      </tr>
-      <tr>
-        <td class="signature-names">DƯƠNG VĂN BÌNH</td>
-        <td class="signature-names">PHÙNG GIA CƯỜNG</td>
-        <td class="signature-names">TRẦN VIỆT TIỆP</td>
-        <td class="signature-names">HOÀNG NGỌC HÀ</td>
-      </tr>
-    </table>
-  </div>
-</div>
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Top Row -->
+                <div class="content-section">
+                    <div class="section-title">THỰC TRẠNG</div>
+                    <div class="section-content content-thuc-trang">${(idea.solution || 'Mô tả thực trạng hiện tại...').substring(0, 800)}${(idea.solution || '').length > 800 ? '...' : ''}</div>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-title">ĐỐI SÁCH</div>
+                    <div class="section-content content-doi-sach">${(idea.benefit || 'Đối sách đề xuất...').substring(0, 800)}${(idea.benefit || '').length > 800 ? '...' : ''}</div>
+                </div>
 
+                <!-- Middle Row -->
+                <div class="content-section">
+                    <div class="section-title">HÌNH ẢNH TRƯỚC</div>
+                    <div class="section-content">[Hình ảnh trước cải tiến]<br><em>Chú thích hình ảnh trước cải tiến</em></div>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-title">HÌNH ẢNH SAU</div>
+                    <div class="section-content">[Hình ảnh sau cải tiến]<br><em>Chú thích hình ảnh sau cải tiến</em></div>
+                </div>
+
+                <!-- Bottom Row -->
+                <div class="bottom-row">
+                    <div class="content-section">
+                        <div class="section-title">LỢI ÍCH</div>
+                        <div class="section-content content-loi-ich">${(idea.benefitOutcome || 'Lợi ích đạt được...').substring(0, 300)}${(idea.benefitOutcome || '').length > 300 ? '...' : ''}</div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <div class="section-title">ĐÁNH GIÁ</div>
+                        <div class="section-content content-danh-gia">${(idea.scalingOpportunity || 'Đánh giá kết quả...').substring(0, 300)}${(idea.scalingOpportunity || '').length > 300 ? '...' : ''}</div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <div class="section-title">CHI PHÍ</div>
+                        <div class="section-content content-chi-phi">${(idea.resourcesUsed || 'Chi phí thực hiện...').substring(0, 300)}${(idea.resourcesUsed || '').length > 300 ? '...' : ''}</div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <div class="section-title">KHEN THƯỞNG</div>
+                        <div class="section-content content-khen-thuong">${(idea.calculationDescription || 'Đề xuất khen thưởng...').substring(0, 300)}${(idea.calculationDescription || '').length > 300 ? '...' : ''}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Overflow content for long text (will be on separate pages if needed) -->
+    ${generateOverflowPages(idea)}
 </body>
 </html>`;
+  };
+
+  // Helper function để tạo trang phụ cho nội dung dài
+  const generateOverflowPages = (idea: Idea): string => {
+    let overflowContent = '';
+    
+    const sections = [
+      { title: 'THỰC TRẠNG (tiếp theo)', content: idea.solution, limit: 800 },
+      { title: 'ĐỐI SÁCH (tiếp theo)', content: idea.benefit, limit: 800 },
+      { title: 'LỢI ÍCH (tiếp theo)', content: idea.benefitOutcome, limit: 300 },
+      { title: 'ĐÁNH GIÁ (tiếp theo)', content: idea.scalingOpportunity, limit: 300 },
+      { title: 'CHI PHÍ (tiếp theo)', content: idea.resourcesUsed, limit: 300 },
+      { title: 'KHEN THƯỞNG (tiếp theo)', content: idea.calculationDescription, limit: 300 }
+    ];
+    
+    sections.forEach(section => {
+      if (section.content && section.content.length > section.limit) {
+        const remainingContent = section.content.substring(section.limit);
+        overflowContent += `
+          <div class="overflow-content">
+            <div class="overflow-title">${section.title}</div>
+            <div>${remainingContent}</div>
+          </div>
+        `;
+      }
+    });
+    
+    return overflowContent;
   };
 
   const createPdfFromHtml = async (htmlContent: string, filename: string) => {
@@ -441,107 +499,101 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
     container.style.position = 'absolute';
     container.style.left = '-10000px';
     container.style.top = '0';
-    container.style.width = '1200px';
+    container.style.width = '297mm';
     container.style.background = '#ffffff';
     container.innerHTML = htmlContent;
     document.body.appendChild(container);
 
     try {
       // Đợi DOM render hoàn toàn
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        allowTaint: false,
-        foreignObjectRendering: false,
-        width: 1200,
-        height: container.scrollHeight, // Sử dụng scrollHeight thực tế
-        scrollX: 0,
-        scrollY: 0,
-        onclone: (clonedDoc) => {
-          const style = clonedDoc.createElement('style');
-          style.innerHTML = `
-            * { 
-              font-family: Arial, sans-serif !important;
-              background-color: white !important;
-            }
-            body {
-              height: auto !important;
-              overflow: visible !important;
-            }
-          `;
-          clonedDoc.head.appendChild(style);
-        }
-      });
-
-      const pdf = new jsPDF('p', 'pt', 'a4');
+      // Sử dụng A3 landscape orientation
+      const pdf = new jsPDF('l', 'mm', 'a3'); // landscape A3
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       
-      const margin = 40; // Tăng margin một chút
-      const contentWidth = pageWidth - (margin * 2);
-      const contentHeight = pageHeight - (margin * 2);
+      // Tìm tất cả các phần tử cần render
+      const mainContainer = container.querySelector('.a3-container') as HTMLElement;
+      const overflowContents = container.querySelectorAll('.overflow-content');
       
-      // Tính tỷ lệ để fit width
-      const scale = contentWidth / canvas.width;
-      const scaledHeight = canvas.height * scale;
+      // Render trang chính (A3 form)
+      if (mainContainer) {
+        const canvas = await html2canvas(mainContainer, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          allowTaint: false,
+          foreignObjectRendering: false,
+          width: Math.floor(297 * 3.78), // Convert mm to px (297mm = A3 width)
+          height: Math.floor(210 * 3.78), // Convert mm to px (210mm = A3 height)
+          onclone: (clonedDoc) => {
+            const style = clonedDoc.createElement('style');
+            style.innerHTML = `
+              * { 
+                font-family: Arial, sans-serif !important;
+                background-color: white !important;
+              }
+            `;
+            clonedDoc.head.appendChild(style);
+          }
+        });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        
+        // Fit content to page with some margin
+        const margin = 5; // 5mm margin
+        const availableWidth = pageWidth - (margin * 2);
+        const availableHeight = pageHeight - (margin * 2);
+        
+        const scaleWidth = availableWidth / (canvas.width / 3.78);
+        const scaleHeight = availableHeight / (canvas.height / 3.78);
+        const scale = Math.min(scaleWidth, scaleHeight);
+        
+        const finalWidth = (canvas.width / 3.78) * scale;
+        const finalHeight = (canvas.height / 3.78) * scale;
+        
+        const xOffset = (pageWidth - finalWidth) / 2;
+        const yOffset = (pageHeight - finalHeight) / 2;
+        
+        pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
+      }
       
-      // Tính chiều cao mỗi trang theo canvas pixels
-      const pageHeightInCanvasPx = contentHeight / scale;
-      
-      let currentY = 0;
-      let pageNumber = 0;
-      
-      while (currentY < canvas.height) {
-        if (pageNumber > 0) {
-          pdf.addPage();
-        }
+      // Render các trang overflow nếu có
+      for (let i = 0; i < overflowContents.length; i++) {
+        const overflowElement = overflowContents[i] as HTMLElement;
         
-        // Tăng buffer để đảm bảo signature không bị cắt
-        const remainingHeight = canvas.height - currentY;
-        let sliceHeight = Math.min(pageHeightInCanvasPx, remainingHeight);
+        const canvas = await html2canvas(overflowElement, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          allowTaint: false,
+          foreignObjectRendering: false,
+        });
+
+        pdf.addPage();
         
-        // Nếu còn ít content và có signature table, đảm bảo đủ không gian
-        if (remainingHeight > 0 && remainingHeight < pageHeightInCanvasPx * 0.3) {
-          sliceHeight = remainingHeight;
-        }
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const margin = 10;
+        const contentWidth = pageWidth - (margin * 2);
+        const contentHeight = pageHeight - (margin * 2);
         
-        // Tạo canvas cho trang hiện tại
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = sliceHeight;
-        const ctx = pageCanvas.getContext('2d');
+        const scale = Math.min(
+          contentWidth / (canvas.width / 3.78),
+          contentHeight / (canvas.height / 3.78)
+        );
         
-        if (ctx) {
-          // Vẽ background trắng
-          ctx.fillStyle = 'white';
-          ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-          
-          // Vẽ slice của trang
-          ctx.drawImage(
-            canvas,
-            0, currentY, // source x, y
-            canvas.width, sliceHeight, // source width, height
-            0, 0, // dest x, y
-            canvas.width, sliceHeight // dest width, height
-          );
-        }
+        const finalWidth = (canvas.width / 3.78) * scale;
+        const finalHeight = (canvas.height / 3.78) * scale;
         
-        // Convert to image và add vào PDF
-        const imgData = pageCanvas.toDataURL('image/jpeg', 0.95);
         pdf.addImage(
           imgData, 
           'JPEG', 
           margin, 
           margin, 
-          contentWidth, 
-          sliceHeight * scale
+          finalWidth, 
+          finalHeight
         );
-        
-        currentY += sliceHeight;
-        pageNumber++;
       }
 
       pdf.save(filename.replace(/\s+/g, '_'));
@@ -567,12 +619,12 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
       if (selectedIdeasData.length === 1) {
         const idea = selectedIdeasData[0];
         const htmlContent = generateHTMLReport(idea);
-        const filename = `Bao_Cao_Cai_Tien_${idea.ideaCode || idea._id}.pdf`;
+        const filename = `Bao_Cao_Cai_Tien_A3_${idea.ideaCode || idea._id}.pdf`;
         await createPdfFromHtml(htmlContent, filename);
       } else {
         for (const idea of selectedIdeasData) {
           const htmlContent = generateHTMLReport(idea);
-          const filename = `Bao_Cao_Cai_Tien_${idea.ideaCode || idea._id}.pdf`;
+          const filename = `Bao_Cao_Cai_Tien_A3_${idea.ideaCode || idea._id}.pdf`;
           await createPdfFromHtml(htmlContent, filename);
           // Delay giữa các file để tránh lỗi
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -591,12 +643,12 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        Export Báo Cáo Cải Tiến
+        Export Báo Cáo Cải Tiến A3
       </DialogTitle>
       <DialogContent>
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Chọn các ý tưởng cần export báo cáo. Mỗi ý tưởng sẽ được export thành một file PDF riêng biệt.
+            Chọn các ý tưởng cần export báo cáo theo format A3. Nội dung dài sẽ tự động được chia sang trang tiếp theo.
           </Typography>
           
           <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
@@ -645,7 +697,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
 
         {selectedIdeas.length > 0 && (
           <Alert severity="info" sx={{ mt: 2 }}>
-            Sẽ tạo {selectedIdeas.length} file báo cáo PDF riêng biệt.
+            Sẽ tạo {selectedIdeas.length} file báo cáo PDF A3. Nội dung dài sẽ được tự động chia trang hợp lý.
           </Alert>
         )}
       </DialogContent>
@@ -660,7 +712,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
           disabled={selectedIdeas.length === 0 || loading}
           startIcon={loading ? <CircularProgress size={20} /> : null}
         >
-          {loading ? 'Đang export PDF...' : 'Export PDF'}
+          {loading ? 'Đang export PDF A3...' : 'Export PDF A3'}
         </Button>
       </DialogActions>
     </Dialog>

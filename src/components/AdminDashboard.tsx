@@ -868,7 +868,7 @@ const AdminDashboard: React.FC = () => {
         </div>
       )
     },
->>>>>>> BaocaoA3
+
     {
       field: 'scalingOpportunity',
       headerName: 'Cơ hội nhân rộng phát triển',
