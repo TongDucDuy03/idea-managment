@@ -15,6 +15,12 @@ export interface IIdea extends Document {
   note?: string;
   benefitValue?: number; // Giá trị làm lợi (VND)
   rewardAmount?: number; // Tiền thưởng (VND)
+  // New fields
+  benefitOutcome?: string; // Lợi ích mang lại (mô tả)
+  resourcesUsed?: string; // Nguồn lực sử dụng
+  calculationDescription?: string; // Mô tả cách tính
+  topicTitle?: string; // Tên đề tài
+  scalingOpportunity?: string; // Cơ hội nhân rộng phát triển
 }
 
 const IdeaSchema: Schema = new Schema({
@@ -39,7 +45,13 @@ const IdeaSchema: Schema = new Schema({
   implementationDepartment: { type: String, required: false },
   note: { type: String, required: false },
   benefitValue: { type: Number, required: false, default: 0 },
-  rewardAmount: { type: Number, required: false, default: 0 }
+  rewardAmount: { type: Number, required: false, default: 0 },
+  // New fields
+  benefitOutcome: { type: String, required: false },
+  resourcesUsed: { type: String, required: false },
+  calculationDescription: { type: String, required: false },
+  topicTitle: { type: String, required: false },
+  scalingOpportunity: { type: String, required: false }
 });
 
 export default mongoose.model<IIdea>('Idea', IdeaSchema); 

@@ -27,6 +27,7 @@ import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { Idea } from '../types';
 import IdeaDialog from './IdeaDialog';
+import ExportReportDialog from './ExportReportDialog';
 import api from '../api/config';
 
 const AdminDashboard: React.FC = () => {
@@ -47,6 +48,7 @@ const AdminDashboard: React.FC = () => {
   const [ideaTextFilter, setIdeaTextFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -399,6 +401,11 @@ const AdminDashboard: React.FC = () => {
       'Ý tưởng': idea.idea,
       'Thực trạng': idea.solution,
       'Giải pháp': idea.benefit ,
+      'Lợi ích mang lại': (idea as any).benefitOutcome || '',
+      'Nguồn lực sử dụng': (idea as any).resourcesUsed || '',
+      'Mô tả cách tính': (idea as any).calculationDescription || '',
+      'Tên đề tài': (idea as any).topicTitle || '',
+      'Cơ hội nhân rộng phát triển': (idea as any).scalingOpportunity || '',
       'Quyết định phê duyệt': idea.status,
       'Trạng thái triển khai': (idea as any).implementationStatus || 'Đề xuất mới',
       'Phòng ban triển khai': (idea as any).implementationDepartment || '',
@@ -457,12 +464,14 @@ const AdminDashboard: React.FC = () => {
 
     if (!topScrollElement || !dataGridElement) return;
 
-
-    // Tính tổng chiều rộng của các cột đang hiển thị
-    const totalWidth = columns
-      .filter(c => columnVisibilityModel[c.field] !== false)
-      .reduce((sum, c) => sum + (c.width ? c.width : 150), 0);
-
+    // Tính tổng chiều rộng của các cột (hardcode để tránh lỗi dependency)
+    const totalWidth = 
+  150 + 200 + 200 + 
+  300 + 300 + 300 + 300 + 300 + 300 + 300 + 300 + 
+  180 + 180 + 180 + 
+  200 + 200 + 
+  180 + 180 + 
+  120; // Tổng chiều rộng các cột
     
     // Cập nhật chiều rộng của thanh cuộn trên
     const invisibleContent = topScrollElement.querySelector('div');
@@ -772,7 +781,6 @@ const AdminDashboard: React.FC = () => {
 
     },
     {
-
       field: 'benefitOutcome',
       headerName: 'Lợi ích mang lại',
       width: 300,
@@ -838,7 +846,29 @@ const AdminDashboard: React.FC = () => {
         </div>
       )
     },
-    
+    {
+      field: 'topicTitle',
+      headerName: 'Tên đề tài',
+      width: 300,
+      align: 'center',
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{
+          whiteSpace: 'normal',
+          wordBreak: 'break-word',
+          width: '100%',
+          textAlign: 'left',
+          maxHeight: '180px',
+          overflowY: 'auto',
+          paddingRight: '8px',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#ccc transparent'
+        }}>
+          {(params.row as any).topicTitle || ''}
+        </div>
+      )
+    },
+>>>>>>> BaocaoA3
     {
       field: 'scalingOpportunity',
       headerName: 'Cơ hội nhân rộng phát triển',
@@ -862,7 +892,6 @@ const AdminDashboard: React.FC = () => {
       )
     },
     {
-
       field: 'status',
       headerName: 'Quyết định phê duyệt',
       width: 180,
@@ -1262,6 +1291,29 @@ const AdminDashboard: React.FC = () => {
                     Xuất Excel
                   </Button>
                   <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<FileDownloadIcon />}
+                    onClick={() => setIsExportDialogOpen(true)}
+                    sx={{
+                      py: 1.0,
+                      px: 2.0,
+                      fontSize: '0.95rem',
+                      fontWeight: 'bold',
+                      textTransform: 'none',
+                      boxShadow: 2,
+                      whiteSpace: 'nowrap',
+                      minWidth: 'max-content',
+                      '&:hover': {
+                        boxShadow: 4,
+                        transform: 'translateY(-2px)',
+                        transition: 'all 0.2s'
+                      }
+                    }}
+                  >
+                    Export Báo Cáo
+                  </Button>
+                  <Button
                     variant="outlined"
                     color="error"
                     onClick={handleLogout}
@@ -1402,6 +1454,11 @@ const AdminDashboard: React.FC = () => {
         onSave={handleSave}
         idea={selectedIdea || undefined}
         isEdit={isEditMode}
+      />
+      <ExportReportDialog
+        open={isExportDialogOpen}
+        onClose={() => setIsExportDialogOpen(false)}
+        ideas={filteredIdeas}
       />
     </Container>
   );

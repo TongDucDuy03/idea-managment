@@ -88,7 +88,12 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
     status: 'pending',
     implementationStatus: 'Đề xuất mới',
     benefitValue: 0,
-    rewardAmount: 0
+    rewardAmount: 0,
+    benefitOutcome: '',
+    resourcesUsed: '',
+    calculationDescription: '',
+    topicTitle: '',
+    scalingOpportunity: ''
   });
   const [error, setError] = useState('');
 
@@ -106,7 +111,12 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         status: idea.status || 'pending',
         implementationStatus: idea.implementationStatus || 'Đề xuất mới',
         benefitValue: idea.benefitValue || 0,
-        rewardAmount: idea.rewardAmount || 0
+        rewardAmount: idea.rewardAmount || 0,
+        benefitOutcome: (idea as any).benefitOutcome || '',
+        resourcesUsed: (idea as any).resourcesUsed || '',
+        calculationDescription: (idea as any).calculationDescription || '',
+        topicTitle: (idea as any).topicTitle || '',
+        scalingOpportunity: (idea as any).scalingOpportunity || ''
       });
     } else {
       setFormData({
@@ -120,7 +130,12 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         status: 'pending',
         implementationStatus: 'Đề xuất mới',
         benefitValue: 0,
-        rewardAmount: 0
+        rewardAmount: 0,
+        benefitOutcome: '',
+        resourcesUsed: '',
+        calculationDescription: '',
+        topicTitle: '',
+        scalingOpportunity: ''
       });
     }
   }, [idea]);
@@ -218,6 +233,52 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               multiline
               rows={6}
             />
+            {/* New fields */}
+            <TextField
+              name="benefitOutcome"
+              label="Lợi ích mang lại"
+              value={(formData as any).benefitOutcome || ''}
+              onChange={handleTextChange}
+              fullWidth
+              multiline
+              rows={4}
+            />
+            <TextField
+              name="resourcesUsed"
+              label="Nguồn lực sử dụng"
+              value={(formData as any).resourcesUsed || ''}
+              onChange={handleTextChange}
+              fullWidth
+              multiline
+              rows={4}
+            />
+            <TextField
+              name="calculationDescription"
+              label="Mô tả cách tính"
+              value={(formData as any).calculationDescription || ''}
+              onChange={handleTextChange}
+              fullWidth
+              multiline
+              rows={4}
+            />
+            <TextField
+              name="topicTitle"
+              label="Tên đề tài"
+              value={(formData as any).topicTitle || ''}
+              onChange={handleTextChange}
+              fullWidth
+              multiline
+              rows={2}
+            />
+            <TextField
+              name="scalingOpportunity"
+              label="Cơ hội nhân rộng phát triển"
+              value={(formData as any).scalingOpportunity || ''}
+              onChange={handleTextChange}
+              fullWidth
+              multiline
+              rows={4}
+            />
             <FormControl fullWidth>
               <InputLabel>Quyết định phê duyệt</InputLabel>
               <Select
@@ -298,17 +359,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
             />
             {isEdit && (
               <FormControl fullWidth>
-                {/* <InputLabel>Trạng thái</InputLabel>
-                <Select
-                  name="status"
-                  value={formData.status || 'pending'}
-                  onChange={handleSelectChange}
-                  label="Trạng thái"
-                >
-                  <MenuItem value="pending">Chưa xem xét</MenuItem>
-                  <MenuItem value="rejected">Không khen thưởng</MenuItem>
-                  <MenuItem value="rewarded">Đã khen thưởng</MenuItem>
-                </Select> */}
+                {/* Additional edit-only controls can be added here */}
               </FormControl>
             )}
           </Box>
