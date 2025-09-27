@@ -18,7 +18,8 @@ import {
   Chip,
   CircularProgress,
   ToggleButton,
-  ToggleButtonGroup
+  ToggleButtonGroup,
+  TextField
 } from '@mui/material';
 import {
   Chart as ChartJS,
@@ -70,6 +71,8 @@ const StatisticsDashboard: React.FC = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [comparisonType, setComparisonType] = useState<'month' | 'quarter' | 'year' | 'none'>('none');
   const [showComparison, setShowComparison] = useState(false);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   // Comparison period selections
   const now = new Date();
   const currentYearInit = now.getFullYear();
@@ -121,24 +124,91 @@ const StatisticsDashboard: React.FC = () => {
     navigate('/admin');
   };
 
-  // Filter data based on time range and department
+  const handleDateFromChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDateFrom(event.target.value);
+  };
+
+  const handleDateToChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDateTo(event.target.value);
+  };
+
+  const handleQuickDateFilter = (type: 'today' | 'week' | 'month' | 'quarter' | 'year') => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    switch (type) {
+      case 'today':
+        setDateFrom(todayStr);
+        setDateTo(todayStr);
+        break;
+      case 'week':
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        setDateFrom(weekStart.toISOString().split('T')[0]);
+        setDateTo(todayStr);
+        break;
+      case 'month':
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        setDateFrom(monthStart.toISOString().split('T')[0]);
+        setDateTo(todayStr);
+        break;
+      case 'quarter':
+        const quarterStart = new Date(today.getFullYear(), Math.floor(today.getMonth() / 3) * 3, 1);
+        setDateFrom(quarterStart.toISOString().split('T')[0]);
+        setDateTo(todayStr);
+        break;
+      case 'year':
+        const yearStart = new Date(today.getFullYear(), 0, 1);
+        setDateFrom(yearStart.toISOString().split('T')[0]);
+        setDateTo(todayStr);
+        break;
+    }
+  };
+
+  const handleClearDateFilter = () => {
+    setDateFrom('');
+    setDateTo('');
+  };
+
+  const isDateRangeValid = () => {
+    if (!dateFrom || !dateTo) return true;
+    return new Date(dateFrom) <= new Date(dateTo);
+  };
+
+  // Filter data based on time range, department, and custom date range
   const getFilteredIdeas = () => {
     let filtered = [...ideas];
 
-    // Filter by time range
-    const now = new Date();
-    if (timeRange === 'week') {
-      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      filtered = filtered.filter(idea => new Date(idea.submissionDate) >= weekAgo);
-    } else if (timeRange === 'month') {
-      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      filtered = filtered.filter(idea => new Date(idea.submissionDate) >= monthAgo);
-    } else if (timeRange === 'quarter') {
-      const quarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-      filtered = filtered.filter(idea => new Date(idea.submissionDate) >= quarterAgo);
-    } else if (timeRange === 'year') {
-      const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-      filtered = filtered.filter(idea => new Date(idea.submissionDate) >= yearAgo);
+    // Filter by custom date range (priority over timeRange)
+    if (dateFrom && dateTo) {
+      const fromMs = new Date(dateFrom).setHours(0, 0, 0, 0);
+      const toMs = new Date(dateTo).setHours(23, 59, 59, 999);
+      filtered = filtered.filter(idea => {
+        const submissionMs = new Date(idea.submissionDate).getTime();
+        return submissionMs >= fromMs && submissionMs <= toMs;
+      });
+    } else if (dateFrom) {
+      const fromMs = new Date(dateFrom).setHours(0, 0, 0, 0);
+      filtered = filtered.filter(idea => new Date(idea.submissionDate).getTime() >= fromMs);
+    } else if (dateTo) {
+      const toMs = new Date(dateTo).setHours(23, 59, 59, 999);
+      filtered = filtered.filter(idea => new Date(idea.submissionDate).getTime() <= toMs);
+    } else {
+      // Filter by time range (only if no custom date range)
+      const now = new Date();
+      if (timeRange === 'week') {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        filtered = filtered.filter(idea => new Date(idea.submissionDate) >= weekAgo);
+      } else if (timeRange === 'month') {
+        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        filtered = filtered.filter(idea => new Date(idea.submissionDate) >= monthAgo);
+      } else if (timeRange === 'quarter') {
+        const quarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        filtered = filtered.filter(idea => new Date(idea.submissionDate) >= quarterAgo);
+      } else if (timeRange === 'year') {
+        const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        filtered = filtered.filter(idea => new Date(idea.submissionDate) >= yearAgo);
+      }
     }
 
     // Filter by department
@@ -734,6 +804,7 @@ const StatisticsDashboard: React.FC = () => {
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
                 label="Khoảng thời gian"
+                disabled={!!(dateFrom || dateTo)}
               >
                 <MenuItem value="all">Tất cả</MenuItem>
                 <MenuItem value="week">7 ngày qua</MenuItem>
@@ -756,6 +827,87 @@ const StatisticsDashboard: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
+
+            {/* Custom Date Range Filter */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold' }}>
+                Lọc theo ngày tùy chỉnh
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                <Button
+                  size="small"
+                  variant={dateFrom && dateTo && dateFrom === dateTo && dateFrom === new Date().toISOString().split('T')[0] ? "contained" : "outlined"}
+                  onClick={() => handleQuickDateFilter('today')}
+                  sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
+                >
+                  Hôm nay
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => handleQuickDateFilter('week')}
+                  sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
+                >
+                  Tuần này
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => handleQuickDateFilter('month')}
+                  sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
+                >
+                  Tháng này
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => handleQuickDateFilter('quarter')}
+                  sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
+                >
+                  Quý này
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => handleQuickDateFilter('year')}
+                  sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
+                >
+                  Năm nay
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="secondary"
+                  onClick={handleClearDateFilter}
+                  sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
+                >
+                  Xóa
+                </Button>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <TextField
+                  label="Từ ngày"
+                  type="date"
+                  size="small"
+                  value={dateFrom}
+                  onChange={handleDateFromChange}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 150 }}
+                  helperText="Chọn ngày bắt đầu"
+                />
+                <TextField
+                  label="Đến ngày"
+                  type="date"
+                  size="small"
+                  value={dateTo}
+                  onChange={handleDateToChange}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 150 }}
+                  helperText="Chọn ngày kết thúc"
+                  error={!isDateRangeValid()}
+                />
+              </Box>
+            </Box>
 
             <ToggleButtonGroup
               value={comparisonType}
@@ -891,6 +1043,24 @@ const StatisticsDashboard: React.FC = () => {
           </Box>
         </CardContent>
       </Card>
+
+      {/* Date Filter Information */}
+      {(dateFrom || dateTo) && (
+        <Card elevation={2} sx={{ mb: 3, backgroundColor: '#f8f9fa' }}>
+          <CardContent sx={{ py: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="body1" color="text.secondary">
+                <strong>Bộ lọc ngày tháng đang áp dụng:</strong> 
+                {dateFrom ? ` Từ ${new Date(dateFrom).toLocaleDateString('vi-VN')}` : ' Từ đầu'} 
+                {dateTo ? ` đến ${new Date(dateTo).toLocaleDateString('vi-VN')}` : ' đến hiện tại'}
+              </Typography>
+              <Typography variant="body2" color="primary" sx={{ fontWeight: 'bold' }}>
+                Hiển thị {filteredIdeas.length} / {ideas.length} ý tưởng
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>

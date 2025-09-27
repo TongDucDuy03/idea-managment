@@ -261,6 +261,57 @@ const AdminDashboard: React.FC = () => {
     setPaginationModel(prev => ({ ...prev, page: 0 }));
   };
 
+  const handleClearAllFilters = () => {
+    setStatusFilter([]);
+    setImplementationStatusFilter([]);
+    setDepartmentFilter([]);
+    setImplementationDepartmentFilter([]);
+    setIdeaCodeFilter('');
+    setFullNameFilter('');
+    setIdeaTextFilter('');
+    setDateFrom('');
+    setDateTo('');
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  const isDateRangeValid = () => {
+    if (!dateFrom || !dateTo) return true;
+    return new Date(dateFrom) <= new Date(dateTo);
+  };
+
+  const handleQuickDateFilter = (type: 'today' | 'week' | 'month' | 'quarter' | 'year') => {
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    switch (type) {
+      case 'today':
+        setDateFrom(todayStr);
+        setDateTo(todayStr);
+        break;
+      case 'week':
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        setDateFrom(weekStart.toISOString().split('T')[0]);
+        setDateTo(todayStr);
+        break;
+      case 'month':
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        setDateFrom(monthStart.toISOString().split('T')[0]);
+        setDateTo(todayStr);
+        break;
+      case 'quarter':
+        const quarterStart = new Date(today.getFullYear(), Math.floor(today.getMonth() / 3) * 3, 1);
+        setDateFrom(quarterStart.toISOString().split('T')[0]);
+        setDateTo(todayStr);
+        break;
+      case 'year':
+        const yearStart = new Date(today.getFullYear(), 0, 1);
+        setDateFrom(yearStart.toISOString().split('T')[0]);
+        setDateTo(todayStr);
+        break;
+    }
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
 
   const handleStatusChange = async (id: string, status: 'pending' | 'rejected' | 'noted' | 'approved') => {
     try {
@@ -1115,24 +1166,73 @@ const AdminDashboard: React.FC = () => {
                       </MenuItem>
                     ))}
                   </Select>
-                  <TextField
-                    label="Từ ngày"
-                    type="date"
-                    size="small"
-                    value={dateFrom}
-                    onChange={handleDateFromChange}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ minWidth: 170 }}
-                  />
-                  <TextField
-                    label="Đến ngày"
-                    type="date"
-                    size="small"
-                    value={dateTo}
-                    onChange={handleDateToChange}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ minWidth: 170 }}
-                  />
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      <Button
+                        size="small"
+                        variant={dateFrom && dateTo && dateFrom === dateTo && dateFrom === new Date().toISOString().split('T')[0] ? "contained" : "outlined"}
+                        onClick={() => handleQuickDateFilter('today')}
+                        sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
+                      >
+                        Hôm nay
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleQuickDateFilter('week')}
+                        sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
+                      >
+                        Tuần này
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleQuickDateFilter('month')}
+                        sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
+                      >
+                        Tháng này
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleQuickDateFilter('quarter')}
+                        sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
+                      >
+                        Quý này
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleQuickDateFilter('year')}
+                        sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
+                      >
+                        Năm nay
+                      </Button>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <TextField
+                        label="Từ ngày"
+                        type="date"
+                        size="small"
+                        value={dateFrom}
+                        onChange={handleDateFromChange}
+                        InputLabelProps={{ shrink: true }}
+                        sx={{ minWidth: 170 }}
+                        helperText="Chọn ngày bắt đầu"
+                      />
+                      <TextField
+                        label="Đến ngày"
+                        type="date"
+                        size="small"
+                        value={dateTo}
+                        onChange={handleDateToChange}
+                        InputLabelProps={{ shrink: true }}
+                        sx={{ minWidth: 170 }}
+                        helperText="Chọn ngày kết thúc"
+                        error={!isDateRangeValid()}
+                      />
+                    </Box>
+                  </Box>
                   <Select
                     multiple
                     displayEmpty
@@ -1213,6 +1313,28 @@ const AdminDashboard: React.FC = () => {
                       </MenuItem>
                     ))}
                   </Select>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    onClick={handleClearAllFilters}
+                    sx={{
+                      py: 1.0,
+                      px: 2.0,
+                      fontSize: '0.9rem',
+                      fontWeight: 'bold',
+                      textTransform: 'none',
+                      whiteSpace: 'nowrap',
+                      minWidth: 'max-content',
+                      borderColor: '#f44336',
+                      color: '#f44336',
+                      '&:hover': {
+                        borderColor: '#d32f2f',
+                        backgroundColor: '#ffebee'
+                      }
+                    }}
+                  >
+                    Xóa bộ lọc
+                  </Button>
                 </Box>
 
                 {/* Hàng 3 */}
@@ -1453,6 +1575,33 @@ const AdminDashboard: React.FC = () => {
             }}
           />
         </Box>
+        
+        {/* Thông tin số lượng kết quả */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 2, 
+          px: 1,
+          backgroundColor: '#f8f9fa',
+          borderRadius: 1,
+          py: 1
+        }}>
+          <Typography variant="body2" color="text.secondary">
+            Hiển thị {filteredIdeas.length} / {ideas.length} ý tưởng
+            {filteredIdeas.length !== ideas.length && (
+              <span style={{ color: '#1976d2', fontWeight: 'bold' }}>
+                {' '}(đã lọc)
+              </span>
+            )}
+          </Typography>
+          {(dateFrom || dateTo) && (
+            <Typography variant="body2" color="text.secondary">
+              Khoảng thời gian: {dateFrom ? new Date(dateFrom).toLocaleDateString('vi-VN') : 'Từ đầu'} - {dateTo ? new Date(dateTo).toLocaleDateString('vi-VN') : 'Hiện tại'}
+            </Typography>
+          )}
+        </Box>
+        
         <Box ref={dataGridRef}>
           <DataGrid
             rows={filteredIdeas}
