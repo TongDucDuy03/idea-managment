@@ -36,6 +36,15 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
   useEffect(() => {
     if (idea) {
       setReportData(idea);
+      // Log để kiểm tra xem hình ảnh có được load đúng không
+      console.log('Loaded idea data:', {
+        _id: idea._id,
+        ideaCode: idea.ideaCode,
+        hasBeforeImage: 'beforeImage' in idea,
+        hasAfterImage: 'afterImage' in idea,
+        beforeImageLength: (idea as any).beforeImage ? (idea as any).beforeImage.length : 0,
+        afterImageLength: (idea as any).afterImage ? (idea as any).afterImage.length : 0
+      });
     }
   }, [idea]);
 
@@ -161,6 +170,8 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         ideaId: idea._id,
         beforeImage: (reportData as any).beforeImage ? 'Present' : 'Missing',
         afterImage: (reportData as any).afterImage ? 'Present' : 'Missing',
+        beforeImageLength: (reportData as any).beforeImage ? (reportData as any).beforeImage.length : 0,
+        afterImageLength: (reportData as any).afterImage ? (reportData as any).afterImage.length : 0,
         reportData: reportData
       });
 
@@ -171,7 +182,14 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         }
       });
 
-      console.log('Save response:', response.data);
+      console.log('Save response:', {
+        _id: response.data._id,
+        ideaCode: response.data.ideaCode,
+        hasBeforeImage: 'beforeImage' in response.data,
+        hasAfterImage: 'afterImage' in response.data,
+        beforeImageLength: response.data.beforeImage ? response.data.beforeImage.length : 0,
+        afterImageLength: response.data.afterImage ? response.data.afterImage.length : 0
+      });
 
       setSuccess('Báo cáo A3 đã được lưu thành công!');
       setTimeout(() => {

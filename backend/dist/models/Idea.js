@@ -62,6 +62,8 @@ const IdeaSchema = new mongoose_1.Schema({
     resourcesUsed: { type: String, required: false },
     calculationDescription: { type: String, required: false },
     topicTitle: { type: String, required: false },
-    scalingOpportunity: { type: String, required: false }
+    scalingOpportunity: { type: String, required: false },
+    beforeImage: { type: String, required: false },
+    afterImage: { type: String, required: false }
 });
 exports.default = mongoose_1.default.model('Idea', IdeaSchema);
