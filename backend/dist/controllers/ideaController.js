@@ -78,13 +78,28 @@ const updatePaymentStatus = async (req, res) => {
 exports.updatePaymentStatus = updatePaymentStatus;
 const updateIdea = async (req, res) => {
     try {
+        console.log('Updating idea:', {
+            id: req.params.id,
+            beforeImage: req.body.beforeImage ? 'Present' : 'Missing',
+            afterImage: req.body.afterImage ? 'Present' : 'Missing',
+            bodyKeys: Object.keys(req.body)
+        });
+
         const idea = await Idea_1.default.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!idea) {
             return res.status(404).json({ message: 'Không tìm thấy ý tưởng' });
         }
+        
+        console.log('Updated idea:', {
+            id: idea._id,
+            beforeImage: idea.beforeImage ? 'Present' : 'Missing',
+            afterImage: idea.afterImage ? 'Present' : 'Missing'
+        });
+        
         res.json(idea);
     }
     catch (error) {
+        console.error('Error updating idea:', error);
         res.status(500).json({ message: 'Lỗi server', error });
     }
 };

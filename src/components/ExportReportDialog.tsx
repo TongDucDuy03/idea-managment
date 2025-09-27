@@ -119,7 +119,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         
         .a3-container {
             width: 297mm;
-            height: 210mm;
+            min-height: 210mm;
             background: white;
             border: 2px solid #000;
             position: relative;
@@ -175,6 +175,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
+            border-bottom: 2px solid #000;
         }
         
         .info-section:first-child {
@@ -213,12 +214,11 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         .main-content {
             display: flex;
             flex: 1;
-            overflow: hidden;
+            min-height: calc(210mm - 80px);
         }
         
         .left-sidebar {
             width: 120px;
-            border-right: 2px solid #000;
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
@@ -226,7 +226,6 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         
         .sidebar-section {
             flex: 1;
-            border-bottom: 2px solid #000;
             display: flex;
             align-items: flex-start;
             justify-content: center;
@@ -234,95 +233,136 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
             font-size: 12px;
             text-align: center;
             padding: 5px;
+            min-height: 25%;
+            border-right: 2px solid #000;
+            border-bottom: 2px solid #000;
         }
         
         .sidebar-section:last-child {
             border-bottom: none;
         }
         
-        .content-grid {
-          flex: 1;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          grid-auto-rows: minmax(150px, auto); /* auto co dãn, min = 150px */
-          gap: 0;
-          overflow: hidden;
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #000;
         }
-
-        .content-section {
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          border: 1px solid #ddd;
-          border-radius: 6px;
-          padding: 10px;
-          background: #fff;
-          min-height: 150px;       /* luôn có khoảng trống tối thiểu */
-          max-height: 400px;       /* tránh quá dài phá layout A3 */
-          overflow-y: auto;        /* nếu vượt quá thì xuất hiện scroll */
-          box-sizing: border-box;
-          font-size: 12px
+        
+        .top-row {
+            display: flex;
+            min-height: 150px;
+            border-bottom: 2px solid #000;
         }
-
-
-        .section-title {
-          font-weight: bold;
-          text-transform: uppercase;
-          margin: 0 0 1px 0;  
-          padding: 1px 1px;     /* thêm khoảng đệm để không bị dính viền */
-          background: #fff;     /* giữ nền trắng để không bị viền cắt chữ */
-          position: relative;
-          z-index: 1;
-          font-size: 12px;
-          color: #333;
+        
+        .middle-row {
+            display: flex;
+            min-height: 180px;
+            border-bottom: 2px solid #000;
         }
         
         .bottom-row {
-            display: grid;
-            grid-column: 1 / -1;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0;
-            min-height: 150px;
+            display: flex;
+            min-height: 120px;
+            border-bottom: 2px solid #000;
         }
-        .image-box { border: 1px dashed #999; height: 180px; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#fff; }
-        .image-box img { width:100%; height:100%; object-fit:contain; display:block; }
         
-        // .section-content {
-        //     flex: 1;
-        //     border: none;
-        //     resize: none;
-        //     font-family: inherit;
-        //     padding: 5px;
-        //     overflow: hidden;
-        //     word-wrap: break-word;
-        //     white-space: pre-wrap;
-        //     text-overflow: ellipsis;
-        // }
+        .content-section {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            background: #fff;
+            overflow: visible;
+            box-sizing: border-box;
+            font-size: 12px;
+        }
+        
+        /* Top row sections */
+        .top-row .content-section:first-child {
+            flex: 1;
+            border-right: 2px solid #000;
+        }
+        
+        .top-row .content-section:last-child {
+            flex: 1;
+        }
+        
+        /* Middle row sections */
+        .middle-row .content-section:first-child {
+            flex: 1;
+            border-right: 2px solid #000;
+        }
+        
+        .middle-row .content-section:last-child {
+            flex: 1;
+        }
+        
+        /* Bottom row sections - 4 equal columns */
+        .bottom-row .content-section {
+            flex: 1;
+            border-right: 2px solid #000;
+        }
+        
+        .bottom-row .content-section:last-child {
+            border-right: none;
+        }
+
+        .section-title {
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0 0 8px 0;
+            padding: 2px 4px;
+            background: #f5f5f5;
+            border-radius: 3px;
+            position: relative;
+            z-index: 1;
+            font-size: 12px;
+            color: #333;
+            flex-shrink: 0;
+        }
+        
+        .image-box { 
+            border: 2px solid #000;
+            min-height: 150px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            background: #fff;
+            margin-top: 5px;
+        }
+        
+        .image-box img { 
+            max-width: 100%; 
+            max-height: 100%; 
+            object-fit: contain; 
+            display: block; 
+        }
 
         .section-content {
-          flex: 1;
-          border: none;
-          padding: 5px; /* giảm padding để ảnh không bị đẩy xuống xa */
-          font-family: inherit;
-          overflow: hidden;
-          word-wrap: break-word;
-          white-space: pre-line;
-          line-height: 1.4;
-          text-overflow: ellipsis;
+            flex: 1;
+            border: none;
+            padding: 5px;
+            font-family: inherit;
+            overflow: visible;
+            word-wrap: break-word;
+            white-space: pre-line;
+            line-height: 1.4;
         }
 
         .section-content .image-box {
-          margin-top: 8px;  /* tạo khoảng vừa phải giữa chữ và ảnh */
-          display: flex;
-          justify-content: center;
-          align-items: center;
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .section-content .image-box img {
-          max-width: 100%;
-          height: auto;
-          border-radius: 4px;
-          border: 1px solid #ccc;
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            border: 1px solid #ccc;
         }
         
         /* Dynamic content styling */
@@ -350,26 +390,10 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
             ${getContentStyle(idea.calculationDescription || '')}
         }
         
-        /* Overflow handling for long content */
-        .overflow-content {
-            page-break-before: always;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-            font-size: 12px;
-            line-height: 1.5;
-            border: 2px solid #000;
-            margin-top: 20px;
-            background: white;
-            white-space: pre-line;
-            word-wrap: break-word;
-        }
-        
-        .overflow-title {
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #ccc;
+        /* Xử lý nội dung dài */
+        .long-content {
+            max-height: none !important;
+            overflow: visible !important;
         }
         
         @media print {
@@ -380,12 +404,21 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
             
             .a3-container {
                 margin: 0;
-                border: 1px solid #000;
+                border: 2px solid #000 !important;
+                min-height: 210mm;
+                height: auto;
             }
             
-            .overflow-content {
-                margin: 0;
-                margin-top: 20px;
+            .content-section {
+                page-break-inside: avoid;
+                overflow: visible;
+            }
+
+            /* Đảm bảo border không bị mất trong print */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
         }
     </style>
@@ -453,35 +486,39 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
                 </div>
             </div>
 
-            <!-- Content Grid -->
-            <div class="content-grid">
+            <!-- Content Area -->
+            <div class="content-area">
                 <!-- Top Row -->
-                <div class="content-section">
-                    <div class="section-title">THỰC TRẠNG</div>
-                    <div class="section-content content-thuc-trang">${(idea.solution || 'Mô tả thực trạng hiện tại...').substring(0, 800)}${(idea.solution || '').length > 800 ? '...' : ''}</div>
-                </div>
-                
-                <div class="content-section">
-                    <div class="section-title">ĐỐI SÁCH</div>
-                    <div class="section-content content-doi-sach">${(idea.benefit || 'Đối sách đề xuất...').substring(0, 800)}${(idea.benefit || '').length > 800 ? '...' : ''}</div>
+                <div class="top-row">
+                    <div class="content-section">
+                        <div class="section-title">THỰC TRẠNG</div>
+                        <div class="section-content content-thuc-trang ${(idea.solution || '').length > 500 ? 'long-content' : ''}">${idea.solution || 'Mô tả thực trạng hiện tại...'}</div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <div class="section-title">ĐỐI SÁCH</div>
+                        <div class="section-content content-doi-sach ${(idea.benefit || '').length > 500 ? 'long-content' : ''}">${idea.benefit || 'Đối sách đề xuất...'}</div>
+                    </div>
                 </div>
 
                 <!-- Middle Row -->
-                <div class="content-section">
-                    <div class="section-title">HÌNH ẢNH TRƯỚC</div>
-                    <div class="section-content">
-                      ${(idea as any).beforeImage
-                        ? `<div class=\"image-box\"><img src=\"${(idea as any).beforeImage}\" alt=\"Hình ảnh trước\" /></div>`
-                        : '<div class=\"image-box\" style=\"color:#999; font-style:italic;\">Chưa có hình ảnh trước</div>'}
+                <div class="middle-row">
+                    <div class="content-section">
+                        <div class="section-title">HÌNH ẢNH TRƯỚC</div>
+                        <div class="section-content">
+                          ${(idea as any).beforeImage
+                            ? `<div class=\"image-box\"><img src=\"${(idea as any).beforeImage}\" alt=\"Hình ảnh trước\" /></div>`
+                            : '<div class=\"image-box\" style=\"color:#999; font-style:italic;\">Chưa có hình ảnh trước</div>'}
+                        </div>
                     </div>
-                </div>
-                
-                <div class="content-section">
-                    <div class="section-title">HÌNH ẢNH SAU</div>
-                    <div class="section-content">
-                      ${(idea as any).afterImage
-                        ? `<div class=\"image-box\"><img src=\"${(idea as any).afterImage}\" alt=\"Hình ảnh sau\" /></div>`
-                        : '<div class=\"image-box\" style=\"color:#999; font-style:italic;\">Chưa có hình ảnh sau</div>'}
+                    
+                    <div class="content-section">
+                        <div class="section-title">HÌNH ẢNH SAU</div>
+                        <div class="section-content">
+                          ${(idea as any).afterImage
+                            ? `<div class=\"image-box\"><img src=\"${(idea as any).afterImage}\" alt=\"Hình ảnh sau\" /></div>`
+                            : '<div class=\"image-box\" style=\"color:#999; font-style:italic;\">Chưa có hình ảnh sau</div>'}
+                        </div>
                     </div>
                 </div>
 
@@ -489,60 +526,29 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
                 <div class="bottom-row">
                     <div class="content-section">
                         <div class="section-title">LỢI ÍCH</div>
-                        <div class="section-content content-loi-ich">${(idea.benefitOutcome || 'Lợi ích đạt được...').substring(0, 5000)}${(idea.benefitOutcome || '').length > 5000 ? '...' : ''}</div>
+                        <div class="section-content content-loi-ich ${(idea.benefitOutcome || '').length > 500 ? 'long-content' : ''}">${idea.benefitOutcome || 'Lợi ích đạt được...'}</div>
                     </div>
                     
                     <div class="content-section">
                         <div class="section-title">ĐÁNH GIÁ</div>
-                        <div class="section-content content-danh-gia">${(idea.scalingOpportunity || 'Đánh giá kết quả...').substring(0, 5000)}${(idea.scalingOpportunity || '').length > 5000 ? '...' : ''}</div>
+                        <div class="section-content content-danh-gia ${(idea.scalingOpportunity || '').length > 500 ? 'long-content' : ''}">${idea.scalingOpportunity || 'Đánh giá kết quả...'}</div>
                     </div>
                     
                     <div class="content-section">
                         <div class="section-title">CHI PHÍ</div>
-                        <div class="section-content content-chi-phi">${(idea.resourcesUsed || 'Chi phí thực hiện...').substring(0, 5000)}${(idea.resourcesUsed || '').length > 5000 ? '...' : ''}</div>
+                        <div class="section-content content-chi-phi ${(idea.resourcesUsed || '').length > 500 ? 'long-content' : ''}">${idea.resourcesUsed || 'Chi phí thực hiện...'}</div>
                     </div>
                     
                     <div class="content-section">
                         <div class="section-title">KHEN THƯỞNG</div>
-                        <div class="section-content content-khen-thuong">${(idea.calculationDescription || 'Đề xuất khen thưởng...').substring(0, 5000)}${(idea.calculationDescription || '').length > 5000 ? '...' : ''}</div>
+                        <div class="section-content content-khen-thuong ${(idea.calculationDescription || '').length > 500 ? 'long-content' : ''}">${idea.calculationDescription || 'Đề xuất khen thưởng...'}</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Overflow content for long text (will be on separate pages if needed) -->
-    ${generateOverflowPages(idea)}
 </body>
 </html>`;
-  };
-
-  // Helper function để tạo trang phụ cho nội dung dài
-  const generateOverflowPages = (idea: Idea): string => {
-    let overflowContent = '';
-    
-    const sections = [
-      { title: 'THỰC TRẠNG (tiếp theo)', content: idea.solution, limit: 800 },
-      { title: 'ĐỐI SÁCH (tiếp theo)', content: idea.benefit, limit: 800 },
-      { title: 'LỢI ÍCH (tiếp theo)', content: idea.benefitOutcome, limit: 5000 },
-      { title: 'ĐÁNH GIÁ (tiếp theo)', content: idea.scalingOpportunity, limit: 5000 },
-      { title: 'CHI PHÍ (tiếp theo)', content: idea.resourcesUsed, limit: 5000 },
-      { title: 'KHEN THƯỞNG (tiếp theo)', content: idea.calculationDescription, limit: 5000 }
-    ];
-    
-    sections.forEach(section => {
-      if (section.content && section.content.length > section.limit) {
-        const remainingContent = section.content.substring(section.limit);
-        overflowContent += `
-          <div class="overflow-content">
-            <div class="overflow-title">${section.title}</div>
-            <div>${remainingContent}</div>
-          </div>
-        `;
-      }
-    });
-    
-    return overflowContent;
   };
 
   const createPdfFromHtml = async (htmlContent: string, filename: string) => {
@@ -564,26 +570,34 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       
-      // Tìm tất cả các phần tử cần render
+      // Tìm container chính
       const mainContainer = container.querySelector('.a3-container') as HTMLElement;
-      const overflowContents = container.querySelectorAll('.overflow-content');
       
       // Render trang chính (A3 form)
       if (mainContainer) {
+        // Đo chiều cao thực tế của container sau khi content đã render
+        const actualHeight = mainContainer.scrollHeight;
+        const actualWidth = mainContainer.scrollWidth;
+        
         const canvas = await html2canvas(mainContainer, {
           scale: 2,
           useCORS: true,
           backgroundColor: '#ffffff',
           allowTaint: false,
           foreignObjectRendering: false,
-          width: Math.floor(297 * 3.78), // Convert mm to px (297mm = A3 width)
-          height: Math.floor(210 * 3.78), // Convert mm to px (210mm = A3 height)
+          width: actualWidth,
+          height: actualHeight,
           onclone: (clonedDoc) => {
             const style = clonedDoc.createElement('style');
             style.innerHTML = `
               * { 
                 font-family: Arial, sans-serif !important;
                 background-color: white !important;
+              }
+              .content-section {
+                overflow: visible !important;
+                height: auto !important;
+                max-height: none !important;
               }
             `;
             clonedDoc.head.appendChild(style);
@@ -592,7 +606,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
 
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
         
-        // Fit content to page with some margin
+        // Tính toán để fit content vào page
         const margin = 5; // 5mm margin
         const availableWidth = pageWidth - (margin * 2);
         const availableHeight = pageHeight - (margin * 2);
@@ -607,44 +621,44 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         const xOffset = (pageWidth - finalWidth) / 2;
         const yOffset = (pageHeight - finalHeight) / 2;
         
-        pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
-      }
-      
-      // Render các trang overflow nếu có
-      for (let i = 0; i < overflowContents.length; i++) {
-        const overflowElement = overflowContents[i] as HTMLElement;
-        
-        const canvas = await html2canvas(overflowElement, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          allowTaint: false,
-          foreignObjectRendering: false,
-        });
-
-        pdf.addPage();
-        
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const margin = 10;
-        const contentWidth = pageWidth - (margin * 2);
-        const contentHeight = pageHeight - (margin * 2);
-        
-        const scale = Math.min(
-          contentWidth / (canvas.width / 3.78),
-          contentHeight / (canvas.height / 3.78)
-        );
-        
-        const finalWidth = (canvas.width / 3.78) * scale;
-        const finalHeight = (canvas.height / 3.78) * scale;
-        
-        pdf.addImage(
-          imgData, 
-          'JPEG', 
-          margin, 
-          margin, 
-          finalWidth, 
-          finalHeight
-        );
+        // Nếu content cao hơn một trang, tạo nhiều trang
+        if (finalHeight > availableHeight) {
+          const pagesNeeded = Math.ceil(finalHeight / availableHeight);
+          
+          for (let page = 0; page < pagesNeeded; page++) {
+            if (page > 0) pdf.addPage();
+            
+            const yStart = page * availableHeight;
+            const pageImageHeight = Math.min(availableHeight, finalHeight - yStart);
+            
+            // Cắt phần ảnh cho từng trang
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            const img = new Image();
+            
+            await new Promise((resolve) => {
+              img.onload = () => {
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = (pageImageHeight / finalHeight) * canvas.height;
+                
+                tempCtx?.drawImage(
+                  img,
+                  0, (yStart / finalHeight) * canvas.height,
+                  canvas.width, tempCanvas.height,
+                  0, 0,
+                  tempCanvas.width, tempCanvas.height
+                );
+                
+                const tempImgData = tempCanvas.toDataURL('image/jpeg', 0.95);
+                pdf.addImage(tempImgData, 'JPEG', xOffset, yOffset, finalWidth, pageImageHeight);
+                resolve(null);
+              };
+              img.src = imgData;
+            });
+          }
+        } else {
+          pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
+        }
       }
 
       pdf.save(filename.replace(/\s+/g, '_'));
@@ -699,7 +713,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
       <DialogContent>
         <Box sx={{ mb: 2 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Chọn các ý tưởng cần export báo cáo theo format A3. Nội dung dài sẽ tự động được chia sang trang tiếp theo.
+            Chọn các ý tưởng cần export báo cáo theo format A3. Các ô sẽ tự động giãn ra để chứa đầy đủ nội dung.
           </Typography>
           
           <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
@@ -751,8 +765,8 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         </FormControl>
 
         {selectedIdeas.length > 0 && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            Sẽ tạo {selectedIdeas.length} file báo cáo PDF A3. Nội dung dài sẽ được tự động chia trang hợp lý.
+          <Alert severity="success" sx={{ mt: 2 }}>
+            Sẽ tạo {selectedIdeas.length} file báo cáo PDF A3. Các ô sẽ tự động mở rộng để hiển thị đầy đủ nội dung.
           </Alert>
         )}
       </DialogContent>

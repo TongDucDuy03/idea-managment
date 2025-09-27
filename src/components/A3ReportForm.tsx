@@ -71,10 +71,25 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
   ) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
+    
+    console.log(`Handling ${field} image:`, {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type
+    });
+    
     const reader = new FileReader();
     reader.onloadend = () => {
       const dataUrl = typeof reader.result === 'string' ? reader.result : '';
-      setReportData(prev => ({ ...prev, [field]: dataUrl }));
+      console.log(`${field} data URL length:`, dataUrl.length);
+      setReportData(prev => {
+        const newData = { ...prev, [field]: dataUrl };
+        console.log(`Updated reportData with ${field}:`, {
+          [field]: dataUrl ? 'Present' : 'Missing',
+          allFields: Object.keys(newData)
+        });
+        return newData;
+      });
     };
     reader.readAsDataURL(file);
   };
@@ -92,12 +107,22 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         return;
       }
 
+      // Log dữ liệu trước khi gửi
+      console.log('Saving A3 report data:', {
+        ideaId: idea._id,
+        beforeImage: (reportData as any).beforeImage ? 'Present' : 'Missing',
+        afterImage: (reportData as any).afterImage ? 'Present' : 'Missing',
+        reportData: reportData
+      });
+
       // Cập nhật ý tưởng với dữ liệu mới
-      await axios.put(`https://idea-managment.onrender.com/api/ideas/${idea._id}`, reportData, {
+      const response = await axios.put(`https://idea-managment.onrender.com/api/ideas/${idea._id}`, reportData, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
+
+      console.log('Save response:', response.data);
 
       setSuccess('Báo cáo A3 đã được lưu thành công!');
       setTimeout(() => {
