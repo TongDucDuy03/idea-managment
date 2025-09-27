@@ -170,7 +170,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         
         .info-section {
             flex: 1;
-            padding: 8px;
+            padding: 6px;
             font-size: 10px;
             display: flex;
             flex-direction: column;

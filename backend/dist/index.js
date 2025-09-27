@@ -15,7 +15,9 @@ const app = (0, express_1.default)();
 const port = process.env.PORT || 5000;
 // Middleware
 app.use((0, cors_1.default)());
-app.use(express_1.default.json());
+// Tăng giới hạn kích thước body để hỗ trợ upload ảnh dạng data URL
+app.use(express_1.default.json({ limit: '20mb' }));
+app.use(express_1.default.urlencoded({ extended: true, limit: '20mb' }));
 // Routes
 app.use('/api/ideas', ideaRoutes_1.default);
 app.use('/api/auth', authRoutes_1.default);

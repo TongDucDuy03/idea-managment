@@ -74,15 +74,15 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
     }));
   };
 
-  // Hàm tối ưu hóa hình ảnh
-  const optimizeImage = (file: File, maxWidth: number = 1200, maxHeight: number = 800, quality: number = 0.8): Promise<string> => {
+  // Hàm tối ưu hóa hình ảnh với compression mạnh hơn
+  const optimizeImage = (file: File, maxWidth: number = 800, maxHeight: number = 600, quality: number = 0.6): Promise<string> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
       
       img.onload = () => {
-        // Tính toán kích thước mới
+        // Tính toán kích thước mới (giảm kích thước tối đa)
         let { width, height } = img;
         
         if (width > height) {
@@ -103,8 +103,25 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         // Vẽ hình ảnh đã resize
         ctx?.drawImage(img, 0, 0, width, height);
         
-        // Chuyển đổi thành data URL với chất lượng đã tối ưu
-        const optimizedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        // Thử nhiều mức quality để đảm bảo kích thước nhỏ
+        let optimizedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        
+        // Nếu vẫn quá lớn (>500KB), giảm quality xuống
+        if (optimizedDataUrl.length > 500000) {
+          optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.4);
+        }
+        
+        // Nếu vẫn quá lớn (>300KB), giảm kích thước thêm
+        if (optimizedDataUrl.length > 300000) {
+          const smallerCanvas = document.createElement('canvas');
+          const smallerCtx = smallerCanvas.getContext('2d');
+          smallerCanvas.width = width * 0.8;
+          smallerCanvas.height = height * 0.8;
+          smallerCtx?.drawImage(canvas, 0, 0, smallerCanvas.width, smallerCanvas.height);
+          optimizedDataUrl = smallerCanvas.toDataURL('image/jpeg', 0.3);
+        }
+        
+        console.log(`Image optimized: ${file.size} bytes -> ${optimizedDataUrl.length} bytes (${Math.round((1 - optimizedDataUrl.length / file.size) * 100)}% reduction)`);
         resolve(optimizedDataUrl);
       };
       
@@ -119,9 +136,9 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     
-    // Kiểm tra kích thước file (giới hạn 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError(`File ${field} quá lớn. Vui lòng chọn file nhỏ hơn 5MB.`);
+    // Kiểm tra kích thước file (giới hạn 3MB)
+    if (file.size > 3 * 1024 * 1024) {
+      setError(`File ${field} quá lớn. Vui lòng chọn file nhỏ hơn 3MB.`);
       return;
     }
     
@@ -710,7 +727,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                 <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, 'beforeImage')} />
               </Button>
               <Box sx={{ mt: 0.5, color: '#777', fontSize: 12 }}>
-                Gợi ý: ảnh ngang ~1200×800px, dung lượng nhỏ hơn 5MB (sẽ được tối ưu hóa tự động)
+                Gợi ý: ảnh ngang ~800×600px, dung lượng nhỏ hơn 3MB (sẽ được tối ưu hóa tự động)
               </Box>
               {(reportData as any).beforeImage && (
                 <Box sx={{ mt: 1 }}>
@@ -724,7 +741,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                 <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, 'afterImage')} />
               </Button>
               <Box sx={{ mt: 0.5, color: '#777', fontSize: 12 }}>
-                Gợi ý: ảnh ngang ~1200×800px, dung lượng nhỏ hơn 5MB (sẽ được tối ưu hóa tự động)
+                Gợi ý: ảnh ngang ~800×600px, dung lượng nhỏ hơn 3MB (sẽ được tối ưu hóa tự động)
               </Box>
               {(reportData as any).afterImage && (
                 <Box sx={{ mt: 1 }}>
