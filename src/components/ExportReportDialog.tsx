@@ -171,7 +171,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         .info-section {
             flex: 1;
             padding: 8px;
-            font-size: 11px;
+            font-size: 10px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -202,7 +202,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         
         .info-value {
             width: 100%;
-            font-size: 11px;
+            font-size: 10px;
             padding: 2px 0;
             border-bottom: 1px dotted #ccc;
             min-height: 16px;
@@ -241,34 +241,40 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         }
         
         .content-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 200px 200px auto;
-            gap: 0;
-            overflow: hidden;
+          flex: 1;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          grid-auto-rows: minmax(150px, auto); /* auto co dãn, min = 150px */
+          gap: 0;
+          overflow: hidden;
         }
-        
-        .content-section {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 15px; /* khoảng cách giữa các section */
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 10px;
-            background: #fff;
-          }
 
-          .section-title {
-            position: absolute;
-            top: -10px; /* nhô ra trên khung 1 chút */
-            left: 10px;
-            background: #fff;
-            padding: 0 6px;
-            font-weight: bold;
-            font-size: 12px;
-            color: #333;
+        .content-section {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          padding: 10px;
+          background: #fff;
+          min-height: 150px;       /* luôn có khoảng trống tối thiểu */
+          max-height: 400px;       /* tránh quá dài phá layout A3 */
+          overflow-y: auto;        /* nếu vượt quá thì xuất hiện scroll */
+          box-sizing: border-box;
+          font-size: 12px
+        }
+
+
+        .section-title {
+          font-weight: bold;
+          text-transform: uppercase;
+          margin: 0 0 1px 0;  
+          padding: 1px 1px;     /* thêm khoảng đệm để không bị dính viền */
+          background: #fff;     /* giữ nền trắng để không bị viền cắt chữ */
+          position: relative;
+          z-index: 1;
+          font-size: 12px;
+          color: #333;
         }
         
         .bottom-row {
@@ -297,6 +303,12 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
           flex: 1;
           border: none;
           padding: 5px; /* giảm padding để ảnh không bị đẩy xuống xa */
+          font-family: inherit;
+          overflow: hidden;
+          word-wrap: break-word;
+          white-space: pre-line;
+          line-height: 1.4;
+          text-overflow: ellipsis;
         }
 
         .section-content .image-box {
@@ -348,6 +360,8 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
             border: 2px solid #000;
             margin-top: 20px;
             background: white;
+            white-space: pre-line;
+            word-wrap: break-word;
         }
         
         .overflow-title {
@@ -475,22 +489,22 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
                 <div class="bottom-row">
                     <div class="content-section">
                         <div class="section-title">LỢI ÍCH</div>
-                        <div class="section-content content-loi-ich">${(idea.benefitOutcome || 'Lợi ích đạt được...').substring(0, 300)}${(idea.benefitOutcome || '').length > 300 ? '...' : ''}</div>
+                        <div class="section-content content-loi-ich">${(idea.benefitOutcome || 'Lợi ích đạt được...').substring(0, 5000)}${(idea.benefitOutcome || '').length > 5000 ? '...' : ''}</div>
                     </div>
                     
                     <div class="content-section">
                         <div class="section-title">ĐÁNH GIÁ</div>
-                        <div class="section-content content-danh-gia">${(idea.scalingOpportunity || 'Đánh giá kết quả...').substring(0, 300)}${(idea.scalingOpportunity || '').length > 300 ? '...' : ''}</div>
+                        <div class="section-content content-danh-gia">${(idea.scalingOpportunity || 'Đánh giá kết quả...').substring(0, 5000)}${(idea.scalingOpportunity || '').length > 5000 ? '...' : ''}</div>
                     </div>
                     
                     <div class="content-section">
                         <div class="section-title">CHI PHÍ</div>
-                        <div class="section-content content-chi-phi">${(idea.resourcesUsed || 'Chi phí thực hiện...').substring(0, 300)}${(idea.resourcesUsed || '').length > 300 ? '...' : ''}</div>
+                        <div class="section-content content-chi-phi">${(idea.resourcesUsed || 'Chi phí thực hiện...').substring(0, 5000)}${(idea.resourcesUsed || '').length > 5000 ? '...' : ''}</div>
                     </div>
                     
                     <div class="content-section">
                         <div class="section-title">KHEN THƯỞNG</div>
-                        <div class="section-content content-khen-thuong">${(idea.calculationDescription || 'Đề xuất khen thưởng...').substring(0, 300)}${(idea.calculationDescription || '').length > 300 ? '...' : ''}</div>
+                        <div class="section-content content-khen-thuong">${(idea.calculationDescription || 'Đề xuất khen thưởng...').substring(0, 5000)}${(idea.calculationDescription || '').length > 5000 ? '...' : ''}</div>
                     </div>
                 </div>
             </div>
@@ -510,10 +524,10 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
     const sections = [
       { title: 'THỰC TRẠNG (tiếp theo)', content: idea.solution, limit: 800 },
       { title: 'ĐỐI SÁCH (tiếp theo)', content: idea.benefit, limit: 800 },
-      { title: 'LỢI ÍCH (tiếp theo)', content: idea.benefitOutcome, limit: 300 },
-      { title: 'ĐÁNH GIÁ (tiếp theo)', content: idea.scalingOpportunity, limit: 300 },
-      { title: 'CHI PHÍ (tiếp theo)', content: idea.resourcesUsed, limit: 300 },
-      { title: 'KHEN THƯỞNG (tiếp theo)', content: idea.calculationDescription, limit: 300 }
+      { title: 'LỢI ÍCH (tiếp theo)', content: idea.benefitOutcome, limit: 5000 },
+      { title: 'ĐÁNH GIÁ (tiếp theo)', content: idea.scalingOpportunity, limit: 5000 },
+      { title: 'CHI PHÍ (tiếp theo)', content: idea.resourcesUsed, limit: 5000 },
+      { title: 'KHEN THƯỞNG (tiếp theo)', content: idea.calculationDescription, limit: 5000 }
     ];
     
     sections.forEach(section => {

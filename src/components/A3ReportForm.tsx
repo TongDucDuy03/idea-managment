@@ -118,10 +118,10 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
 
     const getContentStyle = (content: string) => {
       const length = (content || '').length;
-      if (length > 500) return 'font-size: 9px; line-height: 1.2;';
-      if (length > 300) return 'font-size: 10px; line-height: 1.3;';
-      if (length > 200) return 'font-size: 11px; line-height: 1.4;';
-      return 'font-size: 12px; line-height: 1.4;';
+      if (length > 500) return 'font-size: 11px; line-height: 1.3;';
+      if (length > 300) return 'font-size: 12px; line-height: 1.35;';
+      if (length > 200) return 'font-size: 13px; line-height: 1.45;';
+      return 'font-size: 14px; line-height: 1.45;';
     };
 
     return `<!DOCTYPE html>
@@ -142,6 +142,11 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             background: #ffffff;
             padding: 0;
             margin: 0;
+        }
+        /* Reset màu trong vùng export để tránh oklch từ theme */
+        .a3-container, .a3-container * {
+            background: #ffffff !important;
+            color: #000000 !important;
         }
         
         .a3-container {
@@ -183,7 +188,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         }
         
         .title-section h1 {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             margin: 0;
         }
@@ -198,7 +203,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         .info-section {
             flex: 1;
             padding: 8px;
-            font-size: 11px;
+            font-size: 13px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -221,7 +226,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         
         .info-label {
             font-weight: bold;
-            font-size: 10px;
+            font-size: 12px;
             margin-bottom: 2px;
             display: block;
             width: 100%;
@@ -258,7 +263,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             align-items: flex-start;
             justify-content: center;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 14px;
             text-align: center;
             padding: 5px;
         }
@@ -292,7 +297,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             background: white;
             padding: 0 5px;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 14px;
             z-index: 1;
         }
         
@@ -327,7 +332,8 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             padding: 15px 5px 5px 5px;
             overflow: hidden;
             word-wrap: break-word;
-            white-space: pre-wrap;
+            white-space: pre-line;
+            line-height: 1.4;
             text-overflow: ellipsis;
         }
         
@@ -414,7 +420,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                 <div class="sidebar-section">GĐ ĐH</div>
             </div>
 
-            <div class="content-grid">
+            <div class="content-grid" style="grid-template-rows: 230px 230px auto;">
                 <div class="content-section">
                     <div class="section-title">THỰC TRẠNG</div>
                     <div class="section-content content-thuc-trang">${(idea.solution || 'Mô tả thực trạng hiện tại...').substring(0, 800)}${(idea.solution || '').length > 800 ? '...' : ''}</div>
@@ -443,7 +449,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                     </div>
                 </div>
 
-                <div class="bottom-row">
+                <div class="bottom-row" style="min-height: 200px;">
                     <div class="content-section">
                         <div class="section-title">LỢI ÍCH</div>
                         <div class="section-content content-loi-ich">${(idea.benefitOutcome || 'Lợi ích đạt được...').substring(0, 300)}${(idea.benefitOutcome || '').length > 300 ? '...' : ''}</div>
