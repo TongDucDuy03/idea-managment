@@ -77,6 +77,21 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
   idea,
   isEdit = false
 }) => {
+  // Style cố định cho TextField để không bị thu nhỏ
+  const textFieldStyle = {
+    '& .MuiInputBase-input': { 
+      fontSize: '16px !important',
+      minHeight: '1.4375em !important',
+      padding: '16.5px 14px !important'
+    },
+    '& .MuiInputLabel-root': {
+      fontSize: '16px !important'
+    },
+    '& .MuiOutlinedInput-root': {
+      minHeight: '56px !important'
+    }
+  };
+
   const [formData, setFormData] = useState<Partial<Idea>>({
     fullName: '',
     department: '',
@@ -252,12 +267,12 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
       <DialogTitle>
         {isEdit ? 'Sửa Ý tưởng' : 'Thêm Ý tưởng Mới'}
       </DialogTitle>
       <form onSubmit={handleSubmit}>
-        <DialogContent>
+        <DialogContent sx={{ maxHeight: '80vh', overflowY: 'auto' }}>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -271,6 +286,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               onChange={handleTextChange}
               required
               fullWidth
+              sx={textFieldStyle}
             />
             <TextField
               name="fullName"
@@ -279,6 +295,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               onChange={handleTextChange}
               required
               fullWidth
+              sx={textFieldStyle}
             />
             <FormControl fullWidth required>
               <InputLabel>Phòng ban</InputLabel>
@@ -380,11 +397,22 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
                   <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, 'beforeImage')} />
                 </Button>
                 <Box sx={{ mt: 0.5, color: '#777', fontSize: 12 }}>
-                  Gợi ý: ảnh ngang ~1200×800px, dung lượng nhỏ hơn 2 MB
+                  Gợi ý: ảnh ngang ~800×600px, dung lượng nhỏ hơn 3MB (sẽ được tối ưu hóa tự động)
                 </Box>
                 {(formData as any).beforeImage && (
-                  <Box sx={{ mt: 1 }}>
-                    <img src={(formData as any).beforeImage} alt="Hình ảnh trước" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }} />
+                  <Box sx={{ mt: 1, width: '100%' }}>
+                    <img 
+                      src={(formData as any).beforeImage} 
+                      alt="Hình ảnh trước" 
+                      style={{ 
+                        width: '100%', 
+                        height: 'auto', 
+                        maxHeight: '250px',
+                        objectFit: 'contain',
+                        borderRadius: 8,
+                        border: '1px solid #e0e0e0'
+                      }} 
+                    />
                   </Box>
                 )}
               </Box>
@@ -394,11 +422,22 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
                   <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, 'afterImage')} />
                 </Button>
                 <Box sx={{ mt: 0.5, color: '#777', fontSize: 12 }}>
-                  Gợi ý: ảnh ngang ~1200×800px, dung lượng nhỏ hơn 2 MB
+                  Gợi ý: ảnh ngang ~800×600px, dung lượng nhỏ hơn 3MB (sẽ được tối ưu hóa tự động)
                 </Box>
                 {(formData as any).afterImage && (
-                  <Box sx={{ mt: 1 }}>
-                    <img src={(formData as any).afterImage} alt="Hình ảnh sau" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }} />
+                  <Box sx={{ mt: 1, width: '100%' }}>
+                    <img 
+                      src={(formData as any).afterImage} 
+                      alt="Hình ảnh sau" 
+                      style={{ 
+                        width: '100%', 
+                        height: 'auto', 
+                        maxHeight: '250px',
+                        objectFit: 'contain',
+                        borderRadius: 8,
+                        border: '1px solid #e0e0e0'
+                      }} 
+                    />
                   </Box>
                 )}
               </Box>

@@ -166,11 +166,12 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
             border-left: 2px solid #000;
             display: flex;
             height: 80px;
+            border-right: 2px solid #000;
         }
         
         .info-section {
             flex: 1;
-            padding: 6px;
+            padding: 4px;
             font-size: 10px;
             display: flex;
             flex-direction: column;
@@ -204,7 +205,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         .info-value {
             width: 100%;
             font-size: 10px;
-            padding: 2px 0;
+            padding: 1px 0;
             border-bottom: 1px dotted #ccc;
             min-height: 16px;
             word-wrap: break-word;
@@ -239,7 +240,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         }
         
         .sidebar-section:last-child {
-            border-bottom: none;
+            border-bottom: 4px solid black;
         }
         
         .content-area {
@@ -251,19 +252,19 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         
         .top-row {
             display: flex;
-            min-height: 150px;
+            min-height: auto;
             border-bottom: 2px solid #000;
         }
         
         .middle-row {
             display: flex;
-            min-height: 180px;
+            min-height: auto;
             border-bottom: 2px solid #000;
         }
         
         .bottom-row {
             display: flex;
-            min-height: 120px;
+            min-height: auto;
             border-bottom: 2px solid #000;
         }
         
@@ -271,11 +272,14 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
             position: relative;
             display: flex;
             flex-direction: column;
-            padding: 8px;
+            padding: 4px;
             background: #fff;
-            overflow: visible;
+            overflow: visible;   /* Quan trọng */
             box-sizing: border-box;
             font-size: 12px;
+            height: auto;        /* Cho phép cao theo nội dung */
+            min-height: auto;
+            border-bottom:1px solid #000;
         }
         
         /* Top row sections */
@@ -311,8 +315,8 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         .section-title {
             font-weight: bold;
             text-transform: uppercase;
-            margin: 0 0 8px 0;
-            padding: 2px 4px;
+            margin: 0 0 0px 0;
+            padding: 1px 1px;
             background: #f5f5f5;
             border-radius: 3px;
             position: relative;
@@ -324,13 +328,14 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         
         .image-box { 
             border: 2px solid #000;
-            min-height: 150px;
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            overflow: hidden; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: visible;   /* Cho ảnh to không bị co chữ */
             background: #fff;
-            margin-top: 5px;
+            margin-top: 1px;
+            height: auto;        /* Bỏ cứng 150px */
+            min-height: 100px;
         }
         
         .image-box img { 

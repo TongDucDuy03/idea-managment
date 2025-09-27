@@ -33,6 +33,21 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
   const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
   const [reportData, setReportData] = useState<Partial<Idea>>({});
 
+  // Style cố định cho TextField để không bị thu nhỏ
+  const textFieldStyle = {
+    '& .MuiInputBase-input': { 
+      fontSize: '16px !important',
+      minHeight: '1.4375em !important',
+      padding: '16.5px 14px !important'
+    },
+    '& .MuiInputLabel-root': {
+      fontSize: '16px !important'
+    },
+    '& .MuiOutlinedInput-root': {
+      minHeight: '56px !important'
+    }
+  };
+
   useEffect(() => {
     if (idea) {
       setReportData(idea);
@@ -260,7 +275,8 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         
         .a3-container {
             width: 297mm;
-            height: 210mm;
+            min-height: 210mm;
+            height: auto;
             background: white;
             border: 2px solid #000;
             position: relative;
@@ -385,18 +401,21 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             flex: 1;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            grid-template-rows: 200px 200px auto;
+            grid-template-rows: auto auto auto;
             gap: 0;
-            overflow: hidden;
+            overflow: visible;
+            min-height: auto;
         }
         
         .content-section {
             border: 1px solid #000;
             padding: 10px;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             display: flex;
             flex-direction: column;
+            min-height: auto;
+            height: auto;
         }
         
         .section-title {
@@ -439,11 +458,12 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             resize: none;
             font-family: inherit;
             padding: 15px 5px 5px 5px;
-            overflow: hidden;
+            overflow: visible;
             word-wrap: break-word;
             white-space: pre-line;
             line-height: 1.4;
-            text-overflow: ellipsis;
+            min-height: auto;
+            height: auto;
         }
         
         .content-thuc-trang {
@@ -529,15 +549,15 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                 <div class="sidebar-section">GĐ ĐH</div>
             </div>
 
-            <div class="content-grid" style="grid-template-rows: 230px 230px auto;">
+            <div class="content-grid" style="grid-template-rows: auto auto auto;">
                 <div class="content-section">
                     <div class="section-title">THỰC TRẠNG</div>
-                    <div class="section-content content-thuc-trang">${(idea.solution || 'Mô tả thực trạng hiện tại...').substring(0, 800)}${(idea.solution || '').length > 800 ? '...' : ''}</div>
+                    <div class="section-content content-thuc-trang">${idea.solution || 'Mô tả thực trạng hiện tại...'}</div>
                 </div>
                 
                 <div class="content-section">
                     <div class="section-title">ĐỐI SÁCH</div>
-                    <div class="section-content content-doi-sach">${(idea.benefit || 'Đối sách đề xuất...').substring(0, 800)}${(idea.benefit || '').length > 800 ? '...' : ''}</div>
+                    <div class="section-content content-doi-sach">${idea.benefit || 'Đối sách đề xuất...'}</div>
                 </div>
 
                 <div class="content-section">
@@ -558,25 +578,25 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                     </div>
                 </div>
 
-                <div class="bottom-row" style="min-height: 200px;">
+                <div class="bottom-row" style="min-height: auto;">
                     <div class="content-section">
                         <div class="section-title">LỢI ÍCH</div>
-                        <div class="section-content content-loi-ich">${(idea.benefitOutcome || 'Lợi ích đạt được...').substring(0, 300)}${(idea.benefitOutcome || '').length > 300 ? '...' : ''}</div>
+                        <div class="section-content content-loi-ich">${idea.benefitOutcome || 'Lợi ích đạt được...'}</div>
                     </div>
                     
                     <div class="content-section">
                         <div class="section-title">ĐÁNH GIÁ</div>
-                        <div class="section-content content-danh-gia">${(idea.scalingOpportunity || 'Đánh giá kết quả...').substring(0, 300)}${(idea.scalingOpportunity || '').length > 300 ? '...' : ''}</div>
+                        <div class="section-content content-danh-gia">${idea.scalingOpportunity || 'Đánh giá kết quả...'}</div>
                     </div>
                     
                     <div class="content-section">
                         <div class="section-title">CHI PHÍ</div>
-                        <div class="section-content content-chi-phi">${(idea.resourcesUsed || 'Chi phí thực hiện...').substring(0, 300)}${(idea.resourcesUsed || '').length > 300 ? '...' : ''}</div>
+                        <div class="section-content content-chi-phi">${idea.resourcesUsed || 'Chi phí thực hiện...'}</div>
                     </div>
                     
                     <div class="content-section">
                         <div class="section-title">KHEN THƯỞNG</div>
-                        <div class="section-content content-khen-thuong">${(idea.calculationDescription || 'Đề xuất khen thưởng...').substring(0, 300)}${(idea.calculationDescription || '').length > 300 ? '...' : ''}</div>
+                        <div class="section-content content-khen-thuong">${idea.calculationDescription || 'Đề xuất khen thưởng...'}</div>
                     </div>
                 </div>
             </div>
@@ -599,45 +619,106 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
       
+      const mainContainer = container.querySelector('.a3-container') as HTMLElement;
+      
+      if (!mainContainer) {
+        throw new Error('Không tìm thấy container A3');
+      }
+
+      // Đo chiều cao thực tế của container sau khi content đã render
+      const actualHeight = mainContainer.scrollHeight;
+      const actualWidth = mainContainer.scrollWidth;
+      
+      console.log('Container dimensions:', { actualWidth, actualHeight });
+      
+      const canvas = await html2canvas(mainContainer, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        allowTaint: false,
+        foreignObjectRendering: false,
+        width: actualWidth,
+        height: actualHeight,
+        onclone: (clonedDoc) => {
+          const style = clonedDoc.createElement('style');
+          style.innerHTML = `
+            * { 
+              font-family: Arial, sans-serif !important;
+              background-color: white !important;
+            }
+            .content-section {
+              overflow: visible !important;
+              height: auto !important;
+              max-height: none !important;
+            }
+            .a3-container {
+              height: auto !important;
+              min-height: 210mm !important;
+            }
+          `;
+          clonedDoc.head.appendChild(style);
+        }
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      
+      // Tạo PDF với kích thước động dựa trên nội dung
       const pdf = new jsPDF('l', 'mm', 'a3');
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       
-      const mainContainer = container.querySelector('.a3-container') as HTMLElement;
+      // Tính toán kích thước thực tế của canvas trong mm
+      const canvasWidthMM = canvas.width / 3.78; // Convert pixels to mm
+      const canvasHeightMM = canvas.height / 3.78;
       
-      if (mainContainer) {
-        const canvas = await html2canvas(mainContainer, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          allowTaint: false,
-          foreignObjectRendering: false,
-          width: Math.floor(297 * 3.78),
-          height: Math.floor(210 * 3.78),
-          onclone: (clonedDoc) => {
-            const style = clonedDoc.createElement('style');
-            style.innerHTML = `
-              * { 
-                font-family: Arial, sans-serif !important;
-                background-color: white !important;
-              }
-            `;
-            clonedDoc.head.appendChild(style);
-          }
-        });
-
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        
+      console.log('Canvas dimensions in mm:', { canvasWidthMM, canvasHeightMM });
+      
+      // Nếu nội dung dài hơn 1 trang A3, tạo nhiều trang
+      if (canvasHeightMM > pageHeight) {
         const margin = 5;
         const availableWidth = pageWidth - (margin * 2);
         const availableHeight = pageHeight - (margin * 2);
         
-        const scaleWidth = availableWidth / (canvas.width / 3.78);
-        const scaleHeight = availableHeight / (canvas.height / 3.78);
+        // Scale để fit width
+        const scale = availableWidth / canvasWidthMM;
+        const scaledHeight = canvasHeightMM * scale;
+        
+        // Tính số trang cần thiết
+        const pagesNeeded = Math.ceil(scaledHeight / availableHeight);
+        
+        console.log(`Content requires ${pagesNeeded} pages`);
+        
+        for (let i = 0; i < pagesNeeded; i++) {
+          if (i > 0) {
+            pdf.addPage();
+          }
+          
+          const yOffset = -i * availableHeight;
+          const currentPageHeight = Math.min(availableHeight, scaledHeight - (i * availableHeight));
+          
+          pdf.addImage(
+            imgData, 
+            'JPEG', 
+            margin, 
+            margin + yOffset, 
+            availableWidth, 
+            currentPageHeight,
+            undefined,
+            'FAST'
+          );
+        }
+      } else {
+        // Nội dung vừa 1 trang, fit toàn bộ
+        const margin = 5;
+        const availableWidth = pageWidth - (margin * 2);
+        const availableHeight = pageHeight - (margin * 2);
+        
+        const scaleWidth = availableWidth / canvasWidthMM;
+        const scaleHeight = availableHeight / canvasHeightMM;
         const scale = Math.min(scaleWidth, scaleHeight);
         
-        const finalWidth = (canvas.width / 3.78) * scale;
-        const finalHeight = (canvas.height / 3.78) * scale;
+        const finalWidth = canvasWidthMM * scale;
+        const finalHeight = canvasHeightMM * scale;
         
         const xOffset = (pageWidth - finalWidth) / 2;
         const yOffset = (pageHeight - finalHeight) / 2;
@@ -645,6 +726,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         pdf.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
       }
 
+      // Lưu PDF
       pdf.save(filename.replace(/\s+/g, '_'));
     } catch (error) {
       console.error('Error creating PDF:', error);
@@ -694,9 +776,9 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Card elevation={3} sx={{ borderRadius: 2 }}>
-        <CardContent>
+    <Container maxWidth="xl" sx={{ py: 4, minHeight: '100vh' }}>
+      <Card elevation={3} sx={{ borderRadius: 2, minHeight: 'fit-content', width: '100%' }}>
+        <CardContent sx={{ p: 3, width: '100%' }}>
           <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ color: '#1976d2', fontWeight: 'bold' }}>
             Báo cáo A3 - {idea.ideaCode}
           </Typography>
@@ -714,15 +796,15 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             </Alert>
           )}
 
-          <Grid container spacing={3}>
+          <Grid container spacing={3} sx={{ width: '100%' }}>
             {/* Hình ảnh trước/sau */}
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom sx={{ color: '#1976d2', fontWeight: 'bold' }}>
                 Hình ảnh minh họa
               </Typography>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <Button variant="outlined" component="label" fullWidth>
+            <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', minHeight: 'fit-content' }}>
+              <Button variant="outlined" component="label" fullWidth sx={{ minHeight: '56px' }}>
                 Tải lên Hình ảnh Trước
                 <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, 'beforeImage')} />
               </Button>
@@ -730,13 +812,24 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                 Gợi ý: ảnh ngang ~800×600px, dung lượng nhỏ hơn 3MB (sẽ được tối ưu hóa tự động)
               </Box>
               {(reportData as any).beforeImage && (
-                <Box sx={{ mt: 1 }}>
-                  <img src={(reportData as any).beforeImage} alt="Hình ảnh trước" style={{ maxWidth: '100%', maxHeight: 220, borderRadius: 8 }} />
+                <Box sx={{ mt: 1, width: '100%', flex: '0 0 auto' }}>
+                  <img 
+                    src={(reportData as any).beforeImage} 
+                    alt="Hình ảnh trước" 
+                    style={{ 
+                      width: '100%', 
+                      height: 'auto', 
+                      maxHeight: '300px',
+                      objectFit: 'contain',
+                      borderRadius: 8,
+                      border: '1px solid #e0e0e0'
+                    }} 
+                  />
                 </Box>
               )}
             </Grid>
-            <Grid item xs={12} md={6}>
-              <Button variant="outlined" component="label" fullWidth>
+            <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', minHeight: 'fit-content' }}>
+              <Button variant="outlined" component="label" fullWidth sx={{ minHeight: '56px' }}>
                 Tải lên Hình ảnh Sau
                 <input type="file" accept="image/*" hidden onChange={(e) => handleImageChange(e, 'afterImage')} />
               </Button>
@@ -744,8 +837,19 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                 Gợi ý: ảnh ngang ~800×600px, dung lượng nhỏ hơn 3MB (sẽ được tối ưu hóa tự động)
               </Box>
               {(reportData as any).afterImage && (
-                <Box sx={{ mt: 1 }}>
-                  <img src={(reportData as any).afterImage} alt="Hình ảnh sau" style={{ maxWidth: '100%', maxHeight: 220, borderRadius: 8 }} />
+                <Box sx={{ mt: 1, width: '100%', flex: '0 0 auto' }}>
+                  <img 
+                    src={(reportData as any).afterImage} 
+                    alt="Hình ảnh sau" 
+                    style={{ 
+                      width: '100%', 
+                      height: 'auto', 
+                      maxHeight: '300px',
+                      objectFit: 'contain',
+                      borderRadius: 8,
+                      border: '1px solid #e0e0e0'
+                    }} 
+                  />
                 </Box>
               )}
             </Grid>
@@ -763,6 +867,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                 value={reportData.ideaCode || ''}
                 disabled
                 variant="outlined"
+                sx={textFieldStyle}
               />
             </Grid>
             
@@ -773,6 +878,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                 value={reportData.fullName || ''}
                 disabled
                 variant="outlined"
+                sx={textFieldStyle}
               />
             </Grid>
             
@@ -783,6 +889,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                 value={reportData.department || ''}
                 disabled
                 variant="outlined"
+                sx={textFieldStyle}
               />
             </Grid>
             
@@ -793,6 +900,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                 value={reportData.topicTitle || ''}
                 onChange={(e) => handleInputChange('topicTitle', e.target.value)}
                 variant="outlined"
+                sx={textFieldStyle}
               />
             </Grid>
 
