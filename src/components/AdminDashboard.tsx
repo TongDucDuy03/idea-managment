@@ -46,8 +46,6 @@ const AdminDashboard: React.FC = () => {
   const [ideaCodeFilter, setIdeaCodeFilter] = useState('');
   const [fullNameFilter, setFullNameFilter] = useState('');
   const [ideaTextFilter, setIdeaTextFilter] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   
   const [paginationModel, setPaginationModel] = useState({
@@ -200,11 +198,6 @@ const AdminDashboard: React.FC = () => {
       setImplementationStatusFilter([implStatus as 'Đề xuất mới' | 'Xem xét' | 'Phê duyệt' | 'Phản hồi phê duyệt' | 'Đang triển khai' | 'Lập báo cáo A3' | 'Phê duyệt khen thưởng' | 'Đã khen thưởng' | 'Không đạt']);
     }
     
-    // Date range filter
-    const dateFrom = params.get('dateFrom');
-    const dateTo = params.get('dateTo');
-    if (dateFrom) setDateFrom(dateFrom);
-    if (dateTo) setDateTo(dateTo);
     
     // Full name filter
     const fullName = params.get('fullName');
@@ -251,16 +244,6 @@ const AdminDashboard: React.FC = () => {
   };
 
   
-  const handleDateFromChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDateFrom(event.target.value);
-    setPaginationModel(prev => ({ ...prev, page: 0 }));
-  };
-
-  const handleDateToChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDateTo(event.target.value);
-    setPaginationModel(prev => ({ ...prev, page: 0 }));
-  };
-
   const handleClearAllFilters = () => {
     setStatusFilter([]);
     setImplementationStatusFilter([]);
@@ -269,49 +252,9 @@ const AdminDashboard: React.FC = () => {
     setIdeaCodeFilter('');
     setFullNameFilter('');
     setIdeaTextFilter('');
-    setDateFrom('');
-    setDateTo('');
     setPaginationModel(prev => ({ ...prev, page: 0 }));
   };
 
-  const isDateRangeValid = () => {
-    if (!dateFrom || !dateTo) return true;
-    return new Date(dateFrom) <= new Date(dateTo);
-  };
-
-  const handleQuickDateFilter = (type: 'today' | 'week' | 'month' | 'quarter' | 'year') => {
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    
-    switch (type) {
-      case 'today':
-        setDateFrom(todayStr);
-        setDateTo(todayStr);
-        break;
-      case 'week':
-        const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - today.getDay());
-        setDateFrom(weekStart.toISOString().split('T')[0]);
-        setDateTo(todayStr);
-        break;
-      case 'month':
-        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-        setDateFrom(monthStart.toISOString().split('T')[0]);
-        setDateTo(todayStr);
-        break;
-      case 'quarter':
-        const quarterStart = new Date(today.getFullYear(), Math.floor(today.getMonth() / 3) * 3, 1);
-        setDateFrom(quarterStart.toISOString().split('T')[0]);
-        setDateTo(todayStr);
-        break;
-      case 'year':
-        const yearStart = new Date(today.getFullYear(), 0, 1);
-        setDateFrom(yearStart.toISOString().split('T')[0]);
-        setDateTo(todayStr);
-        break;
-    }
-    setPaginationModel(prev => ({ ...prev, page: 0 }));
-  };
 
   const handleStatusChange = async (id: string, status: 'pending' | 'rejected' | 'noted' | 'approved') => {
     try {
@@ -493,11 +436,6 @@ const AdminDashboard: React.FC = () => {
     const matchesImplementationStatus = implementationStatusFilter.length === 0 || implementationStatusFilter.includes(((idea as any).implementationStatus || ''));
     const matchesDepartment = departmentFilter.length === 0 || departmentFilter.includes((idea as any).department);
     const matchesImplementationDepartment = implementationDepartmentFilter.length === 0 || implementationDepartmentFilter.includes(((idea as any).implementationDepartment || ''));
-    const submissionMs = idea.submissionDate ? new Date(idea.submissionDate).getTime() : NaN;
-    const fromMs = dateFrom ? new Date(dateFrom).setHours(0, 0, 0, 0) : NaN;
-    const toMs = dateTo ? new Date(dateTo).setHours(23, 59, 59, 999) : NaN;
-    const matchesDateFrom = !dateFrom || (!Number.isNaN(submissionMs) && submissionMs >= fromMs);
-    const matchesDateTo = !dateTo || (!Number.isNaN(submissionMs) && submissionMs <= toMs);
 
     return (
       matchesIdeaCode &&
@@ -506,9 +444,7 @@ const AdminDashboard: React.FC = () => {
       matchesStatus &&
       matchesImplementationStatus &&
       matchesDepartment &&
-      matchesImplementationDepartment &&
-      matchesDateFrom &&
-      matchesDateTo
+      matchesImplementationDepartment
     );
   });
 
@@ -1166,73 +1102,6 @@ const AdminDashboard: React.FC = () => {
                       </MenuItem>
                     ))}
                   </Select>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                      <Button
-                        size="small"
-                        variant={dateFrom && dateTo && dateFrom === dateTo && dateFrom === new Date().toISOString().split('T')[0] ? "contained" : "outlined"}
-                        onClick={() => handleQuickDateFilter('today')}
-                        sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
-                      >
-                        Hôm nay
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleQuickDateFilter('week')}
-                        sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
-                      >
-                        Tuần này
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleQuickDateFilter('month')}
-                        sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
-                      >
-                        Tháng này
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleQuickDateFilter('quarter')}
-                        sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
-                      >
-                        Quý này
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleQuickDateFilter('year')}
-                        sx={{ fontSize: '0.75rem', py: 0.5, px: 1 }}
-                      >
-                        Năm nay
-                      </Button>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <TextField
-                        label="Từ ngày"
-                        type="date"
-                        size="small"
-                        value={dateFrom}
-                        onChange={handleDateFromChange}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{ minWidth: 170 }}
-                        helperText="Chọn ngày bắt đầu"
-                      />
-                      <TextField
-                        label="Đến ngày"
-                        type="date"
-                        size="small"
-                        value={dateTo}
-                        onChange={handleDateToChange}
-                        InputLabelProps={{ shrink: true }}
-                        sx={{ minWidth: 170 }}
-                        helperText="Chọn ngày kết thúc"
-                        error={!isDateRangeValid()}
-                      />
-                    </Box>
-                  </Box>
                   <Select
                     multiple
                     displayEmpty
@@ -1595,11 +1464,6 @@ const AdminDashboard: React.FC = () => {
               </span>
             )}
           </Typography>
-          {(dateFrom || dateTo) && (
-            <Typography variant="body2" color="text.secondary">
-              Khoảng thời gian: {dateFrom ? new Date(dateFrom).toLocaleDateString('vi-VN') : 'Từ đầu'} - {dateTo ? new Date(dateTo).toLocaleDateString('vi-VN') : 'Hiện tại'}
-            </Typography>
-          )}
         </Box>
         
         <Box ref={dataGridRef}>
