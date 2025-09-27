@@ -162,18 +162,66 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
     }));
   };
 
+  // Hàm tối ưu hóa hình ảnh
+  const optimizeImage = (file: File, maxWidth: number = 1200, maxHeight: number = 800, quality: number = 0.8): Promise<string> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Tính toán kích thước mới
+        let { width, height } = img;
+        
+        if (width > height) {
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Vẽ hình ảnh đã resize
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Chuyển đổi thành data URL với chất lượng đã tối ưu
+        const optimizedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(optimizedDataUrl);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleImageChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
     field: 'beforeImage' | 'afterImage'
   ) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
-      setFormData(prev => ({ ...prev, [field]: dataUrl }));
-    };
-    reader.readAsDataURL(file);
+    
+    // Kiểm tra kích thước file (giới hạn 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError(`File ${field} quá lớn. Vui lòng chọn file nhỏ hơn 5MB.`);
+      return;
+    }
+    
+    try {
+      // Tối ưu hóa hình ảnh trước khi lưu
+      const optimizedDataUrl = await optimizeImage(file);
+      setFormData(prev => ({ ...prev, [field]: optimizedDataUrl }));
+      setError(''); // Clear any previous errors
+    } catch (error) {
+      console.error(`Error processing ${field} image:`, error);
+      setError(`Lỗi khi xử lý hình ảnh ${field}. Vui lòng thử lại.`);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
