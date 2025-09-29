@@ -1011,7 +1011,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
               {saving ? 'Đang lưu...' : 'Lưu báo cáo'}
             </Button>
             
-            <Button
+            {/* <Button
               variant="contained"
               color="success"
               onClick={handleExport}
@@ -1031,7 +1031,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
               sx={{ minWidth: 200 }}
             >
               {saving || loading ? 'Đang xử lý...' : 'Lưu và Export PDF'}
-            </Button>
+            </Button> */}
           </Box>
         </CardContent>
       </Card>

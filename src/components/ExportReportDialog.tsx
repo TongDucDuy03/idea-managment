@@ -483,7 +483,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
                         
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Ngày lập: ${formatDate(idea.submissionDate)}</span>
+                        <span class="info-label">Ngày lập: ${formatDate(new Date())}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Đơn vị: ${idea.implementationDepartment || idea.department || 'N/A'}</span>
