@@ -267,16 +267,10 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             padding: 0;
             margin: 0;
         }
-        /* Reset màu trong vùng export để tránh oklch từ theme */
-        .a3-container, .a3-container * {
-            background: #ffffff !important;
-            color: #000000 !important;
-        }
         
         .a3-container {
-            width: 297mm;
-            min-height: 210mm;
-            height: auto;
+            width: 420mm; 
+            min-height: 297mm;
             background: white;
             border: 2px solid #000;
             position: relative;
@@ -313,7 +307,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         }
         
         .title-section h1 {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             margin: 0;
         }
@@ -323,15 +317,18 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             border-left: 2px solid #000;
             display: flex;
             height: 80px;
+            border-right: 2px solid #000;
         }
         
         .info-section {
             flex: 1;
-            padding: 8px;
-            font-size: 13px;
+            padding: 4px;
+            font-size: 10px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
+            border-bottom: 2px solid #000;
+            border-right: 2px solid #000;
         }
         
         .info-section:first-child {
@@ -351,7 +348,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         
         .info-label {
             font-weight: bold;
-            font-size: 12px;
+            font-size: 10px;
             margin-bottom: 2px;
             display: block;
             width: 100%;
@@ -359,8 +356,8 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         
         .info-value {
             width: 100%;
-            font-size: 11px;
-            padding: 2px 0;
+            font-size: 10px;
+            padding: 1px 0;
             border-bottom: 1px dotted #ccc;
             min-height: 16px;
             word-wrap: break-word;
@@ -370,12 +367,11 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         .main-content {
             display: flex;
             flex: 1;
-            overflow: hidden;
+            min-height: 0;
         }
         
         .left-sidebar {
             width: 120px;
-            border-right: 2px solid #000;
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
@@ -383,89 +379,168 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         
         .sidebar-section {
             flex: 1;
-            border-bottom: 2px solid #000;
             display: flex;
             align-items: flex-start;
             justify-content: center;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 12px;
             text-align: center;
             padding: 5px;
+            min-height: 25%;
+            border-right: 2px solid #000;
+            border-bottom: 2px solid #000;
         }
         
         .sidebar-section:last-child {
-            border-bottom: none;
+            border-bottom: 4px solid black;
         }
         
-        .content-grid {
+        .content-area {
             flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto auto auto;
-            gap: 0;
-            overflow: visible;
-            min-height: auto;
-        }
-        
-        .content-section {
-            border: 1px solid #000;
-            padding: 10px;
-            position: relative;
-            overflow: visible;
             display: flex;
             flex-direction: column;
-            min-height: auto;
-            height: auto;
+            border-right: 2px solid #000;
+            min-width: 0;
         }
         
-        .section-title {
-            position: absolute;
-            top: -1px;
-            left: 10px;
-            background: white;
-            padding: 0 5px;
-            font-weight: bold;
-            font-size: 14px;
-            z-index: 1;
+        .top-row,
+        .middle-row,
+        .bottom-row {
+            display: flex;
+            width: 100%;
+            border-bottom: 2px solid #000;
+            height: auto; /* Cho phép chiều cao tự động thay đổi */
+        }
+
+        .top-row {
+            display: flex;
+            min-height: auto;
+            border-bottom: 2px solid #000;
+        }
+        
+        .middle-row {
+            display: flex;
+            min-height: auto;
+            border-bottom: 2px solid #000;
         }
         
         .bottom-row {
-            display: grid;
-            grid-column: 1 / -1;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0;
-            min-height: 150px;
+            display: flex;
+            min-height: auto;
+            border-bottom: 2px solid #000;
         }
-        .image-box {
-            border: 1px dashed #999;
-            height: 180px;
+        
+        .content-section {
+            flex: 1 1 0;  /* Cho phép các ô co giãn linh hoạt */
+            min-width: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 4px;
+            background: #fff;
+            overflow: visible;   /* Quan trọng */
+            box-sizing: border-box;
+            font-size: 13px;
+            height: auto;        /* Cho phép cao theo nội dung */
+            min-height: auto;
+            border-bottom:1px solid #000;
+        }
+        
+        /* Top row sections */
+        .top-row .content-section:first-child {
+            flex: 1;
+            border-right: 2px solid #000;
+        }
+        
+        .top-row .content-section:last-child {
+            flex: 1;
+            border-right: 2px solid #000;
+        }
+        
+        /* Middle row sections */
+        .middle-row .content-section:first-child {
+            flex: 1;
+            border-right: 2px solid #000;
+        }
+        
+        .middle-row .content-section:last-child {
+            flex: 1; 
+            border-right: 2px solid #000;
+        }
+        
+        /* Bottom row sections - 4 equal columns */
+        .bottom-row .content-section {
+            flex: 1;
+            border-right: 2px solid #000;
+        }
+        
+        .bottom-row .content-section:last-child {
+            flex: 1;
+            border-right: 2px solid #000;
+        }
+
+        .section-title {
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0 0 0px 0;
+            padding: 1px 1px;
+            background: #f5f5f5;
+            border-radius: 3px;
+            position: relative;
+            z-index: 1;
+            font-size: 12px;
+            color: #333;
+            flex-shrink: 0;
+        }
+        
+        .image-box { 
+            border: 2px solid #000;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            overflow: visible;   /* Cho ảnh to không bị co chữ */
             background: #fff;
-        }
-        .image-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            display: block;
+            margin-top: 1px;
+            height: auto;        /* Bỏ cứng 150px */
+            min-height: 100px;
         }
         
+        .image-box img { 
+            max-width: 100%; 
+            max-height: 100%; 
+            object-fit: contain; 
+            display: block; 
+        }
+
         .section-content {
             flex: 1;
+            white-space: pre-line;
+            text-align: justify;
             border: none;
-            resize: none;
+            padding: 5px;
             font-family: inherit;
-            padding: 15px 5px 5px 5px;
             overflow: visible;
             word-wrap: break-word;
             white-space: pre-line;
-            line-height: 1.4;
-            min-height: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .section-content .image-box {
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .section-content .image-box img {
+            max-width: 100%;
             height: auto;
+            border-radius: 4px;
+            border: 1px solid #ccc;
         }
         
+        /* Dynamic content styling */
         .content-thuc-trang {
             ${getContentStyle(idea.solution || '')}
         }
@@ -490,6 +565,12 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             ${getContentStyle(idea.calculationDescription || '')}
         }
         
+        /* Xử lý nội dung dài */
+        .long-content {
+            max-height: none !important;
+            overflow: visible !important;
+        }
+        
         @media print {
             body {
                 margin: 0;
@@ -498,13 +579,28 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             
             .a3-container {
                 margin: 0;
-                border: 1px solid #000;
+                border: 2px solid #000 !important;
+                min-height: 297mm;
+                height: auto;
+            }
+            
+            .content-section {
+                page-break-inside: avoid;
+                overflow: visible;
+            }
+
+            /* Đảm bảo border không bị mất trong print */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
         }
     </style>
 </head>
 <body>
     <div class="a3-container">
+        <!-- Header -->
         <div class="header">
             <div class="logo-section">
                 ${logoDataUrl
@@ -518,21 +614,27 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
                 </div>
             </div>
             <div class="info-sections">
+                <!-- Ô 1: Tên đề tài và Mã ý tưởng -->
                 <div class="info-section">
                     <div class="info-row">
                         <span class="info-label">TÊN ĐỀ TÀI:</span>
                         <div class="info-value">${idea.topicTitle || idea.idea || 'N/A'}</div>
                     </div>
+                    
                 </div>
+                
+                <!-- Ô 2: Người lập, Ngày lập, Đơn vị -->
                 <div class="info-section">
                     <div class="info-row">
                         <span class="info-label">MÃ Ý TƯỞNG: ${idea.ideaCode || 'N/A'}</span>
+                        
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Người lập: ${idea.fullName || 'N/A'}</span>
+                        <span class="info-label">Người lâp:  ${idea.fullName || 'N/A'}</span>
+                        
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Ngày lập: ${formatDate(idea.submissionDate)}</span>
+                        <span class="info-label">Ngày lập: ${formatDate(new Date())}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Đơn vị: ${idea.implementationDepartment || idea.department || 'N/A'}</span>
@@ -541,62 +643,80 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             </div>
         </div>
 
+        <!-- Main Content -->
         <div class="main-content">
+            <!-- Left Sidebar -->
             <div class="left-sidebar">
-                <div class="sidebar-section">NGƯỜI LẬP</div>
-                <div class="sidebar-section">P. CẢI TIẾN</div>
-                <div class="sidebar-section">GĐ KT</div>
-                <div class="sidebar-section">GĐ ĐH</div>
+                <div class="sidebar-section">
+                    NGƯỜI LẬP
+                </div>
+                <div class="sidebar-section">
+                    P. CẢI TIẾN
+                </div>
+                <div class="sidebar-section">
+                    GĐ KT
+                </div>
+                <div class="sidebar-section">
+                    GĐ ĐH
+                </div>
             </div>
 
-            <div class="content-grid" style="grid-template-rows: auto auto auto;">
-                <div class="content-section">
-                    <div class="section-title">THỰC TRẠNG</div>
-                    <div class="section-content content-thuc-trang">${idea.solution || 'Mô tả thực trạng hiện tại...'}</div>
-                </div>
-                
-                <div class="content-section">
-                    <div class="section-title">ĐỐI SÁCH</div>
-                    <div class="section-content content-doi-sach">${idea.benefit || 'Đối sách đề xuất...'}</div>
-                </div>
-
-                <div class="content-section">
-                    <div class="section-title">HÌNH ẢNH TRƯỚC</div>
-                    <div class="section-content">
-                      ${(idea as any).beforeImage
-                        ? `<div class=\"image-box\"><img src=\"${(idea as any).beforeImage}\" alt=\"Hình ảnh trước\" /></div>`
-                        : '<div class=\"image-box\" style=\"color:#999; font-style:italic;\">Chưa có hình ảnh trước</div>'}
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Top Row -->
+                <div class="top-row">
+                    <div class="content-section">
+                        <div class="section-title">THỰC TRẠNG</div>
+                        <div class="section-content content-thuc-trang ${(idea.solution || '').length > 500 ? 'long-content' : ''}">${idea.solution || 'Mô tả thực trạng hiện tại...'}</div>
                     </div>
-                </div>
-                
-                <div class="content-section">
-                    <div class="section-title">HÌNH ẢNH SAU</div>
-                    <div class="section-content">
-                      ${(idea as any).afterImage
-                        ? `<div class=\"image-box\"><img src=\"${(idea as any).afterImage}\" alt=\"Hình ảnh sau\" /></div>`
-                        : '<div class=\"image-box\" style=\"color:#999; font-style:italic;\">Chưa có hình ảnh sau</div>'}
+                    
+                    <div class="content-section">
+                        <div class="section-title">ĐỐI SÁCH</div>
+                        <div class="section-content content-doi-sach ${(idea.benefit || '').length > 500 ? 'long-content' : ''}">${idea.benefit || 'Đối sách đề xuất...'}</div>
                     </div>
                 </div>
 
-                <div class="bottom-row" style="min-height: auto;">
+                <!-- Middle Row -->
+                <div class="middle-row">
+                    <div class="content-section">
+                        <div class="section-title">HÌNH ẢNH TRƯỚC</div>
+                        <div class="section-content">
+                          ${(idea as any).beforeImage
+                            ? `<div class=\"image-box\"><img src=\"${(idea as any).beforeImage}\" alt=\"Hình ảnh trước\" /></div>`
+                            : '<div class=\"image-box\" style=\"color:#999; font-style:italic;\">Chưa có hình ảnh trước</div>'}
+                        </div>
+                    </div>
+                    
+                    <div class="content-section">
+                        <div class="section-title">HÌNH ẢNH SAU</div>
+                        <div class="section-content">
+                          ${(idea as any).afterImage
+                            ? `<div class=\"image-box\"><img src=\"${(idea as any).afterImage}\" alt=\"Hình ảnh sau\" /></div>`
+                            : '<div class=\"image-box\" style=\"color:#999; font-style:italic;\">Chưa có hình ảnh sau</div>'}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row -->
+                <div class="bottom-row">
                     <div class="content-section">
                         <div class="section-title">LỢI ÍCH</div>
-                        <div class="section-content content-loi-ich">${idea.benefitOutcome || 'Lợi ích đạt được...'}</div>
+                        <div class="section-content content-loi-ich ${(idea.benefitOutcome || '').length > 500 ? 'long-content' : ''}">${idea.benefitOutcome || 'Lợi ích đạt được...'}</div>
                     </div>
                     
                     <div class="content-section">
                         <div class="section-title">ĐÁNH GIÁ</div>
-                        <div class="section-content content-danh-gia">${idea.scalingOpportunity || 'Đánh giá kết quả...'}</div>
+                        <div class="section-content content-danh-gia ${(idea.scalingOpportunity || '').length > 500 ? 'long-content' : ''}">${idea.scalingOpportunity || 'Đánh giá kết quả...'}</div>
                     </div>
                     
                     <div class="content-section">
                         <div class="section-title">CHI PHÍ</div>
-                        <div class="section-content content-chi-phi">${idea.resourcesUsed || 'Chi phí thực hiện...'}</div>
+                        <div class="section-content content-chi-phi ${(idea.resourcesUsed || '').length > 500 ? 'long-content' : ''}">${idea.resourcesUsed || 'Chi phí thực hiện...'}</div>
                     </div>
                     
                     <div class="content-section">
                         <div class="section-title">KHEN THƯỞNG</div>
-                        <div class="section-content content-khen-thuong">${idea.calculationDescription || 'Đề xuất khen thưởng...'}</div>
+                        <div class="section-content content-khen-thuong ${(idea.calculationDescription || '').length > 500 ? 'long-content' : ''}">${idea.calculationDescription || 'Đề xuất khen thưởng...'}</div>
                     </div>
                 </div>
             </div>
@@ -1011,7 +1131,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
               {saving ? 'Đang lưu...' : 'Lưu báo cáo'}
             </Button>
             
-            {/* <Button
+            <Button
               variant="contained"
               color="success"
               onClick={handleExport}
@@ -1031,7 +1151,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
               sx={{ minWidth: 200 }}
             >
               {saving || loading ? 'Đang xử lý...' : 'Lưu và Export PDF'}
-            </Button> */}
+            </Button>
           </Box>
         </CardContent>
       </Card>
