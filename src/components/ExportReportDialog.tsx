@@ -177,6 +177,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
             flex-direction: column;
             justify-content: flex-start;
             border-bottom: 2px solid #000;
+            border-right: 2px solid #000;
         }
         
         .info-section:first-child {
@@ -290,6 +291,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         
         .top-row .content-section:last-child {
             flex: 1;
+            border-right: 2px solid #000;
         }
         
         /* Middle row sections */
@@ -299,7 +301,8 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         }
         
         .middle-row .content-section:last-child {
-            flex: 1;
+            flex: 1; 
+            border-right: 2px solid #000;
         }
         
         /* Bottom row sections - 4 equal columns */
@@ -309,7 +312,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         }
         
         .bottom-row .content-section:last-child {
-            border-right: none;
+            border-right: 2px solid #000;
         }
 
         .section-title {
