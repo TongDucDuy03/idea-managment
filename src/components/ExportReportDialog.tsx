@@ -91,9 +91,9 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
     // Tự động điều chỉnh font size dựa trên độ dài nội dung
     const getContentStyle = (content: string) => {
       const length = (content || '').length;
-      if (length > 500) return 'font-size: 9px; line-height: 1.2;';
-      if (length > 300) return 'font-size: 10px; line-height: 1.3;';
-      if (length > 200) return 'font-size: 11px; line-height: 1.4;';
+      if (length > 500) return 'font-size: 11px; line-height: 1.2;';
+      if (length > 300) return 'font-size: 12px; line-height: 1.3;';
+      if (length > 200) return 'font-size: 13px; line-height: 1.4;';
       return 'font-size: 12px; line-height: 1.4;';
     };
 
@@ -118,8 +118,8 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         }
         
         .a3-container {
-            width: 297mm;
-            min-height: 210mm;
+            width: 420mm; 
+            min-height: 297mm;
             background: white;
             border: 2px solid #000;
             position: relative;
@@ -216,7 +216,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         .main-content {
             display: flex;
             flex: 1;
-            min-height: calc(210mm - 80px);
+            min-height: 0;
         }
         
         .left-sidebar {
@@ -249,8 +249,18 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
             display: flex;
             flex-direction: column;
             border-right: 2px solid #000;
+            min-width: 0;
         }
         
+        .top-row,
+        .middle-row,
+        .bottom-row {
+            display: flex;
+            width: 100%;
+            border-bottom: 2px solid #000;
+            height: auto; /* Cho phép chiều cao tự động thay đổi */
+        }
+
         .top-row {
             display: flex;
             min-height: auto;
@@ -270,6 +280,8 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         }
         
         .content-section {
+            flex: 1 1 0;  /* Cho phép các ô co giãn linh hoạt */
+            min-width: 0;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -277,7 +289,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
             background: #fff;
             overflow: visible;   /* Quan trọng */
             box-sizing: border-box;
-            font-size: 12px;
+            font-size: 13px;
             height: auto;        /* Cho phép cao theo nội dung */
             min-height: auto;
             border-bottom:1px solid #000;
@@ -312,6 +324,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         }
         
         .bottom-row .content-section:last-child {
+            flex: 1;
             border-right: 2px solid #000;
         }
 
@@ -350,13 +363,16 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
 
         .section-content {
             flex: 1;
+            white-space: pre-line;
+            text-align: justify;
             border: none;
             padding: 5px;
             font-family: inherit;
             overflow: visible;
             word-wrap: break-word;
             white-space: pre-line;
-            line-height: 1.4;
+            font-size: 13px;
+            line-height: 1.5;
         }
 
         .section-content .image-box {
@@ -413,7 +429,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
             .a3-container {
                 margin: 0;
                 border: 2px solid #000 !important;
-                min-height: 210mm;
+                min-height: 297mm;
                 height: auto;
             }
             
