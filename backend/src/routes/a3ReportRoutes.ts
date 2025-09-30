@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   createA3Report,
+  searchIdeas,
   getAllA3Reports,
   getA3ReportById,
   getA3ReportByIdeaId,
@@ -13,13 +14,15 @@ import * as auth from '../middleware/auth';
 const router = express.Router();
 
 // Tất cả routes đều cần authentication
-router.use(auth.auth);
+
 
 // Tạo báo cáo A3 mới
 router.post('/', createA3Report);
 
 // Lấy tất cả báo cáo A3
 router.get('/', getAllA3Reports);
+
+router.get('/', searchIdeas);
 
 // Lấy báo cáo A3 theo ID
 router.get('/:id', getA3ReportById);
