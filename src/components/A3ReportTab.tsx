@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 import axios from 'axios';
-import api from '../api/config';
+import api, { getWithFallback } from '../api/config';
 import { Idea } from '../types';
 import A3ReportForm from './A3ReportForm';
 
@@ -42,14 +42,14 @@ const A3ReportTab: React.FC = () => {
       // ✅ Gọi API public lấy đúng ý tưởng theo mã (không cần token)
       let foundIdea: Idea | null = null;
       try {
-        const { data } = await api.get(
+        const { data } = await getWithFallback<Idea>(
           `/ideas/code/${encodeURIComponent(ideaCode)}`
         );
         foundIdea = data;
       } catch (err: any) {
         // Fallback: một số môi trường (Render cũ) chưa có endpoint này
         // Thử tìm qua endpoint search công khai nếu khả dụng
-        const { data } = await api.get(
+        const { data } = await getWithFallback<Idea[]>(
           `/ideas?search=${encodeURIComponent(ideaCode)}`
         );
         if (Array.isArray(data)) {

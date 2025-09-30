@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import { FileDownload as FileDownloadIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 import axios from 'axios';
+import api from '../api/config';
 import { Idea } from '../types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -49,17 +50,26 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
   };
 
   useEffect(() => {
+    const fetchByCode = async () => {
+      if (!idea?.ideaCode) return;
+      try {
+        const { data } = await api.get(`/ideas/code/${encodeURIComponent(idea.ideaCode)}`);
+        setReportData(data);
+        console.log('Loaded idea data by code:', {
+          _id: (data as any)._id,
+          ideaCode: (data as any).ideaCode,
+          hasBeforeImage: 'beforeImage' in (data as any),
+          hasAfterImage: 'afterImage' in (data as any),
+          beforeImageLength: (data as any).beforeImage ? (data as any).beforeImage.length : 0,
+          afterImageLength: (data as any).afterImage ? (data as any).afterImage.length : 0
+        });
+      } catch {
+        // fallback to prop
+        setReportData(idea);
+      }
+    };
     if (idea) {
-      setReportData(idea);
-      // Log để kiểm tra xem hình ảnh có được load đúng không
-      console.log('Loaded idea data:', {
-        _id: idea._id,
-        ideaCode: idea.ideaCode,
-        hasBeforeImage: 'beforeImage' in idea,
-        hasAfterImage: 'afterImage' in idea,
-        beforeImageLength: (idea as any).beforeImage ? (idea as any).beforeImage.length : 0,
-        afterImageLength: (idea as any).afterImage ? (idea as any).afterImage.length : 0
-      });
+      fetchByCode();
     }
   }, [idea]);
 
@@ -202,8 +212,8 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
         reportData: reportData
       });
 
-      // Cập nhật ý tưởng với dữ liệu mới
-      const response = await axios.put(`https://idea-managment.onrender.com/api/ideas/${idea._id}`, reportData);
+      // Cập nhật ý tưởng theo mã (public, không cần token)
+      const response = await api.put(`/ideas/code/${encodeURIComponent(idea.ideaCode)}`, reportData);
 
       console.log('Save response:', {
         _id: response.data._id,
