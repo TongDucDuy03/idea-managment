@@ -6,10 +6,10 @@ const router = express.Router();
 
 // Public routes
 router.post('/', createIdea);
+router.get('/', getAllIdeas);
+router.put('/:id', updateIdea);
 
-// Protected routes
-router.get('/', auth, getAllIdeas);
-router.put('/:id', auth, updateIdea);
+// Protected admin routes
 router.delete('/:id', auth, deleteIdea);
 router.patch('/:id/payment', auth, updatePaymentStatus);
 

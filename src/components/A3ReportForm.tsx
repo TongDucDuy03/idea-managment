@@ -191,11 +191,6 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
     setError('');
     
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Phiên đăng nhập đã hết hạn');
-        return;
-      }
 
       // Log dữ liệu trước khi gửi
       console.log('Saving A3 report data:', {
@@ -208,11 +203,7 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
       });
 
       // Cập nhật ý tưởng với dữ liệu mới
-      const response = await axios.put(`https://idea-managment.onrender.com/api/ideas/${idea._id}`, reportData, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await axios.put(`https://idea-managment.onrender.com/api/ideas/${idea._id}`, reportData);
 
       console.log('Save response:', {
         _id: response.data._id,
