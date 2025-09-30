@@ -38,25 +38,10 @@ const A3ReportTab: React.FC = () => {
     setShowForm(false);
 
     try {
-      // ✅ Gọi API public (không cần token)
-      const response = await axios.get(
-        `https://idea-managment.onrender.com/api/ideas?search=${ideaCode}`
+      // ✅ Gọi API public lấy đúng ý tưởng theo mã (không cần token)
+      const { data: foundIdea } = await axios.get(
+        `/api/ideas/code/${encodeURIComponent(ideaCode)}`
       );
-
-      if (response.data.length === 0) {
-        setError('Không tìm thấy ý tưởng với mã: ' + ideaCode);
-        return;
-      }
-
-      // ✅ Tìm đúng ideaCode
-      const foundIdea = response.data.find(
-        (idea: Idea) => idea.ideaCode === ideaCode
-      );
-
-      if (!foundIdea) {
-        setError('Không tìm thấy ý tưởng với mã: ' + ideaCode);
-        return;
-      }
 
       // ✅ Chỉ cho phép khi trạng thái là "Lập báo cáo A3"
       if (foundIdea.implementationStatus !== 'Lập báo cáo A3') {

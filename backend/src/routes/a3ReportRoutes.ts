@@ -1,7 +1,7 @@
 import express from 'express';
 import {
   createA3Report,
-  searchIdeas,
+  // searchIdeas,
   getAllA3Reports,
   getA3ReportById,
   getA3ReportByIdeaId,
@@ -22,7 +22,7 @@ router.post('/', createA3Report);
 // Lấy tất cả báo cáo A3
 router.get('/', getAllA3Reports);
 
-router.get('/', searchIdeas);
+// router.get('/', searchIdeas);
 
 // Lấy báo cáo A3 theo ID
 router.get('/:id', getA3ReportById);
