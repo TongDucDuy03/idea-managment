@@ -42,16 +42,24 @@ const A3ReportTab: React.FC = () => {
       // ✅ Gọi API public lấy đúng ý tưởng theo mã (không cần token)
       let foundIdea: Idea | null = null;
       try {
-        const { data } = await api.get(`/ideas/code/${encodeURIComponent(ideaCode)}`);
-        foundIdea = data;
+        // Ưu tiên endpoint search công khai mới
+        const { data } = await api.get(`/ideas/public/search`, {
+          params: { ideaCode: ideaCode.trim() }
+        });
+        foundIdea = data as Idea;
       } catch (err: any) {
-        // Fallback: một số môi trường (Render cũ) chưa có endpoint này
-        // Thử tìm qua endpoint search công khai nếu khả dụng
-        const { data } = await getWithFallback<Idea[]>(
-          `/ideas?search=${encodeURIComponent(ideaCode)}`
-        );
-        if (Array.isArray(data)) {
-          foundIdea = data.find((it: Idea) => it.ideaCode === ideaCode) || null;
+        // Fallback: thử endpoint code/:ideaCode nếu server cũ
+        try {
+          const { data } = await api.get(`/ideas/code/${encodeURIComponent(ideaCode)}`);
+          foundIdea = data as Idea;
+        } catch (err2: any) {
+          // Fallback cuối: dùng search chung (nếu server support)
+          const { data } = await getWithFallback<Idea[]>(
+            `/ideas?search=${encodeURIComponent(ideaCode)}`
+          );
+          if (Array.isArray(data)) {
+            foundIdea = data.find((it: Idea) => it.ideaCode === ideaCode) || null;
+          }
         }
       }
 
