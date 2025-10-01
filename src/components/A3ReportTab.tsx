@@ -13,8 +13,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
-import axios from 'axios';
-import api, { getWithFallback } from '../api/config';
+import api from '../api/config';
 import { Idea } from '../types';
 import A3ReportForm from './A3ReportForm';
 
@@ -27,7 +26,9 @@ const A3ReportTab: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
 
   const handleCheckIdea = async () => {
-    if (!ideaCode.trim()) {
+    const trimmedCode = ideaCode.trim();
+    
+    if (!trimmedCode) {
       setError('Vui lòng nhập mã ý tưởng');
       return;
     }
@@ -38,53 +39,41 @@ const A3ReportTab: React.FC = () => {
     setIdea(null);
     setShowForm(false);
 
-    try {
-      // ✅ Gọi API public lấy đúng ý tưởng theo mã (không cần token)
-      let foundIdea: Idea | null = null;
-      try {
-        // Ưu tiên endpoint search công khai mới
-        const { data } = await api.get(`/ideas/search`, {
-          params: { ideaCode: ideaCode.trim() }
-        });
-        foundIdea = data as Idea;
-      } catch (err: any) {
-        // Fallback: thử endpoint code/:ideaCode nếu server cũ
-        try {
-          const { data } = await api.get(`/ideas/code/${encodeURIComponent(ideaCode)}`);
-          foundIdea = data as Idea;
-        } catch (err2: any) {
-          // Fallback cuối: dùng search chung (nếu server support)
-          const { data } = await getWithFallback<Idea[]>(
-            `/ideas?search=${encodeURIComponent(ideaCode)}`
-          );
-          if (Array.isArray(data)) {
-            foundIdea = data.find((it: Idea) => it.ideaCode === ideaCode) || null;
-          }
-        }
-      }
+    console.log('Checking idea with code:', trimmedCode);
 
-      if (!foundIdea) {
-        setError('Không tìm thấy ý tưởng với mã: ' + ideaCode);
+    try {
+      // Gọi endpoint public /ideas/code/:ideaCode
+      const { data } = await api.get(`/ideas/code/${encodeURIComponent(trimmedCode)}`);
+      
+      console.log('Received idea:', data);
+      
+      if (!data) {
+        setError('Không tìm thấy ý tưởng với mã: ' + trimmedCode);
         return;
       }
 
-      // ✅ Chỉ cho phép khi trạng thái là "Lập báo cáo A3"
-      if (foundIdea.implementationStatus !== 'Lập báo cáo A3') {
+      // Kiểm tra trạng thái
+      if (data.implementationStatus !== 'Lập báo cáo A3') {
         setError(
-          `Ý tưởng này chưa ở trạng thái "Lập báo cáo A3". Trạng thái hiện tại: ${foundIdea.implementationStatus}`
+          `Ý tưởng này chưa ở trạng thái "Lập báo cáo A3".\nTrạng thái hiện tại: ${data.implementationStatus || 'Chưa xác định'}`
         );
         return;
       }
 
-      setIdea(foundIdea);
-      setSuccess('Tìm thấy ý tưởng phù hợp. Bạn có thể nhập báo cáo A3.');
+      setIdea(data);
+      setSuccess('✓ Tìm thấy ý tưởng phù hợp. Bạn có thể nhập báo cáo A3.');
       setShowForm(true);
+      
     } catch (error: any) {
       console.error('Error checking idea:', error);
+      
       if (error.response?.status === 404) {
-        setError('Không tìm thấy ý tưởng với mã: ' + ideaCode);
+        setError('Không tìm thấy ý tưởng với mã: ' + trimmedCode);
+      } else if (error.response?.status === 401) {
+        setError('Lỗi xác thực. Vui lòng liên hệ quản trị viên.');
       } else {
-        setError('Không thể kiểm tra mã ý tưởng. Vui lòng thử lại.');
+        const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
+        setError('Không thể kiểm tra mã ý tưởng. Chi tiết: ' + errorMsg);
       }
     } finally {
       setLoading(false);
@@ -134,12 +123,12 @@ const A3ReportTab: React.FC = () => {
           
           <Alert severity="info" sx={{ mb: 3 }}>
             <Typography variant="body2">
-              <strong>Hướng dẫn:</strong> Nếu bạn đã có mã ý tưởng từ email thông báo, hãy nhập mã đó vào ô bên dưới để tiếp tục nhập báo cáo A3.
+              <strong>Hướng dẫn:</strong> Nhập mã ý tưởng bạn nhận được từ email thông báo vào ô bên dưới.
             </Typography>
           </Alert>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-wrap' }}>
               {error}
             </Alert>
           )}
@@ -157,9 +146,10 @@ const A3ReportTab: React.FC = () => {
               value={ideaCode}
               onChange={(e) => setIdeaCode(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Nhập mã ý tưởng..."
+              placeholder="Ví dụ: 1234567890-123"
               variant="outlined"
               disabled={loading}
+              helperText="Nhập chính xác mã ý tưởng từ email"
             />
             <Button
               variant="contained"
@@ -171,7 +161,7 @@ const A3ReportTab: React.FC = () => {
               }
               sx={{ minWidth: 140, height: 56 }}
             >
-              {loading ? 'Đang kiểm tra...' : 'Kiểm tra mã ý tưởng'}
+              {loading ? 'Đang kiểm tra...' : 'Kiểm tra'}
             </Button>
           </Box>
 
@@ -185,15 +175,15 @@ const A3ReportTab: React.FC = () => {
             </Typography>
             <Typography variant="body2" component="div" sx={{ lineHeight: 1.8 }}>
               <ol>
-                <li><strong>Nhập mã ý tưởng:</strong> Dán mã ý tưởng bạn nhận được từ email thông báo vào ô bên trên</li>
-                <li><strong>Kiểm tra mã:</strong> Nhấn nút "Kiểm tra mã ý tưởng" để xác minh</li>
-                <li><strong>Xác nhận trạng thái:</strong> Hệ thống sẽ kiểm tra xem ý tưởng có ở trạng thái "Lập báo cáo A3" không</li>
-                <li><strong>Nhập báo cáo:</strong> Nếu đúng, form nhập báo cáo A3 sẽ hiển thị với dữ liệu đã có sẵn</li>
-                <li><strong>Hoàn thành:</strong> Điền thông tin còn thiếu và nhấn "Lưu và Export PDF" để tải file báo cáo</li>
+                <li><strong>Nhập mã ý tưởng:</strong> Copy mã từ email thông báo và dán vào ô trên</li>
+                <li><strong>Kiểm tra mã:</strong> Nhấn nút "Kiểm tra" hoặc phím Enter</li>
+                <li><strong>Xác nhận trạng thái:</strong> Hệ thống kiểm tra trạng thái "Lập báo cáo A3"</li>
+                <li><strong>Nhập báo cáo:</strong> Form sẽ hiển thị với dữ liệu có sẵn</li>
+                <li><strong>Hoàn thành:</strong> Điền thông tin và nhấn "Lưu và Export PDF"</li>
               </ol>
               <Box sx={{ mt: 2, p: 2, backgroundColor: '#e3f2fd', borderRadius: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                  💡 Lưu ý: Chỉ những ý tưởng đã được phê duyệt và chuyển sang trạng thái "Lập báo cáo A3" mới có thể nhập báo cáo.
+                  💡 Lưu ý: Chỉ ý tưởng đã được phê duyệt và ở trạng thái "Lập báo cáo A3" mới có thể nhập báo cáo.
                 </Typography>
               </Box>
             </Typography>
