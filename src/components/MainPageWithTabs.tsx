@@ -55,6 +55,11 @@ const MainPageWithTabs: React.FC = () => {
               Hệ thống Ghi nhận và Quản lý Ý tưởng Cải tiến
             </Typography>
           </Box>
+          <Box sx={{ textAlign: 'center', mb: 2 }}>
+            <Typography variant="body1" sx={{ color: '#666', fontSize: '1.1rem' }}>
+              Chào mừng bạn đến với hệ thống! Bạn có thể đề xuất ý tưởng mới hoặc nhập báo cáo A3 bằng mã ý tưởng.
+            </Typography>
+          </Box>
           <Divider sx={{ mb: 0 }} />
           <Tabs
             value={tabValue}

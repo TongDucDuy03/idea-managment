@@ -123,6 +123,12 @@ const A3ReportTab: React.FC = () => {
           >
             Nhập mã ý tưởng để kiểm tra và tạo báo cáo A3
           </Typography>
+          
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <Typography variant="body2">
+              <strong>Hướng dẫn:</strong> Nếu bạn đã có mã ý tưởng từ email thông báo, hãy nhập mã đó vào ô bên dưới để tiếp tục nhập báo cáo A3.
+            </Typography>
+          </Alert>
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -171,21 +177,17 @@ const A3ReportTab: React.FC = () => {
             </Typography>
             <Typography variant="body2" component="div" sx={{ lineHeight: 1.8 }}>
               <ol>
-                <li>Nhập mã ý tưởng vào ô bên trên</li>
-                <li>Nhấn nút "Kiểm tra mã ý tưởng" để xác minh</li>
-                <li>
-                  Hệ thống sẽ kiểm tra xem ý tưởng có ở trạng thái "Lập báo cáo
-                  A3" không
-                </li>
-                <li>
-                  Nếu đúng, form nhập báo cáo A3 sẽ hiển thị với dữ liệu đã có
-                  sẵn
-                </li>
-                <li>
-                  Điền thông tin còn thiếu và nhấn "Export báo cáo A3" để tải
-                  file
-                </li>
+                <li><strong>Nhập mã ý tưởng:</strong> Dán mã ý tưởng bạn nhận được từ email thông báo vào ô bên trên</li>
+                <li><strong>Kiểm tra mã:</strong> Nhấn nút "Kiểm tra mã ý tưởng" để xác minh</li>
+                <li><strong>Xác nhận trạng thái:</strong> Hệ thống sẽ kiểm tra xem ý tưởng có ở trạng thái "Lập báo cáo A3" không</li>
+                <li><strong>Nhập báo cáo:</strong> Nếu đúng, form nhập báo cáo A3 sẽ hiển thị với dữ liệu đã có sẵn</li>
+                <li><strong>Hoàn thành:</strong> Điền thông tin còn thiếu và nhấn "Lưu và Export PDF" để tải file báo cáo</li>
               </ol>
+              <Box sx={{ mt: 2, p: 2, backgroundColor: '#e3f2fd', borderRadius: 1 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                  💡 Lưu ý: Chỉ những ý tưởng đã được phê duyệt và chuyển sang trạng thái "Lập báo cáo A3" mới có thể nhập báo cáo.
+                </Typography>
+              </Box>
             </Typography>
           </Paper>
         </CardContent>

@@ -119,6 +119,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         
         .a3-container {
             width: 420mm; 
+            min-width: 420mm;
             min-height: 297mm;
             background: white;
             border: 2px solid #000;
@@ -387,7 +388,7 @@ const ExportReportDialog: React.FC<ExportReportDialogProps> = ({
         }
 
         .section-content .image-box {
-            margin-top: 8px;
+            margin-top: 1px;
             display: flex;
             justify-content: center;
             align-items: center;
