@@ -42,9 +42,7 @@ const A3ReportTab: React.FC = () => {
       // ✅ Gọi API public lấy đúng ý tưởng theo mã (không cần token)
       let foundIdea: Idea | null = null;
       try {
-        const { data } = await getWithFallback<Idea>(
-          `/ideas/code/${encodeURIComponent(ideaCode)}`
-        );
+        const { data } = await api.get(`/ideas/code/${encodeURIComponent(ideaCode)}`);
         foundIdea = data;
       } catch (err: any) {
         // Fallback: một số môi trường (Render cũ) chưa có endpoint này

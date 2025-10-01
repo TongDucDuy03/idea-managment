@@ -480,6 +480,20 @@ const A3ReportForm: React.FC<A3ReportFormProps> = ({ idea, onClose }) => {
             border-right: 2px solid #000;
         }
 
+        /* Custom widths for bottom row sections */
+        .bottom-row .content-section:nth-child(1) { /* Lợi ích */
+            flex: 0 0 40%;
+        }
+        .bottom-row .content-section:nth-child(2) { /* Đánh giá */
+            flex: 0 0 15%;
+        }
+        .bottom-row .content-section:nth-child(3) { /* Chi phí */
+            flex: 0 0 15%;
+        }
+        .bottom-row .content-section:nth-child(4) { /* Khen thưởng */
+            flex: 0 0 30%;
+        }
+
         .section-title {
             font-weight: bold;
             text-transform: uppercase;
