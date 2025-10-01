@@ -5,60 +5,67 @@ import { auth } from '../middleware/auth';
 
 const router = express.Router();
 
-// ========================================
-// PUBLIC ROUTES - ĐẶT TRƯỚC CÁC ROUTE KHÁC
-// ========================================
+// ===========================================
+// QUAN TRỌNG: PUBLIC ROUTES PHẢI ĐẶT TRƯỚC!
+// ===========================================
 
-// Public: tạo ý tưởng mới
+// 1. Public: Tạo ý tưởng mới
 router.post('/', createIdea);
 
-// Public: tìm ý tưởng theo mã code (endpoint chính)
+// 2. Public: Tìm ý tưởng theo mã code - ENDPOINT CHÍNH
 router.get('/code/:ideaCode', async (req, res) => {
   try {
     const { ideaCode } = req.params;
-    console.log('GET /ideas/code/:ideaCode - ideaCode:', ideaCode);
+    console.log('[PUBLIC] GET /ideas/code/:ideaCode - Searching for:', ideaCode);
     
     const idea = await Idea.findOne({ ideaCode });
+    
     if (!idea) {
+      console.log('[PUBLIC] Idea not found:', ideaCode);
       return res.status(404).json({ message: 'Không tìm thấy ý tưởng với mã này' });
     }
     
-    console.log('Found idea:', idea.ideaCode, 'implementationStatus:', idea.implementationStatus);
-    res.json(idea);
+    console.log('[PUBLIC] Found idea:', {
+      id: idea._id,
+      code: idea.ideaCode,
+      status: idea.implementationStatus
+    });
+    
+    return res.json(idea);
   } catch (error) {
-    console.error('Error getting idea by code:', error);
-    res.status(500).json({ message: 'Lỗi server', error });
+    console.error('[PUBLIC] Error getting idea by code:', error);
+    return res.status(500).json({ message: 'Lỗi server', error });
   }
 });
 
-// Public: tìm kiếm ý tưởng theo query param (dự phòng)
+// 3. Public: Tìm kiếm theo query param (dự phòng)
 router.get('/search', async (req, res) => {
   try {
     const { ideaCode } = req.query;
-    console.log('GET /ideas/search - ideaCode:', ideaCode);
+    console.log('[PUBLIC] GET /ideas/search - Query:', ideaCode);
     
     if (!ideaCode || typeof ideaCode !== 'string') {
       return res.status(400).json({ message: 'Thiếu tham số ideaCode' });
     }
     
     const idea = await Idea.findOne({ ideaCode: ideaCode.trim() });
+    
     if (!idea) {
       return res.status(404).json({ message: 'Không tìm thấy ý tưởng với mã này' });
     }
     
-    console.log('Found idea via search:', idea.ideaCode);
-    res.json(idea);
+    return res.json(idea);
   } catch (error) {
-    console.error('Error in public search:', error);
-    res.status(500).json({ message: 'Lỗi server', error });
+    console.error('[PUBLIC] Error in search:', error);
+    return res.status(500).json({ message: 'Lỗi server', error });
   }
 });
 
-// Public: cập nhật ý tưởng theo code (chỉ các trường A3)
+// 4. Public: Cập nhật ý tưởng theo code (chỉ các trường A3)
 router.put('/code/:ideaCode', async (req, res) => {
   try {
     const { ideaCode } = req.params;
-    console.log('PUT /ideas/code/:ideaCode - ideaCode:', ideaCode);
+    console.log('[PUBLIC] PUT /ideas/code/:ideaCode - Code:', ideaCode);
     
     const idea = await Idea.findOne({ ideaCode });
     if (!idea) {
@@ -66,15 +73,16 @@ router.put('/code/:ideaCode', async (req, res) => {
     }
 
     // Kiểm tra trạng thái
-    if ((idea as any).implementationStatus !== 'Lập báo cáo A3') {
+    const currentStatus = (idea as any).implementationStatus;
+    if (currentStatus !== 'Lập báo cáo A3') {
       return res.status(400).json({ 
         message: 'Ý tưởng chưa ở trạng thái "Lập báo cáo A3"',
-        currentStatus: (idea as any).implementationStatus 
+        currentStatus: currentStatus
       });
     }
 
     // Chỉ cho phép cập nhật các trường A3
-    const allowedFields: (keyof any)[] = [
+    const allowedFields = [
       'topicTitle',
       'solution',
       'benefit',
@@ -86,36 +94,37 @@ router.put('/code/:ideaCode', async (req, res) => {
       'afterImage'
     ];
 
-    const updatePayload: Record<string, any> = {};
+    const updatePayload: any = {};
     for (const key of allowedFields) {
-      if (Object.prototype.hasOwnProperty.call(req.body, key)) {
-        updatePayload[key as string] = (req.body as any)[key];
+      if (req.body[key] !== undefined) {
+        updatePayload[key] = req.body[key];
       }
     }
 
+    console.log('[PUBLIC] Updating fields:', Object.keys(updatePayload));
     const updated = await Idea.findByIdAndUpdate(idea._id, updatePayload, { new: true });
-    console.log('Updated idea:', updated?.ideaCode);
+    
     return res.json(updated);
   } catch (error) {
-    console.error('Error in public update by code:', error);
-    res.status(500).json({ message: 'Lỗi server', error });
+    console.error('[PUBLIC] Error updating by code:', error);
+    return res.status(500).json({ message: 'Lỗi server', error });
   }
 });
 
-// ========================================
-// PROTECTED ROUTES (cần authentication)
-// ========================================
+// ===========================================
+// PROTECTED ROUTES (yêu cầu authentication)
+// ===========================================
 
-// Protected: lấy tất cả ý tưởng (dành cho admin)
+// Protected: Lấy tất cả ý tưởng (admin)
 router.get('/', auth, getAllIdeas);
 
-// Protected: cập nhật ý tưởng theo ID (admin)
+// Protected: Cập nhật ý tưởng theo ID (admin)
 router.put('/:id', auth, updateIdea);
 
-// Protected: xóa ý tưởng (admin)
+// Protected: Xóa ý tưởng (admin)
 router.delete('/:id', auth, deleteIdea);
 
-// Protected: cập nhật trạng thái thanh toán (admin)
+// Protected: Cập nhật trạng thái thanh toán (admin)
 router.patch('/:id/payment', auth, updatePaymentStatus);
 
 export default router;
