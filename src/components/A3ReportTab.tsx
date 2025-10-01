@@ -43,7 +43,7 @@ const A3ReportTab: React.FC = () => {
       let foundIdea: Idea | null = null;
       try {
         // Ưu tiên endpoint search công khai mới
-        const { data } = await api.get(`/ideas/public/search`, {
+        const { data } = await api.get(`/ideas/search`, {
           params: { ideaCode: ideaCode.trim() }
         });
         foundIdea = data as Idea;

@@ -10,6 +10,26 @@ router.post('/', createIdea);
 router.get('/', getAllIdeas);
 router.put('/:id', updateIdea);
 
+// Public: search ideas by code (no auth required)
+router.get('/search', async (req, res) => {
+  try {
+    const { ideaCode } = req.query;
+    if (!ideaCode) {
+      return res.status(400).json({ message: 'Thiếu tham số ideaCode' });
+    }
+    
+    const idea = await Idea.findOne({ ideaCode });
+    if (!idea) {
+      return res.status(404).json({ message: 'Không tìm thấy ý tưởng với mã này' });
+    }
+    
+    res.json(idea);
+  } catch (error) {
+    console.error('Public search error:', error);
+    res.status(500).json({ message: 'Lỗi server', error });
+  }
+});
+
 // Protected admin routes
 router.delete('/:id', auth, deleteIdea);
 router.patch('/:id/payment', auth, updatePaymentStatus);
