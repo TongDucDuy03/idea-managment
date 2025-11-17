@@ -15,6 +15,7 @@ export interface IIdea extends Document {
   note?: string;
   benefitValue?: number; // Giá trị làm lợi (VND)
   rewardAmount?: number; // Tiền thưởng (VND)
+  rewardApprovalDate?: Date; // Ngày duyệt khen thưởng
   // New fields
   benefitOutcome?: string; // Lợi ích mang lại (mô tả)
   resourcesUsed?: string; // Nguồn lực sử dụng
@@ -48,6 +49,7 @@ const IdeaSchema: Schema = new Schema({
   note: { type: String, required: false },
   benefitValue: { type: Number, required: false, default: 0 },
   rewardAmount: { type: Number, required: false, default: 0 },
+  rewardApprovalDate: { type: Date, required: false },
   // New fields
   benefitOutcome: { type: String, required: false },
   resourcesUsed: { type: String, required: false },
