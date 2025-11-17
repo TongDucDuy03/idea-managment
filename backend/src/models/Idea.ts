@@ -12,6 +12,8 @@ export interface IIdea extends Document {
   status: 'pending' | 'rejected' | 'noted' | 'approved'; // Quyết định phê duyệt (cũ)
   implementationStatus: 'Đề xuất mới' | 'Xem xét' | 'Phê duyệt' | 'Phản hồi phê duyệt' | 'Đang triển khai' | 'Lập báo cáo A3' | 'Phê duyệt khen thưởng' | 'Đã khen thưởng' | 'Không đạt'; // Trạng thái triển khai (mới)
   implementationDepartment?: string;
+  // Legacy field used in migration scripts (hướng triển khai cũ)
+  implementationDirection?: string;
   note?: string;
   benefitValue?: number; // Giá trị làm lợi (VND)
   rewardAmount?: number; // Tiền thưởng (VND)
@@ -46,6 +48,8 @@ const IdeaSchema: Schema = new Schema({
     default: 'Đề xuất mới' 
   },
   implementationDepartment: { type: String, required: false },
+  // Legacy field giữ lại để phục vụ các script migrate cũ
+  implementationDirection: { type: String, required: false },
   note: { type: String, required: false },
   benefitValue: { type: Number, required: false, default: 0 },
   rewardAmount: { type: Number, required: false, default: 0 },
