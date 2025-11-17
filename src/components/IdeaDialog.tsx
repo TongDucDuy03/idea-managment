@@ -140,8 +140,8 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         calculationDescription: (idea as any).calculationDescription || '',
         topicTitle: (idea as any).topicTitle || '',
         scalingOpportunity: (idea as any).scalingOpportunity || '',
-        beforeImage: (idea as any).beforeImage || '',
-        afterImage: (idea as any).afterImage || ''
+        beforeImage: (idea as any).beforeImage || null,
+        afterImage: (idea as any).afterImage || null
       });
     } else {
       setFormData({
@@ -266,17 +266,42 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Prepare data with proper date formatting
+      // Prepare data with proper formatting
       const submitData: any = { ...formData };
       
       // Convert rewardApprovalDate to ISO string if it exists
       if (submitData.rewardApprovalDate instanceof Date) {
         // Convert to ISO string (will be in UTC)
         submitData.rewardApprovalDate = submitData.rewardApprovalDate.toISOString();
-      } else if (!submitData.rewardApprovalDate) {
-        // Remove if undefined or null
-        delete submitData.rewardApprovalDate;
+      } else if (submitData.rewardApprovalDate === null || submitData.rewardApprovalDate === undefined) {
+        // Explicitly set to null if it was cleared
+        submitData.rewardApprovalDate = null;
       }
+      
+      // Handle beforeImage - always include it (null, empty string, or base64)
+      // Convert empty string to null for consistency
+      if (submitData.beforeImage === '') {
+        submitData.beforeImage = null;
+      }
+      // If it's null, undefined, or a non-empty string, keep it as is
+      
+      // Handle afterImage - always include it (null, empty string, or base64)
+      if (submitData.afterImage === '') {
+        submitData.afterImage = null;
+      }
+      // If it's null, undefined, or a non-empty string, keep it as is
+      
+      console.log('Submitting data:', {
+        hasRewardApprovalDate: submitData.rewardApprovalDate !== null && submitData.rewardApprovalDate !== undefined,
+        rewardApprovalDate: submitData.rewardApprovalDate,
+        hasBeforeImage: submitData.beforeImage !== null && submitData.beforeImage !== undefined,
+        beforeImageLength: submitData.beforeImage ? submitData.beforeImage.length : 0,
+        beforeImageType: typeof submitData.beforeImage,
+        hasAfterImage: submitData.afterImage !== null && submitData.afterImage !== undefined,
+        afterImageLength: submitData.afterImage ? submitData.afterImage.length : 0,
+        afterImageType: typeof submitData.afterImage,
+        keys: Object.keys(submitData)
+      });
       
       await onSave(submitData);
       onClose();

@@ -122,6 +122,18 @@ export const updateIdea = async (req: Request, res: Response) => {
       // Allow clearing the date
       updateData.rewardApprovalDate = null;
     }
+    
+    // Handle beforeImage - allow null to clear, or keep string value
+    if (updateData.beforeImage === null || updateData.beforeImage === '') {
+      updateData.beforeImage = null;
+    }
+    // If it's a string (base64), keep it as is
+    
+    // Handle afterImage - allow null to clear, or keep string value
+    if (updateData.afterImage === null || updateData.afterImage === '') {
+      updateData.afterImage = null;
+    }
+    // If it's a string (base64), keep it as is
 
     const idea = await Idea.findByIdAndUpdate(
       req.params.id,
