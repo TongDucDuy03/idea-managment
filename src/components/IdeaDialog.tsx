@@ -104,6 +104,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
     implementationStatus: 'Đề xuất mới',
     benefitValue: 0,
     rewardAmount: 0,
+    rewardApprovalDate: undefined,
     benefitOutcome: '',
     resourcesUsed: '',
     calculationDescription: '',
@@ -129,6 +130,11 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         implementationStatus: idea.implementationStatus || 'Đề xuất mới',
         benefitValue: idea.benefitValue || 0,
         rewardAmount: idea.rewardAmount || 0,
+        rewardApprovalDate: (idea as any).rewardApprovalDate ? (() => {
+          // Adjust for GMT+7 timezone when loading
+          const date = new Date((idea as any).rewardApprovalDate);
+          return date;
+        })() : undefined,
         benefitOutcome: (idea as any).benefitOutcome || '',
         resourcesUsed: (idea as any).resourcesUsed || '',
         calculationDescription: (idea as any).calculationDescription || '',
@@ -150,6 +156,7 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
         implementationStatus: 'Đề xuất mới',
         benefitValue: 0,
         rewardAmount: 0,
+        rewardApprovalDate: undefined,
         benefitOutcome: '',
         resourcesUsed: '',
         calculationDescription: '',
@@ -259,7 +266,19 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await onSave(formData);
+      // Prepare data with proper date formatting
+      const submitData: any = { ...formData };
+      
+      // Convert rewardApprovalDate to ISO string if it exists
+      if (submitData.rewardApprovalDate instanceof Date) {
+        // Convert to ISO string (will be in UTC)
+        submitData.rewardApprovalDate = submitData.rewardApprovalDate.toISOString();
+      } else if (!submitData.rewardApprovalDate) {
+        // Remove if undefined or null
+        delete submitData.rewardApprovalDate;
+      }
+      
+      await onSave(submitData);
       onClose();
     } catch (error: any) {
       setError(error.response?.data?.message || 'Có lỗi xảy ra');
@@ -519,6 +538,44 @@ const IdeaDialog: React.FC<IdeaDialogProps> = ({
               fullWidth
               inputProps={{ min: 0, step: 1 }}
               helperText="Ví dụ: 1.000.000"
+            />
+            <TextField
+              name="rewardApprovalDate"
+              label="Ngày duyệt khen thưởng"
+              type="datetime-local"
+              value={formData.rewardApprovalDate ? (() => {
+                // Convert UTC date to local datetime string for input
+                const date = new Date(formData.rewardApprovalDate);
+                // Get local date components
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+              })() : ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value) {
+                  // Parse the datetime-local value (it's already in local time)
+                  // Create date object which will be converted to UTC when sent
+                  const localDate = new Date(value);
+                  setFormData(prev => ({
+                    ...prev,
+                    rewardApprovalDate: localDate
+                  }));
+                } else {
+                  setFormData(prev => ({
+                    ...prev,
+                    rewardApprovalDate: undefined
+                  }));
+                }
+              }}
+              fullWidth
+              InputLabelProps={{
+                shrink: true,
+              }}
+              sx={textFieldStyle}
             />
             {isEdit && (
               <FormControl fullWidth>

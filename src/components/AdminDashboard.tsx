@@ -46,6 +46,10 @@ const AdminDashboard: React.FC = () => {
   const [ideaCodeFilter, setIdeaCodeFilter] = useState('');
   const [fullNameFilter, setFullNameFilter] = useState('');
   const [ideaTextFilter, setIdeaTextFilter] = useState('');
+  const [submissionDateFromFilter, setSubmissionDateFromFilter] = useState('');
+  const [submissionDateToFilter, setSubmissionDateToFilter] = useState('');
+  const [rewardApprovalDateFromFilter, setRewardApprovalDateFromFilter] = useState('');
+  const [rewardApprovalDateToFilter, setRewardApprovalDateToFilter] = useState('');
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   
   const [paginationModel, setPaginationModel] = useState({
@@ -78,6 +82,7 @@ const AdminDashboard: React.FC = () => {
     'note',
     'benefitValue',
     'rewardAmount',
+    'rewardApprovalDate',
     'actions'
   ] as const;
 
@@ -243,6 +248,26 @@ const AdminDashboard: React.FC = () => {
     setPaginationModel(prev => ({ ...prev, page: 0 }));
   };
 
+  const handleSubmissionDateFromFilter = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSubmissionDateFromFilter(event.target.value);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  const handleSubmissionDateToFilter = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSubmissionDateToFilter(event.target.value);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  const handleRewardApprovalDateFromFilter = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRewardApprovalDateFromFilter(event.target.value);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  const handleRewardApprovalDateToFilter = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRewardApprovalDateToFilter(event.target.value);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
   
   const handleClearAllFilters = () => {
     setStatusFilter([]);
@@ -252,6 +277,10 @@ const AdminDashboard: React.FC = () => {
     setIdeaCodeFilter('');
     setFullNameFilter('');
     setIdeaTextFilter('');
+    setSubmissionDateFromFilter('');
+    setSubmissionDateToFilter('');
+    setRewardApprovalDateFromFilter('');
+    setRewardApprovalDateToFilter('');
     setPaginationModel(prev => ({ ...prev, page: 0 }));
   };
 
@@ -410,6 +439,10 @@ const AdminDashboard: React.FC = () => {
       'Ghi chú': (idea as any).note || '',
       'Giá trị làm lợi (VND)': (idea as any).benefitValue ? (idea as any).benefitValue.toLocaleString('vi-VN') : '0',
       'Tiền thưởng (VND)': (idea as any).rewardAmount ? (idea as any).rewardAmount.toLocaleString('vi-VN') : '0',
+      'Ngày duyệt khen thưởng': (idea as any).rewardApprovalDate ? (() => {
+        const date = new Date((idea as any).rewardApprovalDate);
+        return date.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+      })() : '',
       'Ngày gửi': new Date(idea.submissionDate).toLocaleDateString('vi-VN')
     }));
 
@@ -437,6 +470,60 @@ const AdminDashboard: React.FC = () => {
     const matchesDepartment = departmentFilter.length === 0 || departmentFilter.includes((idea as any).department);
     const matchesImplementationDepartment = implementationDepartmentFilter.length === 0 || implementationDepartmentFilter.includes(((idea as any).implementationDepartment || ''));
 
+    // Filter by submission date
+    let matchesSubmissionDate = true;
+    if (submissionDateFromFilter || submissionDateToFilter) {
+      const submissionDate = new Date(idea.submissionDate);
+      const submissionDateOnly = new Date(submissionDate.getFullYear(), submissionDate.getMonth(), submissionDate.getDate());
+      
+      if (submissionDateFromFilter) {
+        const fromDate = new Date(submissionDateFromFilter);
+        fromDate.setHours(0, 0, 0, 0);
+        if (submissionDateOnly < fromDate) {
+          matchesSubmissionDate = false;
+        }
+      }
+      
+      if (submissionDateToFilter && matchesSubmissionDate) {
+        const toDate = new Date(submissionDateToFilter);
+        toDate.setHours(23, 59, 59, 999);
+        if (submissionDateOnly > toDate) {
+          matchesSubmissionDate = false;
+        }
+      }
+    }
+
+    // Filter by reward approval date
+    let matchesRewardApprovalDate = true;
+    if (rewardApprovalDateFromFilter || rewardApprovalDateToFilter) {
+      const rewardDate = (idea as any).rewardApprovalDate;
+      if (!rewardDate) {
+        // If filter is set but idea has no reward approval date, exclude it
+        matchesRewardApprovalDate = false;
+      } else {
+        const rewardDateObj = new Date(rewardDate);
+        // Adjust for timezone (GMT+7)
+        const adjustedDate = new Date(rewardDateObj.getTime() + (7 * 60 * 60 * 1000));
+        const rewardDateOnly = new Date(adjustedDate.getFullYear(), adjustedDate.getMonth(), adjustedDate.getDate());
+        
+        if (rewardApprovalDateFromFilter) {
+          const fromDate = new Date(rewardApprovalDateFromFilter);
+          fromDate.setHours(0, 0, 0, 0);
+          if (rewardDateOnly < fromDate) {
+            matchesRewardApprovalDate = false;
+          }
+        }
+        
+        if (rewardApprovalDateToFilter && matchesRewardApprovalDate) {
+          const toDate = new Date(rewardApprovalDateToFilter);
+          toDate.setHours(23, 59, 59, 999);
+          if (rewardDateOnly > toDate) {
+            matchesRewardApprovalDate = false;
+          }
+        }
+      }
+    }
+
     return (
       matchesIdeaCode &&
       matchesFullName &&
@@ -444,7 +531,9 @@ const AdminDashboard: React.FC = () => {
       matchesStatus &&
       matchesImplementationStatus &&
       matchesDepartment &&
-      matchesImplementationDepartment
+      matchesImplementationDepartment &&
+      matchesSubmissionDate &&
+      matchesRewardApprovalDate
     );
   });
 
@@ -1014,6 +1103,33 @@ const AdminDashboard: React.FC = () => {
       )
     },
     {
+      field: 'rewardApprovalDate',
+      headerName: 'Ngày duyệt khen thưởng',
+      width: 200,
+      align: 'center',
+      headerAlign: 'center',
+      valueGetter: (params) => {
+        if (!params.value) return '';
+        // Date is stored in UTC, toLocaleString will convert to local timezone
+        const date = new Date(params.value);
+        return date.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+      },
+      renderCell: (params) => (
+        <div style={{
+          width: '100%',
+          textAlign: 'center'
+        }}>
+          {(params.row as any).rewardApprovalDate 
+            ? (() => {
+                // Date is stored in UTC, convert to Vietnam timezone (GMT+7)
+                const date = new Date((params.row as any).rewardApprovalDate);
+                return date.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+              })()
+            : '-'}
+        </div>
+      )
+    },
+    {
       field: 'actions',
       headerName: 'Thao tác',
       width: 120,
@@ -1076,7 +1192,60 @@ const AdminDashboard: React.FC = () => {
                     onChange={handleIdeaTextFilter}
                     sx={{ minWidth: 200, flex: '1 1 200px' }}
                   />
-                  
+                </Box>
+
+                {/* Hàng 1.5 - Date Filters */}
+                <Box sx={{ display: 'flex', columnGap: 2, rowGap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#666', minWidth: 'fit-content' }}>
+                    Lọc theo thời gian nộp:
+                  </Typography>
+                  <TextField
+                    label="Từ ngày"
+                    type="date"
+                    size="small"
+                    value={submissionDateFromFilter}
+                    onChange={handleSubmissionDateFromFilter}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    sx={{ minWidth: 180 }}
+                  />
+                  <TextField
+                    label="Đến ngày"
+                    type="date"
+                    size="small"
+                    value={submissionDateToFilter}
+                    onChange={handleSubmissionDateToFilter}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    sx={{ minWidth: 180 }}
+                  />
+                  <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#666', minWidth: 'fit-content', ml: 2 }}>
+                    Lọc theo ngày duyệt khen thưởng:
+                  </Typography>
+                  <TextField
+                    label="Từ ngày"
+                    type="date"
+                    size="small"
+                    value={rewardApprovalDateFromFilter}
+                    onChange={handleRewardApprovalDateFromFilter}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    sx={{ minWidth: 180 }}
+                  />
+                  <TextField
+                    label="Đến ngày"
+                    type="date"
+                    size="small"
+                    value={rewardApprovalDateToFilter}
+                    onChange={handleRewardApprovalDateToFilter}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                    sx={{ minWidth: 180 }}
+                  />
                 </Box>
 
                 {/* Hàng 2 */}
@@ -1250,6 +1419,7 @@ const AdminDashboard: React.FC = () => {
                                 note: 'Ghi chú',
                                 benefitValue: 'Giá trị làm lợi (VND)',
                                 rewardAmount: 'Tiền thưởng (VND)',
+                                rewardApprovalDate: 'Ngày duyệt khen thưởng',
                                 actions: 'Thao tác'
                               } as Record<string, string>
                             )[field]
