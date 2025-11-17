@@ -192,20 +192,21 @@ const IdeaForm: React.FC = () => {
     if (!validateForm()) return;
 
     try {
-      // Prepare data, only include images if they are not empty
+      // Prepare data, include all fields
       const submitData: any = {
         fullName: formData.fullName,
         department: formData.department,
-        idea: formData.idea
+        idea: formData.idea,
+        beforeImage: formData.beforeImage || null,
+        afterImage: formData.afterImage || null
       };
       
-      // Only include images if they have values
-      if (formData.beforeImage && formData.beforeImage.trim()) {
-        submitData.beforeImage = formData.beforeImage;
-      }
-      if (formData.afterImage && formData.afterImage.trim()) {
-        submitData.afterImage = formData.afterImage;
-      }
+      console.log('Submitting idea form data:', {
+        hasBeforeImage: !!formData.beforeImage,
+        beforeImageLength: formData.beforeImage ? formData.beforeImage.length : 0,
+        hasAfterImage: !!formData.afterImage,
+        afterImageLength: formData.afterImage ? formData.afterImage.length : 0
+      });
       
       const response = await axios.post('https://idea-managment.onrender.com/api/ideas', submitData);
       setSuccess(true);
@@ -386,6 +387,15 @@ const IdeaForm: React.FC = () => {
                         border: '1px solid #e0e0e0'
                       }} 
                     />
+                    <Button 
+                      size="small" 
+                      color="error" 
+                      fullWidth 
+                      sx={{ mt: 1 }}
+                      onClick={() => setFormData(prev => ({ ...prev, beforeImage: '' }))}
+                    >
+                      Xóa hình ảnh
+                    </Button>
                   </Box>
                 )}
               </Box>
@@ -428,6 +438,15 @@ const IdeaForm: React.FC = () => {
                         border: '1px solid #e0e0e0'
                       }} 
                     />
+                    <Button 
+                      size="small" 
+                      color="error" 
+                      fullWidth 
+                      sx={{ mt: 1 }}
+                      onClick={() => setFormData(prev => ({ ...prev, afterImage: '' }))}
+                    >
+                      Xóa hình ảnh
+                    </Button>
                   </Box>
                 )}
               </Box>
