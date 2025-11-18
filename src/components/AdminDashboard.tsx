@@ -203,6 +203,23 @@ const AdminDashboard: React.FC = () => {
       setImplementationStatusFilter([implStatus as 'Đề xuất mới' | 'Xem xét' | 'Phê duyệt' | 'Phản hồi phê duyệt' | 'Đang triển khai' | 'Lập báo cáo A3' | 'Phê duyệt khen thưởng' | 'Đã khen thưởng' | 'Không đạt']);
     }
     
+    // Date filters from query params
+    const dateFrom = params.get('dateFrom');
+    const dateTo = params.get('dateTo');
+    const filterType = params.get('filterType'); // 'reward' => lọc theo rewardApprovalDate, mặc định: submissionDate
+
+    if (dateFrom || dateTo) {
+      if (filterType === 'reward') {
+        // Lọc theo ngày duyệt khen thưởng
+        if (dateFrom) setRewardApprovalDateFromFilter(dateFrom);
+        if (dateTo) setRewardApprovalDateToFilter(dateTo);
+      } else {
+        // Mặc định: lọc theo thời gian nộp
+        if (dateFrom) setSubmissionDateFromFilter(dateFrom);
+        if (dateTo) setSubmissionDateToFilter(dateTo);
+      }
+    }
+    
     
     // Full name filter
     const fullName = params.get('fullName');
@@ -421,30 +438,63 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleExportExcel = () => {
-    const exportData = ideas.map(idea => ({
-      'Mã ý tưởng': idea.ideaCode,
-      'Họ và tên': idea.fullName,
-      'Đơn vị': idea.department,
-      'Ý tưởng': idea.idea,
-      'Thực trạng': idea.solution,
-      'Giải pháp': idea.benefit ,
-      'Lợi ích mang lại': (idea as any).benefitOutcome || '',
-      'Nguồn lực sử dụng': (idea as any).resourcesUsed || '',
-      'Mô tả cách tính': (idea as any).calculationDescription || '',
-      'Tên đề tài': (idea as any).topicTitle || '',
-      'Cơ hội nhân rộng phát triển': (idea as any).scalingOpportunity || '',
-      'Quyết định phê duyệt': idea.status,
-      'Trạng thái triển khai': (idea as any).implementationStatus || 'Đề xuất mới',
-      'Phòng ban triển khai': (idea as any).implementationDepartment || '',
-      'Ghi chú': (idea as any).note || '',
-      'Giá trị làm lợi (VND)': (idea as any).benefitValue ? (idea as any).benefitValue.toLocaleString('vi-VN') : '0',
-      'Tiền thưởng (VND)': (idea as any).rewardAmount ? (idea as any).rewardAmount.toLocaleString('vi-VN') : '0',
-      'Ngày duyệt khen thưởng': (idea as any).rewardApprovalDate ? (() => {
-        const date = new Date((idea as any).rewardApprovalDate);
-        return date.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-      })() : '',
-      'Ngày gửi': new Date(idea.submissionDate).toLocaleDateString('vi-VN')
-    }));
+    // Map field names to display names
+    const fieldDisplayNames: Record<string, string> = {
+      'ideaCode': 'Mã ý tưởng',
+      'beforeImage': 'Hình trước',
+      'afterImage': 'Hình sau',
+      'fullName': 'Họ và tên',
+      'department': 'Đơn vị',
+      'topicTitle': 'Tên đề tài',
+      'idea': 'Ý tưởng',
+      'solution': 'Thực trạng',
+      'benefit': 'Giải pháp',
+      'benefitOutcome': 'Lợi ích mang lại',
+      'resourcesUsed': 'Nguồn lực sử dụng',
+      'calculationDescription': 'Mô tả cách tính',
+      'scalingOpportunity': 'Cơ hội nhân rộng phát triển',
+      'status': 'Quyết định phê duyệt',
+      'implementationStatus': 'Trạng thái triển khai',
+      'implementationDepartment': 'Phòng ban triển khai',
+      'note': 'Ghi chú',
+      'benefitValue': 'Giá trị làm lợi (VND)',
+      'rewardAmount': 'Tiền thưởng (VND)',
+      'rewardApprovalDate': 'Ngày duyệt khen thưởng',
+      'submissionDate': 'Ngày gửi'
+    };
+
+    // Get visible columns (default true if not explicitly hidden)
+    const visibleFields = columns.filter(col => {
+      const isVisible = columnVisibilityModel[col.field];
+      // Default to true if not in visibility model (meaning column is visible by default)
+      return isVisible !== false;
+    }).map(col => col.field);
+
+    const exportData = filteredIdeas.map(idea => {
+      const row: Record<string, any> = {};
+      
+      visibleFields.forEach(field => {
+        const displayName = fieldDisplayNames[field] || field;
+        
+        if (field === 'beforeImage' || field === 'afterImage') {
+          row[displayName] = (idea as any)[field] ? 'Có' : 'Không';
+        } else if (field === 'benefitValue' || field === 'rewardAmount') {
+          const value = (idea as any)[field];
+          row[displayName] = value ? value.toLocaleString('vi-VN') : '0';
+        } else if (field === 'rewardApprovalDate') {
+          const date = (idea as any)[field];
+          row[displayName] = date ? new Date(date).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : '';
+        } else if (field === 'submissionDate') {
+          row[displayName] = new Date((idea as any)[field]).toLocaleDateString('vi-VN');
+        } else if (field === 'idea') {
+          row[displayName] = (idea as any)[field] || '-';
+        } else {
+          row[displayName] = (idea as any)[field] || '-';
+        }
+      });
+      
+      return row;
+    });
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
@@ -1159,9 +1209,9 @@ const AdminDashboard: React.FC = () => {
   ];
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth={false} sx={{ py: 2, px: 1, width: '100%' }}>
       <Card elevation={3} sx={{ mb: 4, borderRadius: 2 }}>
-        <CardContent>
+        <CardContent sx={{ p: 2 }}>
           <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ color: '#1976d2', fontWeight: 'bold' }}>
             Quản lý Ý tưởng Cải tiến
           </Typography>
@@ -1636,7 +1686,7 @@ const AdminDashboard: React.FC = () => {
           </Typography>
         </Box>
         
-        <Box ref={dataGridRef}>
+        <Box ref={dataGridRef} sx={{ width: '100%', overflow: 'auto' }}>
           <DataGrid
             rows={filteredIdeas}
             columns={columns}
@@ -1648,7 +1698,22 @@ const AdminDashboard: React.FC = () => {
             pageSizeOptions={[10, 25, 50]}
             disableRowSelectionOnClick
             loading={loading}
-            getRowHeight={() => 200} 
+            getRowHeight={() => 200}
+            sx={{
+              width: '100%',
+              '& .MuiDataGrid-columnHeader': {
+                backgroundColor: '#f5f5f5',
+              },
+              '& .MuiDataGrid-cell': {
+                overflow: 'hidden',
+                whiteSpace: 'normal',
+                wordWrap: 'break-word'
+              },
+              '& .MuiDataGrid-columnHeaderTitle': {
+                whiteSpace: 'normal',
+                wordWrap: 'break-word'
+              }
+            }}
           />
         </Box>
 
